@@ -1,0 +1,148 @@
+{
+	"tldrawFileFormatVersion": 1,
+	"schema": {
+		"schemaVersion": 2,
+		"sequences": {
+			"com.tldraw.store": 4,
+			"com.tldraw.asset": 1,
+			"com.tldraw.camera": 1,
+			"com.tldraw.document": 2,
+			"com.tldraw.instance": 25,
+			"com.tldraw.instance_page_state": 5,
+			"com.tldraw.page": 1,
+			"com.tldraw.instance_presence": 6,
+			"com.tldraw.pointer": 1,
+			"com.tldraw.shape": 4,
+			"com.tldraw.asset.bookmark": 2,
+			"com.tldraw.asset.image": 5,
+			"com.tldraw.asset.video": 5,
+			"com.tldraw.shape.group": 0,
+			"com.tldraw.shape.text": 2,
+			"com.tldraw.shape.bookmark": 2,
+			"com.tldraw.shape.draw": 2,
+			"com.tldraw.shape.geo": 9,
+			"com.tldraw.shape.note": 8,
+			"com.tldraw.shape.line": 5,
+			"com.tldraw.shape.frame": 0,
+			"com.tldraw.shape.arrow": 5,
+			"com.tldraw.shape.highlight": 1,
+			"com.tldraw.shape.embed": 4,
+			"com.tldraw.shape.image": 4,
+			"com.tldraw.shape.video": 2,
+			"com.tldraw.binding.arrow": 0
+		}
+	},
+	"records": [
+		{
+			"gridSize": 10,
+			"name": "",
+			"meta": {},
+			"id": "document:document",
+			"typeName": "document"
+		},
+		{
+			"meta": {},
+			"id": "page:page",
+			"name": "Page 1",
+			"index": "a1",
+			"typeName": "page"
+		},
+		{
+			"x": 0,
+			"y": 0,
+			"lastActivityTimestamp": 0,
+			"meta": {},
+			"id": "pointer:pointer",
+			"typeName": "pointer"
+		},
+		{
+			"followingUserId": null,
+			"opacityForNextShape": 1,
+			"stylesForNextShape": {},
+			"brush": null,
+			"scribbles": [],
+			"cursor": {
+				"type": "default",
+				"rotation": 0
+			},
+			"isFocusMode": false,
+			"exportBackground": true,
+			"isDebugMode": false,
+			"isToolLocked": false,
+			"screenBounds": {
+				"x": 0,
+				"y": 0,
+				"w": 646.4000244140625,
+				"h": 471.20001220703125
+			},
+			"insets": [
+				false,
+				false,
+				true,
+				false
+			],
+			"zoomBrush": null,
+			"isGridMode": false,
+			"isPenMode": false,
+			"chatMessage": "",
+			"isChatting": false,
+			"highlightedUserIds": [],
+			"isFocused": true,
+			"devicePixelRatio": 1.25,
+			"isCoarsePointer": false,
+			"isHoveringCanvas": null,
+			"openMenus": [],
+			"isChangingStyle": false,
+			"isReadonly": false,
+			"meta": {},
+			"duplicateProps": null,
+			"id": "instance:instance",
+			"currentPageId": "page:page",
+			"typeName": "instance"
+		},
+		{
+			"editingShapeId": null,
+			"croppingShapeId": null,
+			"selectedShapeIds": [],
+			"hoveredShapeId": null,
+			"erasingShapeIds": [],
+			"hintingShapeIds": [],
+			"focusedGroupId": null,
+			"meta": {},
+			"id": "instance_page_state:page:page",
+			"pageId": "page:page",
+			"typeName": "instance_page_state"
+		},
+		{
+			"x": 0,
+			"y": 0,
+			"z": 1,
+			"meta": {},
+			"id": "camera:page:page",
+			"typeName": "camera"
+		},
+		{
+			"x": 140.48126220703125,
+			"y": 40,
+			"rotation": 0,
+			"isLocked": false,
+			"opacity": 1,
+			"meta": {},
+			"id": "shape:JOwgr0cPLfVXnuFyB5Y_U",
+			"type": "text",
+			"props": {
+				"color": "black",
+				"size": "m",
+				"w": 365.4375,
+				"text": "src/\r\n├── assets/\r\n│   ├── images/\r\n│   │   ├── logo.png\r\n│   │   └── background.jpg\r\n│   ├── icons/\r\n│   │   ├── icon.svg\r\n│   │   └── arrow.png\r\n│   └── fonts/\r\n│       ├── Roboto-Regular.ttf\r\n│       └── FontAwesome.otf\r\n├── components/\r\n│   ├── Button/\r\n│   │   ├── Button.js\r\n│   │   └── Button.css\r\n│   ├── Navbar/\r\n│   │   ├── Navbar.js\r\n│   │   └── Navbar.css\r\n│   └── Modal/\r\n│       ├── Modal.js\r\n│       └── Modal.css\r\n├── config/\r\n│   ├── env/\r\n│   │   ├── .env.development\r\n│   │   └── .env.production\r\n│   ├── constants.js\r\n│   └── index.js\r\n├── contexts/\r\n│   ├── ThemeContext/\r\n│   │   └── ThemeContext.js\r\n│   └── AuthContext/\r\n│       └── AuthContext.js\r\n├── hooks/\r\n│   ├── useLocalStorage/\r\n│   │   └── useLocalStorage.js\r\n│   └── useFetch/\r\n│       └── useFetch.js\r\n├── pages/\r\n│   ├── Home/\r\n│   │   └── Home.js\r\n│   ├── Profile/\r\n│   │   └── Profile.js\r\n│   └── Dashboard/\r\n│       └── Dashboard.js\r\n├── services/\r\n│   ├── api/\r\n│   │   ├── userService.js\r\n│   │   └── postService.js\r\n│   ├── auth.js\r\n│   └── axios.js\r\n├── styles/\r\n│   ├── theme/\r\n│   │   ├── lightTheme.js\r\n│   │   └── darkTheme.js\r\n│   └── global.css\r\n├── utils/\r\n│   ├── format/\r\n│   │   └── format.js\r\n│   ├── validate/\r\n│   │   └── validate.js\r\n│   └── helpers/\r\n│       ├── stringHelpers.js\r\n│       └── dateHelpers.js\r\n├── lib/\r\n│   ├── apiClient.js\r\n│   ├── constants.js\r\n│   ├── logger.js\r\n│   └── themeUtils.js\r\n├── store/\r\n│   ├── actions/\r\n│   │   ├── userActions.js\r\n│   │   └── postActions.js\r\n│   ├── reducers/\r\n│   │   ├── userReducer.js\r\n│   │   └── postReducer.js\r\n│   ├── selectors/\r\n│   │   ├── userSelectors.js\r\n│   │   └── postSelectors.js\r\n│   └── index.js\r\n├── routes/\r\n│   ├── routes.js\r\n│   └── PrivateRoute.js\r\n└── types/\r\n    ├── interfaces/\r\n    │   ├── User.ts\r\n    │   └── Post.ts\r\n    └── enums/\r\n        ├── Status.ts\r\n        └── Role.ts",
+				"font": "draw",
+				"textAlign": "start",
+				"autoSize": true,
+				"scale": 1
+			},
+			"parentId": "page:page",
+			"index": "a1",
+			"typeName": "shape"
+		}
+	]
+}
