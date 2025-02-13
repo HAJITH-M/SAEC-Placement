@@ -49,7 +49,9 @@ const AuthForm = ({ onSubmit, userType }) => {
             access_type: 'offline',
             prompt: 'consent',
           },
-          redirectTo: window.location.origin + `/${userType.toLowerCase()}-dashboard`,
+          // redirectTo: window.location.origin + `/${userType.toLowerCase()}-dashboard`,
+          redirectTo: window.location.origin + `/home`,
+
         },
       });
 

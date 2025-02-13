@@ -14,7 +14,7 @@ const StudentLogin = () => {
     }
     
     // Navigate to student dashboard
-    // navigate('/student-dashboard');
+    navigate('/student-dashboard');
   };
 
   return <AuthForm userType="Student" onSubmit={onSubmit} />;
