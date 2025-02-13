@@ -1,10 +1,14 @@
 import { FaLock, FaEnvelope, FaGoogle } from 'react-icons/fa';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { loginSchema } from './AuthSchema';
-
+import { loginSchema } from '../../zodSchema/AuthSchema';
+// import { supabaseConfig } from '.. supabaseConfigClient';
+import { useState } from 'react';
+import { supabaseConfig } from '../../config/SupabaseConfig';
 
 const AuthForm = ({ onSubmit, userType }) => {
+  const [authError, setAuthError] = useState(null);
+  
   const {
     register,
     handleSubmit,
@@ -13,13 +17,48 @@ const AuthForm = ({ onSubmit, userType }) => {
     resolver: zodResolver(loginSchema),
   });
 
-  const onSubmitForm = (data) => {
-    onSubmit(data);
+  const onSubmitForm = async (data) => {
+    try {
+      const { data: authData, error } = await supabaseConfig.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      });
+
+      if (error) throw error;
+
+      // Store the user type in supabaseConfig user metadata
+      const { error: updateError } = await supabaseConfig.auth.updateUser({
+        data: { role: userType.toLowerCase() }
+      });
+
+      if (updateError) throw updateError;
+
+      // Call the parent component's onSubmit
+      onSubmit(authData);
+    } catch (error) {
+      setAuthError(error.message);
+    }
   };
 
-  const handleGoogleSignIn = () => {
-    // Handle Google Sign In logic here
-    console.log('Google Sign In clicked');
+  const handleGoogleSignIn = async () => {
+    try {
+      const { data, error } = await supabaseConfig.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+          redirectTo: window.location.origin + `/${userType.toLowerCase()}-dashboard`,
+        },
+      });
+
+      if (error) throw error;
+
+      // The redirect will handle the rest of the auth flow
+    } catch (error) {
+      setAuthError(error.message);
+    }
   };
 
   return (
@@ -40,6 +79,11 @@ const AuthForm = ({ onSubmit, userType }) => {
           <div className="lg:pl-12">
             <div className="overflow-hidden bg-white rounded-md">
               <div className="p-6">
+                {authError && (
+                  <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
+                    {authError}
+                  </div>
+                )}
                 <form className="space-y-4" onSubmit={handleSubmit(onSubmitForm)}>
                   <div>
                     <label className="text-base font-medium text-gray-900">College Email</label>

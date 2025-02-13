@@ -1,15 +1,23 @@
-import React from 'react'
-import AuthForm from '../../../components/AuthForm/AuthForm'
+// StudentLogin.jsx
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import AuthForm from '../../../components/AuthForm/AuthForm';
 
 const StudentLogin = () => {
-  const onSubmit = () => {
-    console.log('Staff Login')
-}
-  return (
-    <>
-    <AuthForm userType={"Student"} onSubmit={onSubmit}/>
-    </>
-  )
-}
+  const navigate = useNavigate();
 
-export default StudentLogin
+  const onSubmit = (authData) => {
+    // Check if the user's email domain matches student email pattern
+    if (!authData.user.email.endsWith('@saec.ac.in')) {
+      alert('Please use a valid student email address');
+      return;
+    }
+    
+    // Navigate to student dashboard
+    // navigate('/student-dashboard');
+  };
+
+  return <AuthForm userType="Student" onSubmit={onSubmit} />;
+};
+
+export default StudentLogin;
