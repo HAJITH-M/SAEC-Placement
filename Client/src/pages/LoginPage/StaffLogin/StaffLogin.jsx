@@ -1,5 +1,4 @@
 import React from 'react'
-import StaffAuth from '../../../components/AuthForm/StaffAuth/StaffAuth'
 import AuthForm from '../../../components/AuthForm/AuthForm'
 
 const StaffLogin = () => {

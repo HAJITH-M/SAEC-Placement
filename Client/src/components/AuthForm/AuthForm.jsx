@@ -29,7 +29,7 @@ const AuthForm = ({ onSubmit, userType }) => {
           <div className="flex flex-col justify-between">
             <div>
               <h2 className="text-3xl font-bold leading-tight text-gray-900 sm:text-4xl lg:text-5xl">
-                Welcome Back {userType}!
+                Welcome Back to Login {userType}!
               </h2>
               <p className="max-w-xl mx-auto mt-4 text-base leading-relaxed text-gray-600">
                 Access your {userType.toLowerCase()} dashboard
