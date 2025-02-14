@@ -5,6 +5,7 @@ import StaffLogin from "../pages/LoginPage/StaffLogin/StaffLogin";
 import Home from "../pages/HomePage/Home";
 import SplashScreen from "../components/SplashScreen/SplashScreen";
 import AuthOptionPage from "../pages/AuthOptionPage/AuthOptionPage";
+import SuperAdminLogin from "../pages/LoginPage/SuperAdminLogin/SuperAdminLogin";
 
 
 
@@ -17,6 +18,7 @@ const AppRouter = () => {
         <Route path="/auth/options" element={<AuthOptionPage/>} />
         <Route path="/auth/student" element={<StudentLogin/>} />
         <Route path="/auth/staff" element={<StaffLogin/>} />
+        <Route path="/auth/superadmin" element={<SuperAdminLogin/>} />
       </Routes>
     </Router>
   );
