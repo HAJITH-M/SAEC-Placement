@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import PlacementStats from '../../components/PlacementStats/PlacementStats';
-import RecentPlacements from '../../components/RecentPlacements/RecentPlacements';
-import NavBar from '../../components/NavBar/NavBar';
-import SideBar from '../../components/SideBar/SideBar';
+import PlacementStats from '../../components/PlacementStats/PlacementStatsView';
+import RecentPlacements from '../../components/RecentPlacements/RecentPlacementsView';
+import NavBar from '../../components/NavBar/NavBarView';
+import SideBar from '../../components/SideBar/SideBarView';
 
 const Home = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);

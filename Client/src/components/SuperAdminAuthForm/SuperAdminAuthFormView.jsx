@@ -1,43 +1,10 @@
+import React from 'react';
 import { FaLock, FaEnvelope } from 'react-icons/fa';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { loginSchema } from '../../zodSchema/AuthSchema';
-import { useState } from 'react';
-import { supabaseConfig } from '../../config/SupabaseConfig';
+import SuperAdminAuthFormVM from './SuperAdminAuthFormVM';
+// import AuthFormVM from './AuthFormVM';
 
-const SuperAdminAuthFormView = ({ onSubmit, userType }) => {
-  const [authError, setAuthError] = useState(null);
-  
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm({
-    resolver: zodResolver(loginSchema),
-  });
-
-  const onSubmitForm = async (data) => {
-    try {
-      const { data: authData, error } = await supabaseConfig.auth.signInWithPassword({
-        email: data.email,
-        password: data.password,
-      });
-
-      if (error) throw error;
-
-      // Store the user type in supabaseConfig user metadata
-      const { error: updateError } = await supabaseConfig.auth.updateUser({
-        data: { role: userType.toLowerCase() }
-      });
-
-      if (updateError) throw updateError;
-
-      // Call the parent component's onSubmit
-      onSubmit(authData);
-    } catch (error) {
-      setAuthError(error.message);
-    }
-  };
+const SuperAdminAuthFormView = (props) => {
+  const vm = SuperAdminAuthFormVM(props);
 
   return (
     <section className="h-screen flex items-center bg-white">
@@ -57,12 +24,12 @@ const SuperAdminAuthFormView = ({ onSubmit, userType }) => {
           <div className="lg:pl-12">
             <div className="overflow-hidden bg-white rounded-md">
               <div className="p-6">
-                {authError && (
+                {vm.authError && (
                   <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
-                    {authError}
+                    {vm.authError}
                   </div>
                 )}
-                <form className="space-y-4" onSubmit={handleSubmit(onSubmitForm)}>
+                <form className="space-y-4" onSubmit={vm.handleSubmit(vm.onSubmitForm)}>
                   <div>
                     <label className="text-base font-medium text-gray-900">Email</label>
                     <div className="mt-2 relative">
@@ -71,13 +38,13 @@ const SuperAdminAuthFormView = ({ onSubmit, userType }) => {
                       </span>
                       <input
                         type="email"
-                        {...register('email')}
+                        {...vm.register('email')}
                         className="block w-full px-10 py-3 text-black placeholder-gray-500 transition-all duration-200 bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500 caret-orange-500"
                         placeholder="Enter your email"
                       />
                     </div>
-                    {errors.email && (
-                      <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+                    {vm.errors.email && (
+                      <p className="mt-1 text-sm text-red-600">{vm.errors.email.message}</p>
                     )}
                   </div>
                   <div>
@@ -88,13 +55,13 @@ const SuperAdminAuthFormView = ({ onSubmit, userType }) => {
                       </span>
                       <input
                         type="password"
-                        {...register('password')}
+                        {...vm.register('password')}
                         className="block w-full px-10 py-3 text-black placeholder-gray-500 transition-all duration-200 bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500 caret-orange-500"
                         placeholder="Enter your password"
                       />
                     </div>
-                    {errors.password && (
-                      <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
+                    {vm.errors.password && (
+                      <p className="mt-1 text-sm text-red-600">{vm.errors.password.message}</p>
                     )}
                   </div>
                   <div className="flex justify-end">
