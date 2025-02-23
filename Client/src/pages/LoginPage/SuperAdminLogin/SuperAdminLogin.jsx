@@ -1,25 +1,27 @@
 import React from 'react'
 import SuperAdminAuthFormView from '../../../components/SuperAdminAuthForm/SuperAdminAuthFormView'
+import axios from 'axios'
+import { useNavigate } from 'react-router-dom'
 
 const SuperAdminLogin = () => {
+    const navigate = useNavigate()
     
       const handleSubmit = async (authData) => {
         try {
-          // You can add any additional logic here like checking if the user is actually a super admin
-          if (authData?.user) {
-            // Redirect to super admin dashboard after successful login
-            navigate('/super-admin-dashboard'); // Adjust this route based on your routing setup
+          const response = await axios.post('http://localhost:9999/superadmin', authData)
+          if (response.data) {
+            // Redirect to super admin dashboard with id from response
+            console.log('Super Admin logged in successfully + id:', response.data);
+            navigate(`/home`);
           }
         } catch (error) {
           console.error('Error in super admin login:', error);
         }
       };
     
-    
-    
   return (
     <div>
-<SuperAdminAuthFormView onSubmit={handleSubmit} userType="Super Admin" />    
+<SuperAdminAuthFormView onSubmit={handleSubmit} userType="Super Admin Login" />    
 </div>
   )
 }

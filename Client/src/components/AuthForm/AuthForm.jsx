@@ -1,65 +1,29 @@
-import { FaLock, FaEnvelope, FaGoogle } from 'react-icons/fa';
+import { FaLock, FaEnvelope } from 'react-icons/fa';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema } from '../../zodSchema/AuthSchema';
-// import { supabaseConfig } from '.. supabaseConfigClient';
 import { useState } from 'react';
-import { supabaseConfig } from '../../config/SupabaseConfig';
 
 const AuthForm = ({ onSubmit, userType }) => {
   const [authError, setAuthError] = useState(null);
-  
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm({
-    resolver: zodResolver(loginSchema),
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { register, handleSubmit, formState: { errors } } = useForm({
+    resolver: zodResolver(loginSchema)
   });
 
   const onSubmitForm = async (data) => {
+    setIsSubmitting(true);
+    setAuthError(null);
+    
     try {
-      const { data: authData, error } = await supabaseConfig.auth.signInWithPassword({
+      await onSubmit({
         email: data.email,
-        password: data.password,
+        password: data.password
       });
-
-      if (error) throw error;
-
-      // Store the user type in supabaseConfig user metadata
-      const { error: updateError } = await supabaseConfig.auth.updateUser({
-        data: { role: userType.toLowerCase() }
-      });
-
-      if (updateError) throw updateError;
-
-      // Call the parent component's onSubmit
-      onSubmit(authData);
     } catch (error) {
-      setAuthError(error.message);
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    try {
-      const { data, error } = await supabaseConfig.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          },
-          // redirectTo: window.location.origin + `/${userType.toLowerCase()}-dashboard`,
-          redirectTo: window.location.origin + `/home`,
-
-        },
-      });
-
-      if (error) throw error;
-
-      // The redirect will handle the rest of the auth flow
-    } catch (error) {
-      setAuthError(error.message);
+      setAuthError(error.message || 'An error occurred during login');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -100,9 +64,7 @@ const AuthForm = ({ onSubmit, userType }) => {
                         placeholder={`Enter your ${userType.toLowerCase()} email`}
                       />
                     </div>
-                    {errors.email && (
-                      <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
-                    )}
+                    {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
                   </div>
                   <div>
                     <label className="text-base font-medium text-gray-900">Password</label>
@@ -117,9 +79,7 @@ const AuthForm = ({ onSubmit, userType }) => {
                         placeholder="Enter your password"
                       />
                     </div>
-                    {errors.password && (
-                      <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
-                    )}
+                    {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>}
                   </div>
                   <div className="flex justify-end">
                     <a href="/forgot-password" className="text-sm text-orange-500 hover:underline">
@@ -129,27 +89,10 @@ const AuthForm = ({ onSubmit, userType }) => {
                   <div>
                     <button
                       type="submit"
-                      className="inline-flex items-center justify-center w-full px-4 py-3 text-base font-semibold text-white transition-all duration-200 bg-orange-500 border border-transparent rounded-md focus:outline-none hover:bg-orange-600 focus:bg-orange-600"
+                      disabled={isSubmitting}
+                      className="inline-flex items-center justify-center w-full px-4 py-3 text-base font-semibold text-white transition-all duration-200 bg-orange-500 border border-transparent rounded-md focus:outline-none hover:bg-orange-600 focus:bg-orange-600 disabled:opacity-50"
                     >
-                      Sign in
-                    </button>
-                  </div>
-                  <div className="relative flex items-center justify-center">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-gray-300"></div>
-                    </div>
-                    <div className="relative flex justify-center text-sm">
-                      <span className="px-2 text-gray-500 bg-white">Or continue with</span>
-                    </div>
-                  </div>
-                  <div>
-                    <button
-                      type="button"
-                      onClick={handleGoogleSignIn}
-                      className="inline-flex items-center justify-center w-full px-4 py-3 text-base font-semibold text-gray-700 transition-all duration-200 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-                    >
-                      <FaGoogle className="w-5 h-5 mr-3 text-red-500" />
-                      Sign in with Google
+                      {isSubmitting ? 'Signing in...' : 'Sign in'}
                     </button>
                   </div>
                   <div className="text-center">
