@@ -25,12 +25,17 @@ const SuperAdminAuthFormVM = (props) => {
     }
   };
 
+  const handleGoogleLogin = () => {
+    window.location.href = 'http://localhost:9999/auth/users/oauth';
+  };
+
   return {
     authError,
     register,
     handleSubmit,
     errors,
-    onSubmitForm
+    onSubmitForm,
+    handleGoogleLogin,
   };
 };
 

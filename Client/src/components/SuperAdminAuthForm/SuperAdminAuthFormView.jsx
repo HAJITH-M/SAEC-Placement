@@ -1,10 +1,12 @@
 import React from 'react';
-import { FaLock, FaEnvelope } from 'react-icons/fa';
+import { FaLock, FaEnvelope, FaGoogle } from 'react-icons/fa'; // Added FaGoogle
 import SuperAdminAuthFormVM from './SuperAdminAuthFormVM';
-// import AuthFormVM from './AuthFormVM';
 
 const SuperAdminAuthFormView = (props) => {
   const vm = SuperAdminAuthFormVM(props);
+
+  // Add Google login handler
+ 
 
   return (
     <section className="h-screen flex items-center bg-white">
@@ -77,12 +79,32 @@ const SuperAdminAuthFormView = (props) => {
                       Sign in
                     </button>
                   </div>
-                  <div className="text-center">
-                    <p className="text-sm text-gray-600">
-                      Super Admin Access Only
-                    </p>
-                  </div>
                 </form>
+
+                {/* Add Google Login Button */}
+                <div className="mt-4">
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-300"></div>
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                      <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={vm.handleGoogleLogin}
+                    className="mt-4 w-full inline-flex items-center justify-center px-4 py-3 text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                  >
+                    <FaGoogle className="mr-2" />
+                    Sign in with Google
+                  </button>
+                </div>
+
+                <div className="mt-4 text-center">
+                  <p className="text-sm text-gray-600">
+                    Super Admin Access Only
+                  </p>
+                </div>
               </div>
             </div>
           </div>

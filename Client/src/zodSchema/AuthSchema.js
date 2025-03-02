@@ -8,17 +8,21 @@ export const loginSchema = z.object({
     .refine(
       (email) => {
         // Split the email into local part and domain
-        const [localPart, domain] = email.split('@');
+
+        const [localPart] = email.split('@');
         
-        // Check if the domain is exactly saec.ac.in
-        // And ensure the local part doesn't contain @ or forbidden characters
+
+
+        // Check if the local part doesn't contain @ or forbidden characters
         return (
-          domain === 'saec.ac.in' &&
+
+          // domain === 'saec.ac.in' &&
           localPart.length > 0 &&
           /^[a-zA-Z0-9._-]+$/.test(localPart)
         );
       },
-      'Only valid college email addresses (@saec.ac.in) are allowed'
+
+      'Please enter a valid email address'
     ),
   password: z.string().min(8, 'Password must be at least 8 characters'),
 });

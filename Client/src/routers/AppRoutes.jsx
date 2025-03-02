@@ -8,6 +8,9 @@ import SplashScreenView from "../components/SplashScreen/SplashScreenView";
 import SuperAdminRegister from "../pages/RegisterPage/SuperAdminRegister";
 import HomeView from "../pages/HomePage/HomeView";
 import StudentDashboardView from "../dashboard/StudentDashboard/StudentDashboardView";
+import SuperAdminDashboardView from "../dashboard/SuperAdminDashboard/SuperAdminDashboardView";
+import OAuthSuccess from "../pages/LoginPage/OAuth/OAuthSuccess";
+import ProtectedRoute from "../pages/LoginPage/OAuth/ProtectedRoute";
 
 
 
@@ -23,8 +26,11 @@ const AppRouter = () => {
         <Route path="/auth/superadmin" element={<SuperAdminLogin/>} />
         <Route path="/auth/superadmin/register" element={<SuperAdminRegister/>} />
         <Route path="/dashboard/student" element={<StudentDashboardView/>} />
-        {/* <Route path="/ssss" element={<Ssss/>} /> */}
+        <Route element={<ProtectedRoute />}>
+        <Route path="/dashboard/superadmin" element={<SuperAdminDashboardView />} />
+      </Route>        {/* <Route path="/ssss" element={<Ssss/>} /> */}
 
+        <Route path="/auth/success" element={<OAuthSuccess />} />
 
       </Routes>
     </Router>

@@ -1,32 +1,54 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import AuthForm from '../../../components/AuthForm/AuthForm';
 
 const StudentLogin = () => {
   const navigate = useNavigate();
 
-  const handleStudentLogin = async ({ email, password }) => {
+  const handleStudentLogin = async (credentials) => {
     try {
-      // Remove manual check since zod already validates it
-  
-      // Here you would typically make an API call to authenticate the user
-      // For now, we'll just simulate it
-      if (!password || password.length < 6) {
-        throw new Error('Invalid password. Please try again.');
+      const response = await axios.post(
+        'http://localhost:9999/student/login',
+        {
+          email: credentials.email,
+          password: credentials.password,
+        },
+        { withCredentials: true }
+      );
+      if (response.status === 200 || response.status === 302) {
+        navigate('/dashboard/student', { replace: true });
+      } else {
+        throw new Error('Unexpected response status');
       }
-  
-      // Store the email in localStorage
-      localStorage.setItem('studentEmail', email);
-  
-      // If authentication is successful, navigate to dashboard
-      navigate('/dashboard/student');
     } catch (error) {
-      // This error will now be properly displayed in the AuthForm
-      throw error;
+      const errorMessage = error.response?.data?.error || 'Login failed. Please try again.';
+      throw new Error(errorMessage);
     }
   };
-  
-  return <AuthForm userType="Student" onSubmit={handleStudentLogin} />;
+
+  const handleOAuthLogin = async () => {
+    try {
+      // Redirect to OAuth endpoint
+      window.location.href = 'http://localhost:9999/auth/oauth/student';
+    } catch (error) {
+      console.error('OAuth initiation error:', error);
+    }
+  };
+
+  return (
+    <div>
+      <AuthForm userType="Student" onSubmit={handleStudentLogin} />
+      <div className="text-center mt-4">
+        <button
+          onClick={handleOAuthLogin}
+          className="inline-flex items-center justify-center px-4 py-2 text-base font-semibold text-white bg-blue-500 rounded-md hover:bg-blue-600"
+        >
+          Login with Google
+        </button>
+      </div>
+    </div>
+  );
 };
 
 export default StudentLogin;
