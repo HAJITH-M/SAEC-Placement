@@ -3,6 +3,7 @@ import { Home, User, FileText, HelpCircle, Menu, X, Plus } from "lucide-react";
 import { CSVLink } from "react-csv";
 import AddStudentView from "./AddStudentView";
 import axios from "axios";
+import AddJobView from "./AddJobView";
 
 // ExportCSV Component to handle CSV generation
 const ExportCSV = ({ job, interestedStudents }) => {
@@ -239,24 +240,6 @@ const HomeComponent = () => (
   </div>
 );
 
-// Add Job View Component
-const AddJobView = () => (
-  <div className="bg-white p-6 rounded-lg shadow">
-    <h2 className="text-2xl font-bold mb-4">Add New Job Opportunity</h2>
-    <form>
-      <input
-        type="text"
-        placeholder="Job Title"
-        className="w-full p-3 mb-4 border border-gray-300 rounded"
-      />
-      <textarea
-        placeholder="Job Description"
-        className="w-full p-3 mb-4 border border-gray-300 rounded"
-      />
-      <button type="submit" className="w-full p-3 bg-orange-500 text-white rounded">Add Job Opportunity</button>
-    </form>
-  </div>
-);
 
 // Help Component
 const StaffHelpView = () => (
