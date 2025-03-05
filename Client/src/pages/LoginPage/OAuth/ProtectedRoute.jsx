@@ -2,35 +2,41 @@ import React, { useEffect, useState } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import axios from 'axios';
 
-const ProtectedRoute = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(null); // null = loading, true = authenticated, false = not authenticated
+const ProtectedRoute = ({ allowedRole }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(null);
 
   useEffect(() => {
     const checkSession = async () => {
       try {
-        // Make a request to a backend endpoint to verify the session
-        const response = await axios.get('http://localhost:9999/superadmin', {
-          withCredentials: true, // Send cookies
+        console.log(`Checking session for role: ${allowedRole}`);
+        const response = await axios.get('http://localhost:9999/auth/session', {
+          withCredentials: true,
         });
-        if (response.data.success && response.data.role === 'super_admin') {
+        console.log('Session response:', response.data);
+        
+        if (response.data.success && response.data.role === allowedRole) {
+          console.log(`Session valid for ${allowedRole}, userId: ${response.data.userId}`);
           setIsAuthenticated(true);
         } else {
+          console.error(`Role mismatch or invalid session: expected ${allowedRole}, got ${response.data.role || 'none'}`);
           setIsAuthenticated(false);
         }
       } catch (error) {
-        console.error('Session check failed:', error);
+        console.error('Session check failed:', error.response ? error.response.data : error.message);
         setIsAuthenticated(false);
       }
     };
 
     checkSession();
-  }, []);
+  }, [allowedRole]);
 
   if (isAuthenticated === null) {
-    return <div>Loading...</div>; // Show loading state while checking
+    return <div>Loading...</div>;
   }
 
-  return isAuthenticated ? <Outlet /> : <Navigate to="/auth/superadmin" replace />;
+  const redirectPath = allowedRole === "super_admin" ? "/auth/superadmin" : `/auth/${allowedRole}`;
+  console.log(`Authentication status: ${isAuthenticated}, redirecting to: ${redirectPath}`);
+  return isAuthenticated ? <Outlet /> : <Navigate to={redirectPath} replace />;
 };
 
 export default ProtectedRoute;

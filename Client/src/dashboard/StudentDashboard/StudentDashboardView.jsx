@@ -1,14 +1,49 @@
-import React, { useState } from "react";
-import { Home, User, FileText, HelpCircle, Menu, X, Code2, Calendar } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Home, User, FileText, HelpCircle, Menu, X, Calendar } from "lucide-react";
 import StudentProfileView from "./StudentProfileView";
 import StudentJobView from "./StudentJobView";
 import StudentEventView from "./StudentEventView";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const StudentDashboardView = () => {
   const [activeComponent, setActiveComponent] = useState("home");
   const [isOpen, setIsOpen] = useState(false);
-  const userEmail = "user@example.com"; // This should be replaced with actual user email from your auth system
-  const firstLetter = userEmail.charAt(0).toUpperCase();
+  const [userEmail, setUserEmail] = useState(""); // Dynamic email from session
+  const [fetchError, setFetchError] = useState(null); // Error state
+  const navigate = useNavigate();
+
+  const firstLetter = userEmail ? userEmail.charAt(0).toUpperCase() : "";
+
+  // Fetch email from session on mount
+  useEffect(() => {
+    const fetchSessionEmail = async () => {
+      try {
+        const response = await axios.get("http://localhost:9999/student", {
+          withCredentials: true, // Send cookies (student_session)
+        });
+        console.log("Full session response:", response);
+        console.log("Session data:", response.data);
+        if (response.data.success) {
+          if (response.data.student && response.data.student.email) {
+            setUserEmail(response.data.student.email);
+          } else {
+            setFetchError("No email found in session response");
+            setUserEmail("user@example.com");
+          }
+        } else {
+          throw new Error(response.data.error || "Failed to fetch user data");
+        }
+      } catch (error) {
+        console.error("Error fetching session email:", error.response || error.message);
+        setFetchError(error.response?.data?.error || error.message || "Failed to fetch session data");
+        setUserEmail("user@example.com"); // Fallback
+        navigate("/auth/student"); // Redirect to correct login route
+      }
+    };
+
+    fetchSessionEmail();
+  }, [navigate]);
 
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
@@ -34,10 +69,11 @@ const StudentDashboardView = () => {
   return (
     <div className="flex relative">
       {/* Sidebar */}
-      <div className={`
-        fixed lg:static lg:translate-x-0 z-40 w-64 h-screen bg-white text-orange-500 transform transition-transform duration-300 ease-in-out
-        ${isOpen ? "translate-x-0" : "-translate-x-full"}
-      `}
+      <div
+        className={`
+          fixed lg:static lg:translate-x-0 z-40 w-64 h-screen bg-white text-orange-500 transform transition-transform duration-300 ease-in-out
+          ${isOpen ? "translate-x-0" : "-translate-x-full"}
+        `}
       >
         <div className="p-4 h-full overflow-y-auto">
           {/* Hamburger Menu Button */}
@@ -51,119 +87,77 @@ const StudentDashboardView = () => {
           <div className="space-y-4">
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-black">Welcome Back!</h2>
-
               <div className="flex items-center mt-2">
                 <div className="w-9 h-9 mt-1 rounded-full bg-orange-500 text-white flex items-center justify-center mr-2">
                   {firstLetter}
                 </div>
                 <div className="flex flex-col">
-                <span className="text-base text-gray-600">{userEmail}</span>
-                <span className="text-xs text-gray-600">Student</span>
+                  <span className="text-base text-gray-600">{userEmail}</span>
+                  <span className="text-xs text-gray-600">Student</span>
                 </div>
-                
-
               </div>
+              {fetchError && (
+                <p className="text-red-500 text-sm mt-2">{fetchError}</p>
+              )}
             </div>
             <div
               className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${
-                activeComponent === "home"
-                  ? "bg-orange-500 text-white"
-                  : "text-black"
+                activeComponent === "home" ? "bg-orange-500 text-white" : "text-black"
               }`}
               onClick={() => {
                 setActiveComponent("home");
                 setIsOpen(false);
               }}
             >
-              <Home
-                size={20}
-                className={
-                  activeComponent === "home" ? "text-white" : "text-orange-500"
-                }
-              />
+              <Home size={20} className={activeComponent === "home" ? "text-white" : "text-orange-500"} />
               <span>Home</span>
             </div>
             <div
               className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${
-                activeComponent === "jobview"
-                  ? "bg-orange-500 text-white"
-                  : "text-black"
+                activeComponent === "jobview" ? "bg-orange-500 text-white" : "text-black"
               }`}
               onClick={() => {
                 setActiveComponent("jobview");
                 setIsOpen(false);
               }}
             >
-              <FileText
-                size={20}
-                className={
-                  activeComponent === "jobview"
-                    ? "text-white"
-                    : "text-orange-500"
-                }
-              />
+              <FileText size={20} className={activeComponent === "jobview" ? "text-white" : "text-orange-500"} />
               <span>Job View</span>
             </div>
             <div
               className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${
-                activeComponent === "profile"
-                  ? "bg-orange-500 text-white"
-                  : "text-black"
+                activeComponent === "profile" ? "bg-orange-500 text-white" : "text-black"
               }`}
               onClick={() => {
                 setActiveComponent("profile");
                 setIsOpen(false);
               }}
             >
-              <User
-                size={20}
-                className={
-                  activeComponent === "profile"
-                    ? "text-white"
-                    : "text-orange-500"
-                }
-              />
+              <User size={20} className={activeComponent === "profile" ? "text-white" : "text-orange-500"} />
               <span>Profile</span>
             </div>
-           
             <div
               className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${
-                activeComponent === "events"
-                  ? "bg-orange-500 text-white"
-                  : "text-black"
+                activeComponent === "events" ? "bg-orange-500 text-white" : "text-black"
               }`}
               onClick={() => {
                 setActiveComponent("events");
                 setIsOpen(false);
               }}
             >
-              <Calendar
-                size={20}
-                className={
-                  activeComponent === "events"
-                    ? "text-white"
-                    : "text-orange-500"
-                }
-              />
+              <Calendar size={20} className={activeComponent === "events" ? "text-white" : "text-orange-500"} />
               <span>Events</span>
             </div>
             <div
               className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${
-                activeComponent === "help"
-                  ? "bg-orange-500 text-white"
-                  : "text-black"
+                activeComponent === "help" ? "bg-orange-500 text-white" : "text-black"
               }`}
               onClick={() => {
                 setActiveComponent("help");
                 setIsOpen(false);
               }}
             >
-              <HelpCircle
-                size={20}
-                className={
-                  activeComponent === "help" ? "text-white" : "text-orange-500"
-                }
-              />
+              <HelpCircle size={20} className={activeComponent === "help" ? "text-white" : "text-orange-500"} />
               <span>Help</span>
             </div>
           </div>
@@ -200,19 +194,9 @@ const StudentDashboardView = () => {
 };
 
 const HomeComponent = () => (
-  <>
-    <div className="bg-white p-6 rounded-lg shadow">
-      <h2 className="text-2xl font-bold mb-4">Home</h2>
-      <p>Your Home information goes here.</p>
-    </div>
-  </>
-);
-
-
-const SettingsComponent = () => (
   <div className="bg-white p-6 rounded-lg shadow">
-    <h2 className="text-2xl font-bold mb-4">Settings</h2>
-    <p>Manage your settings here.</p>
+    <h2 className="text-2xl font-bold mb-4">Home</h2>
+    <p>Your Home information goes here.</p>
   </div>
 );
 

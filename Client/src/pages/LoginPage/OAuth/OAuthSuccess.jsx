@@ -14,47 +14,53 @@ const OAuthSuccess = () => {
     }
 
     const code = searchParams.get('code');
-    console.log('Handling OAuth callback with code:', code);
+    const intendedRole = searchParams.get('intendedRole');
+    const returnUrl = searchParams.get('returnUrl');
+    console.log('Handling OAuth callback with code:', code, 'Intended role:', intendedRole, 'Return URL:', returnUrl);
 
     if (!code) {
       console.error('No OAuth code found in URL');
-      navigate('/superadmin/login', { replace: true });
+      navigate(returnUrl || '/auth/superadmin', { replace: true });
       return;
     }
 
     hasRun.current = true;
     try {
-      const response = await axios.get(`http://localhost:9999/auth/users/oauth/success?code=${code}`, {
+      const response = await axios.get(`http://localhost:9999/auth/users/oauth/success?code=${code}&intendedRole=${intendedRole || 'super_admin'}&returnUrl=${encodeURIComponent(returnUrl || '/auth/superadmin')}`, {
         withCredentials: true,
       });
-      console.log('OAuth response:', response);
-      console.log('OAuth response data:', response.data);
+      console.log('OAuth response:', response.data);
 
+      setSearchParams({}, { replace: true });
       if (response.data.success) {
-        const { role } = response.data;
+        const { role, redirect, ...userDetails } = response.data;
         console.log('OAuth login successful for role:', role);
-        setSearchParams({}, { replace: true });
-        if (role === 'super_admin') {
-          navigate('/dashboard/superadmin', { replace: true });
-        } else if (role === 'staff') {
-          navigate('/dashboard/staff', { replace: true });
-        } else {
-          navigate('/dashboard/student', { replace: true });
-        }
+        // Log all user details in frontend console
+        console.log('User Details (Frontend):', {
+          userId: userDetails.userId,
+          email: userDetails.email,
+          full_name: userDetails.full_name,
+          profile_pic: userDetails.profile_pic,
+          metadata: userDetails.metadata,
+          created_at: userDetails.created_at,
+          last_sign_in_at: userDetails.last_sign_in_at,
+          identities: userDetails.identities,
+        });
+        navigate(redirect, { replace: true });
       } else {
         console.error('OAuth response indicated failure:', response.data.message);
-        navigate('auth/superadmin', { replace: true });
+        navigate(response.data.redirect, { replace: true });
       }
     } catch (error) {
       console.error('OAuth callback error:', error.response ? error.response.data : error.message);
       setSearchParams({}, { replace: true });
-      navigate('auth/superadmin', { replace: true });
+      navigate(returnUrl || '/auth/superadmin', { replace: true });
     }
   };
 
   useEffect(() => {
     handleOAuthCallback();
-  }, []); // Empty deps to run once on mount
+  }, []);
 
   return <div>Loading...</div>;
 };

@@ -26,9 +26,25 @@ const AppRouter = () => {
         <Route path="/auth/superadmin" element={<SuperAdminLogin/>} />
         <Route path="/auth/superadmin/register" element={<SuperAdminRegister/>} />
         <Route path="/dashboard/student" element={<StudentDashboardView/>} />
-        <Route element={<ProtectedRoute />}>
-        <Route path="/dashboard/superadmin" element={<SuperAdminDashboardView />} />
-      </Route>        {/* <Route path="/ssss" element={<Ssss/>} /> */}
+        {/* <Route element={<ProtectedRoute />}>
+          <Route path="/dashboard/superadmin" element={<SuperAdminDashboardView />} />
+        </Route>        <Route path="/ssss" element={<Ssss/>} /> */}
+
+    <Route element={<ProtectedRoute allowedRole="super_admin" />}>
+      <Route path="/dashboard/superadmin" element={<SuperAdminDashboardView />} />
+    </Route>
+
+
+    <Route element={<ProtectedRoute allowedRole="student" />}>
+      <Route path="/dashboard/student" element={<StudentDashboardView />} />
+    </Route>
+
+{/* 
+    <Route element={<ProtectedRoute allowedRole="staff" />}>
+      <Route path="/dashboard/staff" element={<StaffDashboard />} />
+    </Route> */}
+
+
 
         <Route path="/auth/success" element={<OAuthSuccess />} />
 

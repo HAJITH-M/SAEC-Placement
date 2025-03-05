@@ -3,9 +3,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema } from '../../zodSchema/AuthSchema';
 
-const SuperAdminAuthFormVM = (props) => {
+const SuperAdminAuthFormVM = ({ onSubmit }) => {
   const [authError, setAuthError] = useState(null);
-  
+
   const {
     register,
     handleSubmit,
@@ -16,17 +16,13 @@ const SuperAdminAuthFormVM = (props) => {
 
   const onSubmitForm = async (data) => {
     try {
-      props.onSubmit({
+      await onSubmit({
         email: data.email,
-        password: data.password
+        password: data.password,
       });
     } catch (error) {
       setAuthError(error.message);
     }
-  };
-
-  const handleGoogleLogin = () => {
-    window.location.href = 'http://localhost:9999/auth/users/oauth';
   };
 
   return {
@@ -35,7 +31,6 @@ const SuperAdminAuthFormVM = (props) => {
     handleSubmit,
     errors,
     onSubmitForm,
-    handleGoogleLogin,
   };
 };
 

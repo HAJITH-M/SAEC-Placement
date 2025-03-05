@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Home, User, FileText, HelpCircle, Menu, X, Calendar, Users } from "lucide-react";
 import axios from 'axios';
+import { z }  from 'zod'
 import { useNavigate } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import StudentManagementView from "../StudentManagement/StudentManagementView";
@@ -11,6 +12,9 @@ const SuperAdminDashboardView = () => {
   const [staffList, setStaffList] = useState([]);
   const [studentList, setStudentList] = useState([]);
   const navigate = useNavigate();
+  const IdUUIDParamsSchema = z.object({
+    staffId: z.string().uuid({ message: "Invalid UUID format" }),
+  });
 
   const adminEmail = "admin@example.com"; // Replace with actual email from session
   const firstLetter = adminEmail.charAt(0).toUpperCase();
