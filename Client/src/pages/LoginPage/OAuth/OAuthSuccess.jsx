@@ -26,29 +26,20 @@ const OAuthSuccess = () => {
 
     hasRun.current = true;
     try {
-      const response = await axios.get(`http://localhost:9999/auth/users/oauth/success?code=${code}&intendedRole=${intendedRole || 'super_admin'}&returnUrl=${encodeURIComponent(returnUrl || '/auth/superadmin')}`, {
-        withCredentials: true,
-      });
+      const response = await axios.get(
+        `http://localhost:9999/auth/users/oauth/success?code=${code}&intendedRole=${intendedRole || 'super_admin'}&returnUrl=${encodeURIComponent(returnUrl || '/auth/superadmin')}`,
+        { withCredentials: true }
+      );
       console.log('OAuth response:', response.data);
 
       setSearchParams({}, { replace: true });
       if (response.data.success) {
         const { role, redirect, ...userDetails } = response.data;
-        console.log('OAuth login successful for role:', role);
-        // Log all user details in frontend console
-        console.log('User Details (Frontend):', {
-          userId: userDetails.userId,
-          email: userDetails.email,
-          full_name: userDetails.full_name,
-          profile_pic: userDetails.profile_pic,
-          metadata: userDetails.metadata,
-          created_at: userDetails.created_at,
-          last_sign_in_at: userDetails.last_sign_in_at,
-          identities: userDetails.identities,
-        });
+        console.log('OAuth login successful for role:', role, 'Redirecting to:', redirect);
+        console.log('User Details (Frontend):', userDetails);
         navigate(redirect, { replace: true });
       } else {
-        console.error('OAuth response indicated failure:', response.data.message);
+        console.error('OAuth response indicated failure:', response.data);
         navigate(response.data.redirect, { replace: true });
       }
     } catch (error) {

@@ -38,6 +38,9 @@ importers:
       react:
         specifier: ^19.0.0
         version: 19.0.0
+      react-csv:
+        specifier: ^2.2.2
+        version: 2.2.2
       react-dom:
         specifier: ^19.0.0
         version: 19.0.0(react@19.0.0)
@@ -1474,6 +1477,9 @@ packages:
   punycode@2.3.1:
     resolution: {integrity: sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==}
     engines: {node: '>=6'}
+
+  react-csv@2.2.2:
+    resolution: {integrity: sha512-RG5hOcZKZFigIGE8LxIEV/OgS1vigFQT4EkaHeKgyuCbUAu9Nbd/1RYq++bJcJJ9VOqO/n9TZRADsXNDR4VEpw==}
 
   react-dom@18.3.1:
     resolution: {integrity: sha512-5m4nQKp+rZRb09LNH59GM4BxTh9251/ylbKIbpe7TpGxfJ+9kv6BLkLBXIjjspbgbnIBNqlI23tRnTWT0snUIw==}
@@ -3153,6 +3159,8 @@ snapshots:
   proxy-from-env@1.1.0: {}
 
   punycode@2.3.1: {}
+
+  react-csv@2.2.2: {}
 
   react-dom@18.3.1(react@18.3.1):
     dependencies:

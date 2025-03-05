@@ -11,6 +11,7 @@ import StudentDashboardView from "../dashboard/StudentDashboard/StudentDashboard
 import SuperAdminDashboardView from "../dashboard/SuperAdminDashboard/SuperAdminDashboardView";
 import OAuthSuccess from "../pages/LoginPage/OAuth/OAuthSuccess";
 import ProtectedRoute from "../pages/LoginPage/OAuth/ProtectedRoute";
+import StaffDashboardView from "../dashboard/StaffDashboard/StaffDashboardView";
 
 
 
@@ -39,10 +40,10 @@ const AppRouter = () => {
       <Route path="/dashboard/student" element={<StudentDashboardView />} />
     </Route>
 
-{/* 
+
     <Route element={<ProtectedRoute allowedRole="staff" />}>
-      <Route path="/dashboard/staff" element={<StaffDashboard />} />
-    </Route> */}
+      <Route path="/dashboard/staff" element={<StaffDashboardView />} />
+    </Route>
 
 
 

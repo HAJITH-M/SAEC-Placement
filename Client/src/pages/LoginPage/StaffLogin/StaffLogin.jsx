@@ -7,10 +7,9 @@ const StaffLogin = () => {
   const navigate = useNavigate();
 
   const handleSubmit = async (authData) => {
-    console.log('Login request data:', authData); // Add this to debug
+    console.log('Login request data:', authData);
     try {
-      const response = await axios.post('http://localhost:9999/staff/login', authData, { withCredentials: true });
-      console.log('Staff login response:', response.data); // Log response
+      await axios.post('http://localhost:9999/staff/login', authData, { withCredentials: true });
       console.log('Staff logged in successfully');
       navigate('/dashboard/staff', { replace: true });
     } catch (error) {

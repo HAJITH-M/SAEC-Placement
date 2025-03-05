@@ -13,7 +13,7 @@ const ProtectedRoute = ({ allowedRole }) => {
           withCredentials: true,
         });
         console.log('Session response:', response.data);
-        
+
         if (response.data.success && response.data.role === allowedRole) {
           console.log(`Session valid for ${allowedRole}, userId: ${response.data.userId}`);
           setIsAuthenticated(true);
