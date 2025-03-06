@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 
@@ -6,6 +6,7 @@ const OAuthSuccess = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const hasRun = useRef(false);
+  const [errorMessage, setErrorMessage] = useState(null); // Added for error display
 
   const handleOAuthCallback = async () => {
     if (hasRun.current) {
@@ -40,6 +41,7 @@ const OAuthSuccess = () => {
         navigate(redirect, { replace: true });
       } else {
         console.error('OAuth response indicated failure:', response.data);
+        setErrorMessage(response.data.message); // Set error message from backend
         navigate(response.data.redirect, { replace: true });
       }
     } catch (error) {
@@ -53,7 +55,12 @@ const OAuthSuccess = () => {
     handleOAuthCallback();
   }, []);
 
-  return <div>Loading...</div>;
+  return (
+    <div>
+      {errorMessage && <p>{errorMessage}</p>} {/* Display error if present */}
+      <div>Loading...</div>
+    </div>
+  );
 };
 
 export default OAuthSuccess;

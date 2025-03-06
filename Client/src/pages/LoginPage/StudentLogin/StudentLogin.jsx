@@ -8,14 +8,20 @@ const StudentLogin = () => {
 
   const handleSubmit = async (authData) => {
     try {
-      const response = await axios.post('http://localhost:9999/student/login', authData, { withCredentials: true });
-      if (response.data.success) {
-        console.log('Student logged in successfully');
-        navigate('/dashboard/student', { replace: true });
-      }
+      const response = await axios.post('http://localhost:9999/student/login', authData, { 
+        withCredentials: true,
+        maxRedirects: 0,
+      });
+      console.log('Student logged in successfully');
+      navigate('/dashboard/student', { replace: true });
     } catch (error) {
-      console.error('Error in student login:', error);
-      throw new Error(error.response?.data?.error || 'Login failed');
+      if (error.response && error.response.status === 302) {
+        console.log('Redirecting to dashboard');
+        navigate('/dashboard/student', { replace: true, state: { sessionCleared: true } });
+      } else {
+        console.error('Error in student login:', error);
+        throw new Error(error.response?.data?.error || 'Login failed');
+      }
     }
   };
 
