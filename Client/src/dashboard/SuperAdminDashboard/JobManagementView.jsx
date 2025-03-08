@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const JobManagementView = ({ onJobCreated, onJobRemoved }) => {
   const [newJob, setNewJob] = useState({
@@ -13,6 +14,12 @@ const JobManagementView = ({ onJobCreated, onJobRemoved }) => {
   const [jobList, setJobList] = useState([]);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [useAI, setUseAI] = useState(false);
+  const [descriptionInput, setDescriptionInput] = useState("");
+
+  // Initialize Gemini AI with your API key
+  const genAI = new GoogleGenerativeAI("AIzaSyADsdhnpZKKQ3uXJ8y7WjJgdrMivWI7L58");
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -20,7 +27,7 @@ const JobManagementView = ({ onJobCreated, onJobRemoved }) => {
         const response = await axios.get("http://localhost:9999/superadmin/jobs", {
           withCredentials: true,
         });
-        console.log("Raw response from /superadmin/jobs:", response.data); // Debug raw response
+        console.log("Raw response from /superadmin/jobs:", response.data);
         if (response.data.success) {
           setJobList(response.data.jobs || []);
         } else {
@@ -39,6 +46,64 @@ const JobManagementView = ({ onJobCreated, onJobRemoved }) => {
     setNewJob((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleDescriptionChange = (e) => {
+    setDescriptionInput(e.target.value);
+  };
+
+  const handleAnalyzeDescription = async () => {
+    setError(null);
+    setSuccess(null);
+
+    if (!descriptionInput.trim()) {
+      setError("Please enter a job description to analyze.");
+      return;
+    }
+
+    try {
+      const prompt = `
+        Analyze the following job description and extract the following fields:
+        - batch (e.g., "2025" as a string)
+        - jobDescription (short summary, max 50 characters)
+        - department (comma-separated string, e.g., "Computer Science, IT")
+        - expiration (format: "MM/DD/YYYY HH:MM:SS", e.g., "12/31/2025 23:59:59")
+        - companyName (e.g., "TechCorp")
+        - driveDate (format: "MM/DD/YYYY", e.g., "12/20/2025")
+        If a field cannot be determined, return an empty string.
+        Provide the response as plain JSON without any Markdown or extra formatting.
+
+        Job Description:
+        "${descriptionInput}"
+      `;
+
+      const result = await model.generateContent(prompt);
+      let responseText = result.response.text();
+
+      // Clean the response: Remove Markdown code blocks if present
+      responseText = responseText
+        .replace(/```json/g, "")
+        .replace(/```/g, "")
+        .trim();
+
+      console.log("Cleaned AI response:", responseText);
+
+      const analyzedData = JSON.parse(responseText);
+
+      // Auto-fill the form fields
+      setNewJob({
+        batch: analyzedData.batch || "",
+        jobDescription: analyzedData.jobDescription || descriptionInput,
+        department: analyzedData.department || "",
+        expiration: analyzedData.expiration || "",
+        companyName: analyzedData.companyName || "",
+        driveDate: analyzedData.driveDate || "",
+      });
+      setSuccess("Job details extracted successfully! Please review and fill any missing fields.");
+    } catch (error) {
+      console.error("Error analyzing description:", error);
+      setError("Failed to analyze job description: " + error.message);
+    }
+  };
+
   const handleCreateJob = async (e) => {
     e.preventDefault();
     setError(null);
@@ -53,6 +118,13 @@ const JobManagementView = ({ onJobCreated, onJobRemoved }) => {
       ...newJob,
       department: departmentArray.length > 0 ? departmentArray : undefined,
     };
+
+    // Check if all fields are filled (client-side validation)
+    if (!jobData.batch || !jobData.jobDescription || !jobData.department || 
+        !jobData.expiration || !jobData.companyName || !jobData.driveDate) {
+      setError("All fields are required. Please fill in all details.");
+      return;
+    }
 
     try {
       const response = await axios.post(
@@ -70,6 +142,7 @@ const JobManagementView = ({ onJobCreated, onJobRemoved }) => {
         companyName: "",
         driveDate: "",
       });
+      setDescriptionInput("");
       setJobList((prev) => [...prev, ...response.data]);
       if (onJobCreated) onJobCreated();
     } catch (error) {
@@ -114,7 +187,42 @@ const JobManagementView = ({ onJobCreated, onJobRemoved }) => {
       {/* Single Job Form */}
       <div className="mb-6">
         <h3 className="text-lg font-semibold mb-2">Create Job</h3>
+        <div className="mb-4">
+          <label className="inline-flex items-center">
+            <input
+              type="checkbox"
+              checked={useAI}
+              onChange={() => setUseAI(!useAI)}
+              className="form-checkbox"
+            />
+            <span className="ml-2">Use AI to analyze job description</span>
+          </label>
+        </div>
+
         <form onSubmit={handleCreateJob} className="space-y-4">
+          {useAI ? (
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Job Description (Paste full description here)
+              </label>
+              <textarea
+                value={descriptionInput}
+                onChange={handleDescriptionChange}
+                className="mt-1 block w-full p-2 border rounded-md"
+                rows="4"
+                placeholder="Paste the job description here..."
+              />
+              <button
+                type="button"
+                onClick={handleAnalyzeDescription}
+                className="mt-2 bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600"
+              >
+                Analyze Description
+              </button>
+            </div>
+          ) : null}
+
+          {/* Manual Input Fields - All Required */}
           <div>
             <label className="block text-sm font-medium text-gray-700">Batch (e.g., 2025)</label>
             <input
