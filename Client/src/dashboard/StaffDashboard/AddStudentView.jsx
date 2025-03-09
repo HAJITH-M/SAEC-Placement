@@ -6,10 +6,12 @@ const AddStudentView = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [batch, setBatch] = useState("");
   const [file, setFile] = useState(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [students, setStudents] = useState([]);
+  const [allStudents, setAllStudents] = useState({});
+  const [yourStudents, setYourStudents] = useState({});
   const [loading, setLoading] = useState(true);
   const [studentToRemove, setStudentToRemove] = useState(null);
 
@@ -17,10 +19,11 @@ const AddStudentView = () => {
     const fetchStudents = async () => {
       try {
         const response = await axios.get("http://localhost:9999/staff", { withCredentials: true });
-        const { students: studentList } = response.data;
-        setStudents(studentList || []);
+        const { allStudents: all, yourStudents: yours } = response.data;
+        setAllStudents(all || {});
+        setYourStudents(yours || {});
       } catch (err) {
-        console.error("Error fetching students:", err);
+        console.error("Error fetching students:", err.response?.data || err.message);
         setError("Failed to load students");
       } finally {
         setLoading(false);
@@ -35,7 +38,7 @@ const AddStudentView = () => {
     setMessage("");
     setError("");
 
-    const studentData = [{ email, password }];
+    const studentData = [{ email, password, batch }];
 
     try {
       const response = await axios.post(
@@ -48,7 +51,16 @@ const AddStudentView = () => {
       setName("");
       setEmail("");
       setPassword("");
-      setStudents((prev) => [...prev, ...response.data]);
+      setBatch("");
+      const newBatch = response.data[0].batch || "Unknown";
+      setAllStudents((prev) => ({
+        ...prev,
+        [newBatch]: [...(prev[newBatch] || []), ...response.data],
+      }));
+      setYourStudents((prev) => ({
+        ...prev,
+        [newBatch]: [...(prev[newBatch] || []), ...response.data],
+      }));
     } catch (err) {
       console.error("Error adding student:", err.response ? err.response.data : err.message);
       setError(err.response?.data?.error || "Failed to add student");
@@ -77,10 +89,11 @@ const AddStudentView = () => {
         const studentData = jsonData.map((row) => ({
           email: row.email || row.Email,
           password: row.password || row.Password,
+          batch: row.batch || row.Batch,
         }));
 
-        if (studentData.some((student) => !student.email || !student.password)) {
-          throw new Error("All students must have an email and password");
+        if (studentData.some((student) => !student.email || !student.password || !student.batch)) {
+          throw new Error("All students must have an email, password, and batch");
         }
 
         const uniqueStudentsMap = new Map();
@@ -90,10 +103,6 @@ const AddStudentView = () => {
           }
         });
         const uniqueStudents = Array.from(uniqueStudentsMap.values());
-
-        if (uniqueStudents.length === 0) {
-          throw new Error("No unique students found in the file");
-        }
 
         const response = await axios.post(
           "http://localhost:9999/staff/bulkuploadstudents",
@@ -108,13 +117,25 @@ const AddStudentView = () => {
           setError(`Skipped ${skipped.length} duplicates: ${skipped.map(s => s.email).join(", ")}`);
         }
         setFile(null);
-        setStudents((prev) => [...prev, ...inserted]);
+        setAllStudents((prev) => {
+          const updated = { ...prev };
+          inserted.forEach((student) => {
+            const batch = student.batch || "Unknown";
+            updated[batch] = [...(updated[batch] || []), student];
+          });
+          return updated;
+        });
+        setYourStudents((prev) => {
+          const updated = { ...prev };
+          inserted.forEach((student) => {
+            const batch = student.batch || "Unknown";
+            updated[batch] = [...(updated[batch] || []), student];
+          });
+          return updated;
+        });
       } catch (err) {
         console.error("Error uploading students:", err.response ? err.response.data : err.message);
         setError(err.response?.data?.error || err.message || "Failed to upload students");
-        if (err.response?.data?.details) {
-          setError((prev) => `${prev} - ${err.response.data.details}`);
-        }
       }
     };
     reader.readAsArrayBuffer(file);
@@ -126,7 +147,22 @@ const AddStudentView = () => {
         withCredentials: true },
       );
       console.log(`Student ${studentId} removed`);
-      setStudents((prev) => prev.filter((student) => student.studentId !== studentId));
+      setAllStudents((prev) => {
+        const updated = { ...prev };
+        Object.keys(updated).forEach((batch) => {
+          updated[batch] = updated[batch].filter((student) => student.studentId !== studentId);
+          if (updated[batch].length === 0) delete updated[batch];
+        });
+        return updated;
+      });
+      setYourStudents((prev) => {
+        const updated = { ...prev };
+        Object.keys(updated).forEach((batch) => {
+          updated[batch] = updated[batch].filter((student) => student.studentId !== studentId);
+          if (updated[batch].length === 0) delete updated[batch];
+        });
+        return updated;
+      });
       setStudentToRemove(null);
     } catch (err) {
       console.error("Error removing student:", err);
@@ -177,6 +213,14 @@ const AddStudentView = () => {
             className="w-full p-3 mb-4 border border-gray-300 rounded"
             required
           />
+          <input
+            type="text"
+            placeholder="Batch (e.g., 2023)"
+            value={batch}
+            onChange={(e) => setBatch(e.target.value)}
+            className="w-full p-3 mb-4 border border-gray-300 rounded"
+            required
+          />
           <button
             type="submit"
             className="w-full p-3 bg-orange-500 text-white rounded hover:bg-orange-600"
@@ -207,30 +251,67 @@ const AddStudentView = () => {
         {error && <p className="text-red-500 mt-4">{error}</p>}
       </div>
 
-      {/* Student List */}
+      {/* All Students by Batch */}
       <div className="mt-6">
-        <h3 className="text-xl font-semibold mb-2">Students</h3>
-        {students.length === 0 ? (
-          <p className="text-gray-600">No students added yet.</p>
+        <h3 className="text-xl font-semibold mb-2">All Students by Batch (Department)</h3>
+        {Object.keys(allStudents).length === 0 ? (
+          <p className="text-gray-600">No students in your department yet.</p>
         ) : (
-          <ul className="space-y-2">
-            {students.map((student) => (
-              <li
-                key={student.studentId}
-                className="flex justify-between items-center p-2 border-b border-gray-200"
-              >
-                <span>
-                  {student.email} (Added by: {student.staffEmail || "Unknown"})
-                </span>
-                <button
-                  onClick={() => confirmRemove(student)}
-                  className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-                >
-                  Remove
-                </button>
-              </li>
-            ))}
-          </ul>
+          Object.entries(allStudents).map(([batch, batchStudents]) => (
+            <div key={batch} className="mb-4">
+              <h4 className="text-lg font-semibold text-gray-800">Batch {batch} [{batchStudents.length}]</h4>
+              <ul className="space-y-2">
+                {batchStudents.map((student) => (
+                  <li
+                    key={student.studentId}
+                    className="flex justify-between items-center p-2 border-b border-gray-200"
+                  >
+                    <span>
+                      {student.email} (Added by: {student.staffEmail || "Unknown"})
+                    </span>
+                    <button
+                      onClick={() => confirmRemove(student)}
+                      className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                    >
+                      Remove
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Your Students by Batch */}
+      <div className="mt-6">
+        <h3 className="text-xl font-semibold mb-2">Your Students by Batch</h3>
+        {Object.keys(yourStudents).length === 0 ? (
+          <p className="text-gray-600">You haven’t added any students yet.</p>
+        ) : (
+          Object.entries(yourStudents).map(([batch, batchStudents]) => (
+            <div key={batch} className="mb-4">
+              <h4 className="text-lg font-semibold text-gray-800">Batch {batch} [{batchStudents.length}]</h4>
+              <ul className="space-y-2">
+                {batchStudents.map((student) => (
+                  <li
+                    key={student.studentId}
+                    className="flex justify-between items-center p-2 border-b border-gray-200"
+                  >
+                    <span>
+                      {student.email} (Added by: {student.staffEmail || "Unknown"})
+                    </span>
+                    <button
+                      onClick={() => confirmRemove(student)}
+                      className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                    >
+                      Remove
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))
         )}
       </div>
 
