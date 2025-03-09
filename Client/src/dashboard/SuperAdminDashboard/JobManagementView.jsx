@@ -1,362 +1,308 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+// JobManagementView.jsx
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
-const JobManagementView = ({ onJobCreated, onJobRemoved }) => {
-  const [newJob, setNewJob] = useState({
-    batch: "",
-    jobDescription: "",
-    department: "",
-    expiration: "",
-    companyName: "",
-    driveDate: "",
+const BASE_URL = 'http://localhost:9999';
+
+const JobManagementView = () => {
+  const [jobs, setJobs] = useState([]);
+  const [formData, setFormData] = useState({
+    companyName: '',
+    jobDescription: '',
+    driveDate: '',
+    expiration: '',
+    batch: '',
+    department: [],
+    driveLink: '',
   });
-  const [jobList, setJobList] = useState([]);
+  const [selectedJob, setSelectedJob] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
-  const [useAI, setUseAI] = useState(false);
-  const [descriptionInput, setDescriptionInput] = useState("");
-
-  // Initialize Gemini AI with your API key
-  const genAI = new GoogleGenerativeAI("AIzaSyADsdhnpZKKQ3uXJ8y7WjJgdrMivWI7L58");
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get("http://localhost:9999/superadmin/jobs", {
-          withCredentials: true,
-        });
-        console.log("Raw response from /superadmin/jobs:", response.data);
-        if (response.data.success) {
-          setJobList(response.data.jobs || []);
-        } else {
-          throw new Error(response.data.error || "Failed to fetch jobs");
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        setError(error.response?.data?.details || error.message || "Failed to load job data");
-      }
-    };
-    fetchData();
+    fetchJobs();
   }, []);
+
+  const fetchJobs = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${BASE_URL}/superadmin/jobs-with-students`, {
+        withCredentials: true,
+      });
+      console.log('API Response:', response.data);
+      setJobs(Array.isArray(response.data.jobs) ? response.data.jobs : []);
+    } catch (err) {
+      console.error('Fetch Jobs Error:', err);
+      setError('Failed to fetch jobs: ' + (err.response?.data?.error || err.message));
+      setJobs([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setNewJob((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleDescriptionChange = (e) => {
-    setDescriptionInput(e.target.value);
-  };
-
-  const handleAnalyzeDescription = async () => {
-    setError(null);
-    setSuccess(null);
-
-    if (!descriptionInput.trim()) {
-      setError("Please enter a job description to analyze.");
-      return;
+    if (name === 'department') {
+      setFormData({ ...formData, [name]: value.split(',').map(d => d.trim()) });
+    } else {
+      setFormData({ ...formData, [name]: value });
     }
+  };
 
+  const formatDateForBackend = (dateStr, includeTime = false) => {
     try {
-      const prompt = `
-        Analyze the following job description and extract the following fields:
-        - batch (e.g., "2025" as a string)
-        - jobDescription (short summary, max 50 characters)
-        - department (comma-separated string, e.g., "Computer Science, IT")
-        - expiration (format: "MM/DD/YYYY HH:MM:SS", e.g., "12/31/2025 23:59:59")
-        - companyName (e.g., "TechCorp")
-        - driveDate (format: "MM/DD/YYYY", e.g., "12/20/2025")
-        If a field cannot be determined, return an empty string.
-        Provide the response as plain JSON without any Markdown or extra formatting.
-
-        Job Description:
-        "${descriptionInput}"
-      `;
-
-      const result = await model.generateContent(prompt);
-      let responseText = result.response.text();
-
-      // Clean the response: Remove Markdown code blocks if present
-      responseText = responseText
-        .replace(/```json/g, "")
-        .replace(/```/g, "")
-        .trim();
-
-      console.log("Cleaned AI response:", responseText);
-
-      const analyzedData = JSON.parse(responseText);
-
-      // Auto-fill the form fields
-      setNewJob({
-        batch: analyzedData.batch || "",
-        jobDescription: analyzedData.jobDescription || descriptionInput,
-        department: analyzedData.department || "",
-        expiration: analyzedData.expiration || "",
-        companyName: analyzedData.companyName || "",
-        driveDate: analyzedData.driveDate || "",
-      });
-      setSuccess("Job details extracted successfully! Please review and fill any missing fields.");
-    } catch (error) {
-      console.error("Error analyzing description:", error);
-      setError("Failed to analyze job description: " + error.message);
-    }
-  };
-
-  const handleCreateJob = async (e) => {
-    e.preventDefault();
-    setError(null);
-    setSuccess(null);
-
-    const departmentArray = newJob.department
-      .split(",")
-      .map((d) => d.trim())
-      .filter((d) => d);
-
-    const jobData = {
-      ...newJob,
-      department: departmentArray.length > 0 ? departmentArray : undefined,
-    };
-
-    // Check if all fields are filled (client-side validation)
-    if (!jobData.batch || !jobData.jobDescription || !jobData.department || 
-        !jobData.expiration || !jobData.companyName || !jobData.driveDate) {
-      setError("All fields are required. Please fill in all details.");
-      return;
-    }
-
-    try {
-      const response = await axios.post(
-        "http://localhost:9999/superadmin/createjobs",
-        [jobData],
-        { withCredentials: true }
-      );
-      console.log("Single job creation response:", response.data);
-      setSuccess("Job created successfully!");
-      setNewJob({
-        batch: "",
-        jobDescription: "",
-        department: "",
-        expiration: "",
-        companyName: "",
-        driveDate: "",
-      });
-      setDescriptionInput("");
-      setJobList((prev) => [...prev, ...response.data]);
-      if (onJobCreated) onJobCreated();
-    } catch (error) {
-      console.error("Error creating job:", error);
-      setError(error.response?.data?.error || "Failed to create job");
-    }
-  };
-
-  const handleRemoveJob = async (jobId) => {
-    if (!jobId) {
-      setError("Cannot remove job: Job ID is missing");
-      return;
-    }
-    setError(null);
-    setSuccess(null);
-
-    try {
-      const response = await axios.delete(
-        `http://localhost:9999/superadmin/job/${jobId}`,
-        { withCredentials: true }
-      );
-      console.log("Job removal response:", response.status);
-      setSuccess("Job removed successfully!");
-      setJobList((prev) => prev.filter((job) => job.id !== jobId));
-      if (onJobRemoved) onJobRemoved();
-    } catch (error) {
-      console.error("Error removing job:", error);
-      if (error.response?.status === 404) {
-        setSuccess("Job already removed or not found");
-        setJobList((prev) => prev.filter((job) => job.id !== jobId));
-        if (onJobRemoved) onJobRemoved();
-      } else {
-        setError(error.response?.data?.error || "Failed to remove job");
+      const parts = dateStr.split(' ');
+      const dateParts = parts[0].split('/');
+      if (dateParts.length !== 3) throw new Error('Invalid date format');
+      const formattedDate = `${dateParts[2]}-${dateParts[0].padStart(2, '0')}-${dateParts[1].padStart(2, '0')}`;
+      if (includeTime && parts[1]) {
+        const timeParts = parts[1].split(':');
+        if (timeParts.length !== 3) throw new Error('Invalid time format');
+        return `${formattedDate} ${parts[1]}`;
       }
+      return formattedDate;
+    } catch (err) {
+      console.error('Date formatting error:', err.message);
+      return dateStr;
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      const formattedData = {
+        ...formData,
+        driveDate: formatDateForBackend(formData.driveDate),
+        expiration: formatDateForBackend(formData.expiration, true),
+      };
+      console.log('Sending job data:', [formattedData]);
+      const response = await axios.post(
+        `${BASE_URL}/superadmin/createjobs`,
+        [formattedData],
+        {
+          withCredentials: true,
+        }
+      );
+      console.log('Create Job Response:', response.data);
+      setFormData({
+        companyName: '',
+        jobDescription: '',
+        driveDate: '',
+        expiration: '',
+        batch: '',
+        department: [],
+        driveLink: '',
+      });
+      fetchJobs();
+    } catch (err) {
+      console.error('Create Job Error:', err.response?.data);
+      const errorMsg = err.response?.data?.errors
+        ? err.response.data.errors.map(e => `${e.path}: ${e.message}`).join(', ')
+        : err.response?.data?.error || err.message;
+      setError('Failed to create job: ' + errorMsg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (jobId) => {
+    try {
+      setLoading(true);
+      await axios.delete(`${BASE_URL}/superadmin/job/${jobId}`, {
+        withCredentials: true,
+      });
+      fetchJobs();
+    } catch (err) {
+      setError('Failed to delete job: ' + (err.response?.data?.error || err.message));
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
-      <h2 className="text-2xl font-bold mb-4">Job Management</h2>
-
-      {/* Single Job Form */}
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-2">Create Job</h3>
-        <div className="mb-4">
-          <label className="inline-flex items-center">
-            <input
-              type="checkbox"
-              checked={useAI}
-              onChange={() => setUseAI(!useAI)}
-              className="form-checkbox"
-            />
-            <span className="ml-2">Use AI to analyze job description</span>
-          </label>
-        </div>
-
-        <form onSubmit={handleCreateJob} className="space-y-4">
-          {useAI ? (
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Job Description (Paste full description here)
-              </label>
-              <textarea
-                value={descriptionInput}
-                onChange={handleDescriptionChange}
-                className="mt-1 block w-full p-2 border rounded-md"
-                rows="4"
-                placeholder="Paste the job description here..."
-              />
-              <button
-                type="button"
-                onClick={handleAnalyzeDescription}
-                className="mt-2 bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600"
-              >
-                Analyze Description
-              </button>
-            </div>
-          ) : null}
-
-          {/* Manual Input Fields - All Required */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Batch (e.g., 2025)</label>
-            <input
-              type="text"
-              name="batch"
-              value={newJob.batch}
-              onChange={handleInputChange}
-              className="mt-1 block w-full p-2 border rounded-md"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Job Description</label>
-            <input
-              type="text"
-              name="jobDescription"
-              value={newJob.jobDescription}
-              onChange={handleInputChange}
-              className="mt-1 block w-full p-2 border rounded-md"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Departments (comma-separated, e.g., Computer Science, IT)
-            </label>
-            <input
-              type="text"
-              name="department"
-              value={newJob.department}
-              onChange={handleInputChange}
-              className="mt-1 block w-full p-2 border rounded-md"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Expiration (MM/DD/YYYY HH:MM:SS, e.g., 12/31/2025 23:59:59)
-            </label>
-            <input
-              type="text"
-              name="expiration"
-              value={newJob.expiration}
-              onChange={handleInputChange}
-              className="mt-1 block w-full p-2 border rounded-md"
-              required
-            />
-          </div>
+    <div className="container mx-auto p-4">
+      {/* Job Creation Form */}
+      <div className="mb-8 bg-white p-6 rounded-lg shadow">
+        <h2 className="text-2xl font-bold mb-4">Create New Job</h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Company Name</label>
             <input
               type="text"
               name="companyName"
-              value={newJob.companyName}
+              value={formData.companyName}
               onChange={handleInputChange}
-              className="mt-1 block w-full p-2 border rounded-md"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Drive Date (MM/DD/YYYY, e.g., 12/20/2025)
-            </label>
+            <label className="block text-sm font-medium text-gray-700">Job Description</label>
+            <textarea
+              name="jobDescription"
+              value={formData.jobDescription}
+              onChange={handleInputChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Drive Date (MM/DD/YYYY)</label>
             <input
               type="text"
               name="driveDate"
-              value={newJob.driveDate}
+              value={formData.driveDate}
               onChange={handleInputChange}
-              className="mt-1 block w-full p-2 border rounded-md"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
               required
+              placeholder="e.g., 12/31/2025"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Expiration (MM/DD/YYYY HH:MM:SS)</label>
+            <input
+              type="text"
+              name="expiration"
+              value={formData.expiration}
+              onChange={handleInputChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+              required
+              placeholder="e.g., 12/31/2025 23:59:59"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Batch</label>
+            <input
+              type="text"
+              name="batch"
+              value={formData.batch}
+              onChange={handleInputChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+              required
+              placeholder="e.g., 2025"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Departments (comma-separated)</label>
+            <input
+              type="text"
+              name="department"
+              value={formData.department.join(', ')}
+              onChange={handleInputChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+              required
+              placeholder="e.g., Computer Science, IT"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Drive Link</label>
+            <input
+              type="text"
+              name="driveLink"
+              value={formData.driveLink}
+              onChange={handleInputChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+              required
+              placeholder="e.g., https://example.com/drive"
             />
           </div>
           <button
             type="submit"
-            className="bg-orange-500 text-white p-2 rounded-md hover:bg-orange-600"
+            disabled={loading}
+            className="w-full py-2 px-4 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:bg-gray-400"
           >
-            Create Job
+            {loading ? 'Creating...' : 'Create Job'}
           </button>
-          {error && <p className="text-red-500">{error}</p>}
-          {success && <p className="text-green-500">{success}</p>}
         </form>
       </div>
 
-      {/* Job List with Registered Students */}
-      <h3 className="text-lg font-semibold mb-2">Current Jobs</h3>
-      {jobList.length > 0 ? (
-        <ul>
-          {jobList.map((job) => {
-            const registeredStudents = job.applications || [];
-            return (
-              <li key={job.id} className="mb-4 border-b pb-2">
-                <div className="flex justify-between items-center">
-                  <span>
-                    <strong>Company:</strong> {job.companyName} | <strong>Batch:</strong> {job.batch} |{" "}
-                    <strong>Description:</strong> {job.jobDescription} |{" "}
-                    <strong>Departments:</strong> {job.department?.join(", ") || "N/A"}
-                  </span>
+      {/* Jobs List */}
+      <div className="bg-white p-6 rounded-lg shadow">
+        <h2 className="text-2xl font-bold mb-4">Job Listings</h2>
+        {error && <div className="text-red-500 mb-4">{error}</div>}
+        {loading && <div className="text-gray-500 mb-4">Loading...</div>}
+        {!loading && jobs.length === 0 && (
+          <div className="text-gray-500 mb-4">No jobs available</div>
+        )}
+        <div className="space-y-4">
+          {jobs && jobs.map((job) => (
+            <div key={job.jobId} className="border p-4 rounded-md">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="text-lg font-semibold">{job.companyName}</h3>
+                  <p className="text-gray-600">{job.jobDescription}</p>
+                  <p className="text-sm text-gray-500">Drive Date: {job.driveDate}</p>
+                  <p className="text-sm text-gray-500">Batch: {job.batch}</p>
+                  <p className="text-sm text-gray-500">
+                    Departments: {job.department?.join(', ') || 'N/A'}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Drive Link: <a href={job.driveLink} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                      {job.driveLink || 'N/A'}
+                    </a>
+                  </p>
+                </div>
+                <div className="space-x-2">
                   <button
-                    onClick={() => handleRemoveJob(job.id)}
-                    className="bg-red-500 text-white p-1 rounded-md hover:bg-red-600"
-                    disabled={!job.id}
+                    onClick={() => setSelectedJob(job)}
+                    className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
                   >
-                    Remove
+                    View Students
+                  </button>
+                  <button
+                    onClick={() => handleDelete(job.jobId)}
+                    className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                  >
+                    Delete
                   </button>
                 </div>
-                <div className="mt-2">
-                  <strong>Registered Students:</strong>
-                  {registeredStudents.length > 0 ? (
-                    <ul className="ml-4 list-disc">
-                      {registeredStudents.map((app) => (
-                        <li key={app.studentId}>
-                          <strong>Name:</strong> {app.student?.name || "N/A"} |{" "}
-                          <strong>Email:</strong> {app.student?.email || "N/A"} |{" "}
-                          <strong>Batch:</strong> {app.student?.batch || "N/A"} |{" "}
-                          <strong>Reg No:</strong> {app.student?.regNo || "N/A"} |{" "}
-                          <strong>Department:</strong> {app.student?.department || "N/A"} |{" "}
-                          <strong>Roll No:</strong> {app.student?.rollNo || "N/A"} |{" "}
-                          <strong>Placed:</strong> {app.student?.placedStatus || "N/A"} |{" "}
-                          <strong>CGPA:</strong> {app.student?.cgpa || "N/A"} |{" "}
-                          <strong>Applied At:</strong> {app.appliedAt || "N/A"}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="ml-4">No students registered for this job.</p>
-                  )}
+              </div>
+
+              {/* Registered Students Modal */}
+              {selectedJob && selectedJob.jobId === job.jobId && (
+                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
+                  <div className="bg-white p-6 rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+                    <h3 className="text-xl font-bold mb-4">
+                      Registered Students for {selectedJob.companyName}
+                    </h3>
+                    {selectedJob.students && selectedJob.students.length > 0 ? (
+                      <table className="w-full">
+                        <thead>
+                          <tr className="bg-gray-100">
+                            <th className="p-2 text-left">Name</th>
+                            <th className="p-2 text-left">Email</th>
+                            <th className="p-2 text-left">CGPA</th>
+                            <th className="p-2 text-left">Applied At</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {selectedJob.students.map((student) => (
+                            <tr key={student.applicationId} className="border-t">
+                              <td className="p-2">{student.studentName || 'N/A'}</td>
+                              <td className="p-2">{student.email || 'N/A'}</td>
+                              <td className="p-2">{student.cgpa || 'N/A'}</td>
+                              <td className="p-2">{student.appliedAt || 'N/A'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    ) : (
+                      <p>No students registered for this job yet.</p>
+                    )}
+                    <button
+                      onClick={() => setSelectedJob(null)}
+                      className="mt-4 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+                    >
+                      Close
+                    </button>
+                  </div>
                 </div>
-              </li>
-            );
-          })}
-        </ul>
-      ) : (
-        <p>No jobs found.</p>
-      )}
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };

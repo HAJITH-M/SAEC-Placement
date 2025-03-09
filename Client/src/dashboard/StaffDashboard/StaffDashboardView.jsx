@@ -4,6 +4,7 @@ import { CSVLink } from "react-csv";
 import AddStudentView from "./AddStudentView";
 import axios from "axios";
 import AddJobView from "./AddJobView";
+import StaffProfileView from "./StaffProfileView";
 
 // ExportCSV Component to handle CSV generation
 const ExportCSV = ({ job, interestedStudents }) => {
@@ -35,38 +36,23 @@ const StaffDashboardView = () => {
   const [activeComponent, setActiveComponent] = useState("home");
   const [isOpen, setIsOpen] = useState(false);
   const [interestedStudents, setInterestedStudents] = useState({});
-  const [staffDetails, setStaffDetails] = useState({ email: "", name: "" });
+  const [staffDetails, setStaffDetails] = useState({ email: "", name: "", department: "" });
   const [loading, setLoading] = useState(true);
-
-  // Example job data (replace with API call if needed)
-  const jobs = [
-    {
-      title: "Software Engineer",
-      company: "Tech Corp",
-      status: "Registered",
-      jobLink: "https://example.com",
-    },
-    {
-      title: "Frontend Developer",
-      company: "Web Solutions",
-      status: "Open",
-      jobLink: "https://example.com",
-    },
-  ];
 
   // Fetch staff details on mount
   useEffect(() => {
     const fetchStaffDetails = async () => {
       try {
         const response = await axios.get("http://localhost:9999/staff", { withCredentials: true });
-        const { staff } = response.data; // Destructure 'staff' from response
+        const { staff } = response.data;
         setStaffDetails({
           email: staff.email || "",
           name: staff.name || "",
+          department: staff.department || "", // Add department
         });
       } catch (error) {
         console.error("Error fetching staff details:", error);
-        setStaffDetails({ email: "staff@example.com", name: "" }); // Fallback
+        setStaffDetails({ email: "staff@example.com", name: "", department: "Unknown" }); // Fallback
       } finally {
         setLoading(false);
       }
@@ -124,16 +110,15 @@ const StaffDashboardView = () => {
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-black">Welcome Back, Staff!</h2>
               <div className="flex items-center mt-2">
-                <div className="w-9 h-9 mt-1 rounded-full bg-orange-500 text-white flex items-center justify-center mr-2">
-                  {firstLetter || "?"}
+                <div className="w-8 h-8 mt-1 rounded-full bg-orange-500 text-white flex items-center justify-center mr-2 overflow-hidden">
+                  <span className="text-lg">{firstLetter || "?"}</span>
                 </div>
                 <div className="flex flex-col">
                   <span className="text-base text-gray-600">{staffDetails.email || "Unknown"}</span>
-                  <span className="text-xs text-gray-600">Staff</span>
+                  <span className="text-xs text-gray-600">{staffDetails.department || "Unknown"} Staff</span>
                 </div>
               </div>
             </div>
-
             {/* Sidebar Navigation */}
             <div
               className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${
@@ -240,7 +225,6 @@ const HomeComponent = () => (
   </div>
 );
 
-
 // Help Component
 const StaffHelpView = () => (
   <div className="bg-white p-6 rounded-lg shadow">
@@ -248,78 +232,5 @@ const StaffHelpView = () => (
     <p>If you need help, here are some resources for you.</p>
   </div>
 );
-
-// Staff Profile View Component with Password Update
-const StaffProfileView = ({ staffDetails }) => {
-  const [oldPassword, setOldPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
-
-  const handlePasswordUpdate = async (e) => {
-    e.preventDefault();
-    setMessage("");
-    setError("");
-
-    try {
-      const response = await axios.patch(
-        "http://localhost:9999/staff/updatepassword",
-        { oldPassword, newPassword },
-        { withCredentials: true }
-      );
-      setMessage(response.data.message);
-      setOldPassword("");
-      setNewPassword("");
-    } catch (err) {
-      setError(err.response?.data?.error || "Failed to update password");
-    }
-  };
-
-  return (
-    <div className="bg-white p-6 rounded-lg shadow">
-      <h2 className="text-2xl font-bold mb-4">Staff Profile</h2>
-      <div className="mb-6">
-        <p className="text-gray-600">
-          <strong>Email:</strong> {staffDetails.email || "Unknown"}
-        </p>
-        <p className="text-gray-600">
-          <strong>Name:</strong> {staffDetails.name || "Not set"}
-        </p>
-      </div>
-
-      <h3 className="text-xl font-semibold mb-2">Update Password</h3>
-      <form onSubmit={handlePasswordUpdate}>
-        <div className="mb-4">
-          <input
-            type="password"
-            placeholder="Old Password"
-            value={oldPassword}
-            onChange={(e) => setOldPassword(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded"
-            required
-          />
-        </div>
-        <div className="mb-4">
-          <input
-            type="password"
-            placeholder="New Password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded"
-            required
-          />
-        </div>
-        {message && <p className="text-green-500 mb-4">{message}</p>}
-        {error && <p className="text-red-500 mb-4">{error}</p>}
-        <button
-          type="submit"
-          className="w-full p-3 bg-orange-500 text-white rounded hover:bg-orange-600"
-        >
-          Update Password
-        </button>
-      </form>
-    </div>
-  );
-};
 
 export default StaffDashboardView;

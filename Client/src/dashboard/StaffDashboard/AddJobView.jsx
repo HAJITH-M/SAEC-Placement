@@ -1,322 +1,237 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
 const AddJobView = () => {
-  const navigate = useNavigate();
-
-  const getCurrentDateTime = () => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
-  };
-
-  const [formData, setFormData] = useState({
-    batch: '',
-    expiration: getCurrentDateTime(),
-    companyName: '',
-    driveDate: '',
-    jobDescription: '',
-    department: '',
+  const [jobForm, setJobForm] = useState({
+    batch: "",
+    jobDescription: "",
+    department: "",
+    driveLink: "",
+    expiration: "",
+    companyName: "",
+    driveDate: "",
   });
-  const [jobs, setJobs] = useState([]);
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [fetchLoading, setFetchLoading] = useState(false);
 
-  const fetchJobs = async () => {
-    setFetchLoading(true);
-    try {
-      const response = await axios.get('http://localhost:9999/staff', {
-        withCredentials: true,
-      });
-      console.log('Fetched staff data:', response.data);
-      setJobs(response.data.drives || []);
-    } catch (err) {
-      console.error('Error fetching jobs:', err);
-      if (err.response?.status === 401) {
-        setError('Unauthorized: Please log in');
-        navigate('/staff/login');
-      } else {
-        setError('Failed to fetch jobs');
-      }
-    } finally {
-      setFetchLoading(false);
-    }
-  };
+  const [jobs, setJobs] = useState([]);
+  const [filteredStudents, setFilteredStudents] = useState([]);
+  const [selectedJobId, setSelectedJobId] = useState(null);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+
+  const API_BASE_URL = "http://localhost:9999";
 
   useEffect(() => {
     fetchJobs();
-  }, [navigate]);
+  }, []);
 
-  const handleChange = (e) => {
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setJobForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleCreateJob = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
-
     try {
-      let departments = formData.department
-        ? formData.department
-            .split(',')
-            .map((d) => d.trim())
-            .filter((d) => d.length > 0)
-        : [];
-
-      if (departments.length === 0 && formData.department && formData.department.trim()) {
-        departments.push(formData.department.trim());
-      }
-
-      const jobData = [{
-        batch: formData.batch,
-        expiration: new Date(formData.expiration).toISOString(),
-        companyName: formData.companyName,
-        driveDate: formData.driveDate,
-        jobDescription: formData.jobDescription,
-        department: departments,
-      }];
-
-      console.log('Sending job data:', JSON.stringify(jobData, null, 2));
-
       const response = await axios.post(
-        'http://localhost:9999/staff/createjobs',
-        jobData,
-        {
-          withCredentials: true,
-          headers: { 'Content-Type': 'application/json' },
-        }
+        `${API_BASE_URL}/staff/createjobs`,
+        [{
+          ...jobForm,
+          department: jobForm.department ? [jobForm.department] : [],
+        }],
+        { withCredentials: true }
       );
-
-      console.log('Response received:', response.data);
-
-      if (response.status === 200 && response.data.length > 0) {
-        alert('Job posted successfully!');
-        setFormData({
-          batch: '',
-          expiration: getCurrentDateTime(),
-          companyName: '',
-          driveDate: '',
-          jobDescription: '',
-          department: '',
-        });
-        await fetchJobs();
-      } else {
-        throw new Error('No jobs were created');
-      }
+      setSuccess("Job created successfully!");
+      setError(null);
+      setJobForm({
+        batch: "",
+        jobDescription: "",
+        department: "",
+        driveLink: "",
+        expiration: "",
+        companyName: "",
+        driveDate: "",
+      });
+      fetchJobs();
     } catch (err) {
-      console.error('Full error:', err);
-      if (err.response) {
-        console.error('Response error:', err.response.data, err.response.status);
-        if (err.response.status === 401) {
-          setError('Unauthorized: Please log in');
-          navigate('/staff/login');
-        } else if (err.response.status === 403) {
-          setError('Forbidden: Insufficient permissions');
-        } else {
-          setError(err.response.data?.error || 'Failed to post job');
-        }
-      } else if (err.request) {
-        setError('Network error: Could not reach the server');
-      } else {
-        setError('Error: ' + err.message);
-      }
-    } finally {
-      setLoading(false);
+      setError(err.response?.data?.error || "Failed to create job");
+      setSuccess(null);
+    }
+  };
+
+  const fetchJobs = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/staff/displaydrives`, {
+        withCredentials: true,
+      });
+      setJobs(response.data.drives_list || []);
+      setError(null);
+    } catch (err) {
+      setError(err.response?.data?.error || "Failed to fetch jobs");
     }
   };
 
   const handleRemoveJob = async (jobId) => {
-    if (!window.confirm('Are you sure you want to delete this job?')) return;
-
-    console.log('Attempting to remove job with ID:', jobId, 'Type:', typeof jobId);
-
     try {
-      const response = await axios.delete(`http://localhost:9999/staff/job/${jobId}`, {
+      await axios.delete(`${API_BASE_URL}/staff/job/${jobId}`, {
         withCredentials: true,
       });
-
-      console.log('Delete response:', response.status, response.data);
-
-      if (response.status === 204) {
-        alert('Job removed successfully!');
-        await fetchJobs();
-      } else {
-        throw new Error('Failed to remove job - unexpected status');
+      setSuccess(`Job with ID ${jobId} removed successfully!`);
+      setError(null);
+      fetchJobs();
+      if (selectedJobId === jobId) {
+        setSelectedJobId(null);
+        setFilteredStudents([]);
       }
     } catch (err) {
-      console.error('Error removing job:', err);
-      if (err.response) {
-        console.error('Response error:', err.response.status, err.response.data);
-        if (err.response.status === 401) {
-          setError('Unauthorized: Please log in');
-          navigate('/staff/login');
-        } else if (err.response.status === 404) {
-          setError('Job not found');
-          await fetchJobs();
-        } else if (err.response.status === 422) {
-          const errorMsg = err.response.data?.errors?.[0]?.message || 'Invalid job ID format';
-          setError(`Failed to remove job: ${errorMsg}`);
-        } else {
-          setError(err.response.data?.errors?.[0]?.message || 'Failed to remove job');
-        }
-      } else if (err.request) {
-        setError('Network error: Could not reach the server');
-      } else {
-        setError('Error: ' + err.message);
-      }
+      setError(err.response?.data?.error || "Failed to remove job");
+      setSuccess(null);
     }
   };
 
+  const fetchRegisteredStudents = async (driveId) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/staff/registeredstudents/${driveId}`, {
+        withCredentials: true,
+      });
+      const students = response.data.registered_students || [];
+      setFilteredStudents(students);
+      setError(null);
+    } catch (err) {
+      console.error("Fetch registered students error:", err.response);
+      setError(err.response?.status === 404 ? "No students registered for this job" : err.response?.data?.error || "Failed to fetch registered students");
+      setFilteredStudents([]);
+    }
+  };
+
+  const handleJobSelect = (jobId) => {
+    setSelectedJobId(jobId);
+    fetchRegisteredStudents(jobId);
+  };
+
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h2 className="text-2xl font-bold mb-6">Post New Job</h2>
+    <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
+      <h1>Staff Job Management</h1>
 
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {error}
-        </div>
-      )}
+      {/* Job Creation Form */}
+      <section>
+        <h2>Create a New Job Post</h2>
+        <form onSubmit={handleCreateJob} style={{ marginBottom: "20px" }}>
+          <div style={{ marginBottom: "10px" }}>
+            <label>Batch: </label>
+            <input type="text" name="batch" value={jobForm.batch} onChange={handleInputChange} required />
+          </div>
+          <div style={{ marginBottom: "10px" }}>
+            <label>Job Description: </label>
+            <input type="text" name="jobDescription" value={jobForm.jobDescription} onChange={handleInputChange} required />
+          </div>
+          <div style={{ marginBottom: "10px" }}>
+            <label>Department: </label>
+            <input type="text" name="department" value={jobForm.department} onChange={handleInputChange} />
+          </div>
+          <div style={{ marginBottom: "10px" }}>
+            <label>Drive Link: </label>
+            <input type="url" name="driveLink" value={jobForm.driveLink} onChange={handleInputChange} required />
+          </div>
+          <div style={{ marginBottom: "10px" }}>
+            <label>Expiration (mm/dd/yyyy HH:mm:ss): </label>
+            <input
+              type="text"
+              name="expiration"
+              value={jobForm.expiration}
+              onChange={handleInputChange}
+              placeholder="e.g., 12/31/2025 23:59:59"
+              required
+            />
+          </div>
+          <div style={{ marginBottom: "10px" }}>
+            <label>Company Name: </label>
+            <input type="text" name="companyName" value={jobForm.companyName} onChange={handleInputChange} required />
+          </div>
+          <div style={{ marginBottom: "10px" }}>
+            <label>Drive Date: </label>
+            <input type="date" name="driveDate" value={jobForm.driveDate} onChange={handleInputChange} required />
+          </div>
+          <button type="submit">Create Job</button>
+        </form>
+        {success && <p style={{ color: "green" }}>{success}</p>}
+        {error && <p style={{ color: "red" }}>{error}</p>}
+      </section>
 
-      <form onSubmit={handleSubmit} className="space-y-4 mb-8">
-        <div>
-          <label htmlFor="companyName" className="block mb-1">Company Name</label>
-          <input
-            type="text"
-            id="companyName"
-            name="companyName"
-            value={formData.companyName}
-            onChange={handleChange}
-            className="w-full p-2 border rounded"
-            required
-          />
-        </div>
+      {/* Job List */}
+      <section>
+        <h2>Job Posts</h2>
+        <button onClick={fetchJobs}>Refresh Job List</button>
+        {jobs.length > 0 ? (
+          <ul>
+            {jobs.map((job) => (
+              <li key={String(job.id)} style={{ marginBottom: "10px" }}>
+                <strong>{job.companyName || "N/A"}</strong> - {job.jobDescription || "No description"} (ID: {String(job.id)})
+                <button
+                  onClick={() => handleRemoveJob(String(job.id))}
+                  style={{ marginLeft: "10px", color: "red" }}
+                >
+                  Remove
+                </button>
+                <button
+                  onClick={() => handleJobSelect(String(job.id))}
+                  style={{ marginLeft: "10px", color: "blue" }}
+                >
+                  View Registered Students
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>No jobs available.</p>
+        )}
+      </section>
 
-        <div>
-          <label htmlFor="batch" className="block mb-1">Batch</label>
-          <input
-            type="text"
-            id="batch"
-            name="batch"
-            value={formData.batch}
-            onChange={handleChange}
-            className="w-full p-2 border rounded"
-            required
-          />
-        </div>
-
-        <div>
-          <label htmlFor="driveDate" className="block mb-1">Drive Date</label>
-          <input
-            type="date"
-            id="driveDate"
-            name="driveDate"
-            value={formData.driveDate}
-            onChange={handleChange}
-            className="w-full p-2 border rounded"
-            required
-          />
-        </div>
-
-        <div>
-          <label htmlFor="expiration" className="block mb-1">Expiration Date & Time</label>
-          <input
-            type="datetime-local"
-            id="expiration"
-            name="expiration"
-            value={formData.expiration}
-            onChange={handleChange}
-            className="w-full p-2 border rounded"
-            required
-          />
-        </div>
-
-        <div>
-          <label htmlFor="jobDescription" className="block mb-1">Job Description</label>
-          <textarea
-            id="jobDescription"
-            name="jobDescription"
-            value={formData.jobDescription}
-            onChange={handleChange}
-            className="w-full p-2 border rounded"
-            rows={4}
-            required
-          />
-        </div>
-
-        <div>
-          <label htmlFor="department" className="block mb-1">Department(s)</label>
-          <textarea
-            id="department"
-            name="department"
-            value={formData.department}
-            onChange={handleChange}
-            className="w-full p-2 border rounded"
-            rows={2}
-            placeholder="e.g., cse,it,eee or cse, it, eee"
-          />
-          <p className="text-sm text-gray-500 mt-1">Enter departments separated by commas (with or without spaces)</p>
-        </div>
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-gray-400"
-        >
-          {loading ? 'Posting...' : 'Post Job'}
-        </button>
-      </form>
-
-      <h2 className="text-2xl font-bold mb-4">Current Jobs</h2>
-      {fetchLoading ? (
-        <p>Loading jobs...</p>
-      ) : jobs.length === 0 ? (
-        <p>No jobs available.</p>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-white border">
+      {/* Registered Students for Selected Job */}
+      <section>
+        <h2>Registered Students {selectedJobId ? `for Job ID: ${selectedJobId}` : ""}</h2>
+        {filteredStudents.length > 0 ? (
+          <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "10px" }}>
             <thead>
               <tr>
-                <th className="py-2 px-4 border-b">Company Name</th>
-                <th className="py-2 px-4 border-b">Batch</th>
-                <th className="py-2 px-4 border-b">Drive Date</th>
-                <th className="py-2 px-4 border-b">Expiration</th>
-                <th className="py-2 px-4 border-b">Departments</th>
-                <th className="py-2 px-4 border-b">Actions</th>
+                <th style={{ border: "1px solid #ddd", padding: "8px" }}>Application ID</th>
+                <th style={{ border: "1px solid #ddd", padding: "8px" }}>Student Name</th>
+                <th style={{ border: "1px solid #ddd", padding: "8px" }}>Email</th>
+                <th style={{ border: "1px solid #ddd", padding: "8px" }}>Arrears</th>
+                <th style={{ border: "1px solid #ddd", padding: "8px" }}>CGPA</th>
+                <th style={{ border: "1px solid #ddd", padding: "8px" }}>Batch</th>
+                <th style={{ border: "1px solid #ddd", padding: "8px" }}>Department</th>
+                <th style={{ border: "1px solid #ddd", padding: "8px" }}>Placed Status</th>
+                <th style={{ border: "1px solid #ddd", padding: "8px" }}>Reg No</th>
+                <th style={{ border: "1px solid #ddd", padding: "8px" }}>Roll No</th>
+                <th style={{ border: "1px solid #ddd", padding: "8px" }}>Company Name</th>
+                <th style={{ border: "1px solid #ddd", padding: "8px" }}>Applied At</th>
               </tr>
             </thead>
             <tbody>
-              {jobs.map((job) => (
-                <tr key={job.id}>
-                  <td className="py-2 px-4 border-b">{job.companyName}</td>
-                  <td className="py-2 px-4 border-b">{job.batch}</td>
-                  <td className="py-2 px-4 border-b">{job.driveDate}</td>
-                  <td className="py-2 px-4 border-b">{new Date(job.expiration).toLocaleString()}</td>
-                  <td className="py-2 px-4 border-b">{Array.isArray(job.department) ? job.department.join(', ') : job.department}</td>
-                  <td className="py-2 px-4 border-b">
-                    <button
-                      onClick={() => handleRemoveJob(job.id)}
-                      className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
-                    >
-                      Remove
-                    </button>
-                  </td>
+              {filteredStudents.map((student) => (
+                <tr key={String(student.applicationId)}>
+                  <td style={{ border: "1px solid #ddd", padding: "8px" }}>{String(student.applicationId) || "N/A"}</td>
+                  <td style={{ border: "1px solid #ddd", padding: "8px" }}>{student.studentName || "N/A"}</td>
+                  <td style={{ border: "1px solid #ddd", padding: "8px" }}>{student.email || "N/A"}</td>
+                  <td style={{ border: "1px solid #ddd", padding: "8px" }}>{student.arrears ?? "N/A"}</td>
+                  <td style={{ border: "1px solid #ddd", padding: "8px" }}>{student.cgpa ?? "N/A"}</td>
+                  <td style={{ border: "1px solid #ddd", padding: "8px" }}>{student.batch || "N/A"}</td>
+                  <td style={{ border: "1px solid #ddd", padding: "8px" }}>{student.department || "N/A"}</td>
+                  <td style={{ border: "1px solid #ddd", padding: "8px" }}>{student.placedStatus || "N/A"}</td>
+                  <td style={{ border: "1px solid #ddd", padding: "8px" }}>{student.regNo || "N/A"}</td>
+                  <td style={{ border: "1px solid #ddd", padding: "8px" }}>{student.rollNo || "N/A"}</td>
+                  <td style={{ border: "1px solid #ddd", padding: "8px" }}>{student.companyName || "N/A"}</td>
+                  <td style={{ border: "1px solid #ddd", padding: "8px" }}>{new Date(student.appliedAt).toLocaleString() || "N/A"}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </div>
-      )}
+        ) : selectedJobId ? (
+          <p>No students registered for this job.</p>
+        ) : (
+          <p>Select a job to view registered students.</p>
+        )}
+      </section>
     </div>
   );
 };
