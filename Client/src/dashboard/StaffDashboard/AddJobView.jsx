@@ -5,7 +5,7 @@ const AddJobView = () => {
   const [jobForm, setJobForm] = useState({
     batch: "",
     jobDescription: "",
-    department: "",
+    department: [],
     driveLink: "",
     expiration: "",
     companyName: "",
@@ -17,6 +17,7 @@ const AddJobView = () => {
   const [selectedJobId, setSelectedJobId] = useState(null);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const API_BASE_URL = "http://localhost:9999";
 
@@ -26,26 +27,61 @@ const AddJobView = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setJobForm((prev) => ({ ...prev, [name]: value }));
+    if (name === "department") {
+      setJobForm((prev) => ({ 
+        ...prev, 
+        [name]: value.split(",").map(dept => dept.trim()) 
+      }));
+    } else {
+      setJobForm((prev) => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const formatDateForBackend = (dateStr, includeTime = false) => {
+    try {
+      const parts = dateStr.split(' ');
+      const dateParts = parts[0].split('/');
+      if (dateParts.length !== 3) throw new Error('Invalid date format');
+      const formattedDate = `${dateParts[2]}-${dateParts[0].padStart(2, '0')}-${dateParts[1].padStart(2, '0')}`;
+      if (includeTime && parts[1]) {
+        const timeParts = parts[1].split(':');
+        if (timeParts.length !== 3) throw new Error('Invalid time format');
+        return `${formattedDate} ${parts[1]}`;
+      }
+      return formattedDate;
+    } catch (err) {
+      console.error('Date formatting error:', err.message);
+      return dateStr;
+    }
   };
 
   const handleCreateJob = async (e) => {
     e.preventDefault();
-    try {
-      const response = await axios.post(
-        `${API_BASE_URL}/staff/createjobs`,
-        [{
-          ...jobForm,
-          department: jobForm.department ? [jobForm.department] : [],
-        }],
-        { withCredentials: true }
-      );
+  try {
+    setLoading(true);
+    const formattedData = {
+      ...jobForm,
+      driveDate: formatDateForBackend(jobForm.driveDate),
+      expiration: formatDateForBackend(jobForm.expiration, true),
+    };
+    console.log('Raw jobForm.department:', jobForm.department);
+    console.log('Formatted data:', formattedData);
+    console.log('Full payload:', [formattedData]);
+    
+    const response = await axios.post(
+      `${API_BASE_URL}/staff/createjobs`,
+      [formattedData],
+      { withCredentials: true }
+    );
+
+
+      console.log('Create Job Response:', response.data);
       setSuccess("Job created successfully!");
       setError(null);
       setJobForm({
         batch: "",
         jobDescription: "",
-        department: "",
+        department: [],
         driveLink: "",
         expiration: "",
         companyName: "",
@@ -53,13 +89,20 @@ const AddJobView = () => {
       });
       fetchJobs();
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to create job");
+      console.error('Create Job Error:', err.response?.data);
+      const errorMsg = err.response?.data?.errors
+        ? err.response.data.errors.map(e => `${e.path}: ${e.message}`).join(', ')
+        : err.response?.data?.error || err.message;
+      setError('Failed to create job: ' + errorMsg);
       setSuccess(null);
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchJobs = async () => {
     try {
+      setLoading(true);
       const response = await axios.get(`${API_BASE_URL}/staff/displaydrives`, {
         withCredentials: true,
       });
@@ -67,11 +110,14 @@ const AddJobView = () => {
       setError(null);
     } catch (err) {
       setError(err.response?.data?.error || "Failed to fetch jobs");
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleRemoveJob = async (jobId) => {
     try {
+      setLoading(true);
       await axios.delete(`${API_BASE_URL}/staff/job/${jobId}`, {
         withCredentials: true,
       });
@@ -85,11 +131,14 @@ const AddJobView = () => {
     } catch (err) {
       setError(err.response?.data?.error || "Failed to remove job");
       setSuccess(null);
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchRegisteredStudents = async (driveId) => {
     try {
+      setLoading(true);
       const response = await axios.get(`${API_BASE_URL}/staff/registeredstudents/${driveId}`, {
         withCredentials: true,
       });
@@ -100,6 +149,8 @@ const AddJobView = () => {
       console.error("Fetch registered students error:", err.response);
       setError(err.response?.status === 404 ? "No students registered for this job" : err.response?.data?.error || "Failed to fetch registered students");
       setFilteredStudents([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -118,22 +169,48 @@ const AddJobView = () => {
         <form onSubmit={handleCreateJob} style={{ marginBottom: "20px" }}>
           <div style={{ marginBottom: "10px" }}>
             <label>Batch: </label>
-            <input type="text" name="batch" value={jobForm.batch} onChange={handleInputChange} required />
+            <input 
+              type="text" 
+              name="batch" 
+              value={jobForm.batch} 
+              onChange={handleInputChange} 
+              required 
+              placeholder="e.g., 2025"
+            />
           </div>
           <div style={{ marginBottom: "10px" }}>
             <label>Job Description: </label>
-            <input type="text" name="jobDescription" value={jobForm.jobDescription} onChange={handleInputChange} required />
+            <input 
+              type="text" 
+              name="jobDescription" 
+              value={jobForm.jobDescription} 
+              onChange={handleInputChange} 
+              required 
+            />
           </div>
           <div style={{ marginBottom: "10px" }}>
-            <label>Department: </label>
-            <input type="text" name="department" value={jobForm.department} onChange={handleInputChange} />
+            <label>Department (comma-separated): </label>
+            <input 
+              type="text" 
+              name="department" 
+              value={jobForm.department.join(", ")} 
+              onChange={handleInputChange}
+              placeholder="e.g., Computer Science, IT"
+            />
           </div>
           <div style={{ marginBottom: "10px" }}>
             <label>Drive Link: </label>
-            <input type="url" name="driveLink" value={jobForm.driveLink} onChange={handleInputChange} required />
+            <input 
+              type="url" 
+              name="driveLink" 
+              value={jobForm.driveLink} 
+              onChange={handleInputChange} 
+              required 
+              placeholder="e.g., https://example.com/drive"
+            />
           </div>
           <div style={{ marginBottom: "10px" }}>
-            <label>Expiration (mm/dd/yyyy HH:mm:ss): </label>
+            <label>Expiration (MM/DD/YYYY HH:MM:SS): </label>
             <input
               type="text"
               name="expiration"
@@ -145,22 +222,40 @@ const AddJobView = () => {
           </div>
           <div style={{ marginBottom: "10px" }}>
             <label>Company Name: </label>
-            <input type="text" name="companyName" value={jobForm.companyName} onChange={handleInputChange} required />
+            <input 
+              type="text" 
+              name="companyName" 
+              value={jobForm.companyName} 
+              onChange={handleInputChange} 
+              required 
+            />
           </div>
           <div style={{ marginBottom: "10px" }}>
-            <label>Drive Date: </label>
-            <input type="date" name="driveDate" value={jobForm.driveDate} onChange={handleInputChange} required />
+            <label>Drive Date (MM/DD/YYYY): </label>
+            <input
+              type="text"
+              name="driveDate"
+              value={jobForm.driveDate}
+              onChange={handleInputChange}
+              required
+              placeholder="e.g., 12/31/2025"
+            />
           </div>
-          <button type="submit">Create Job</button>
+          <button type="submit" disabled={loading}>
+            {loading ? 'Creating...' : 'Create Job'}
+          </button>
         </form>
         {success && <p style={{ color: "green" }}>{success}</p>}
         {error && <p style={{ color: "red" }}>{error}</p>}
+        {loading && <p style={{ color: "gray" }}>Loading...</p>}
       </section>
 
-      {/* Job List */}
+      {/* Rest of the component remains unchanged */}
       <section>
         <h2>Job Posts</h2>
-        <button onClick={fetchJobs}>Refresh Job List</button>
+        <button onClick={fetchJobs} disabled={loading}>
+          {loading ? 'Refreshing...' : 'Refresh Job List'}
+        </button>
         {jobs.length > 0 ? (
           <ul>
             {jobs.map((job) => (
@@ -169,12 +264,14 @@ const AddJobView = () => {
                 <button
                   onClick={() => handleRemoveJob(String(job.id))}
                   style={{ marginLeft: "10px", color: "red" }}
+                  disabled={loading}
                 >
                   Remove
                 </button>
                 <button
                   onClick={() => handleJobSelect(String(job.id))}
                   style={{ marginLeft: "10px", color: "blue" }}
+                  disabled={loading}
                 >
                   View Registered Students
                 </button>
@@ -186,7 +283,6 @@ const AddJobView = () => {
         )}
       </section>
 
-      {/* Registered Students for Selected Job */}
       <section>
         <h2>Registered Students {selectedJobId ? `for Job ID: ${selectedJobId}` : ""}</h2>
         {filteredStudents.length > 0 ? (

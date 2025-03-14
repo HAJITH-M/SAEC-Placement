@@ -43,31 +43,39 @@ const StudentProfileView = () => {
     fetchStudentData();
   }, []);
 
-const handleEdit = async (field) => {
-  if (editing[field]) {
-    try {
-      const updateData = {
-        [field]: studentData[field] === 'N/A' ? null : studentData[field], // Convert 'N/A' back to null for backend
-      };
-
-      const response = await axios.patch('http://localhost:9999/student/resume', updateData, {
-        withCredentials: true,
-      });
-      console.log('Update Response:', response.data);
-
-      setStudentData((prev) => ({
-        ...prev,
-        [field]: response.data[field] || studentData[field],
-      }));
-    } catch (err) {
-      console.error('Error updating field:', err.response?.data || err.message);
-      setError(`Failed to update ${field}. Please try again.`);
-      return;
+  const handleEdit = async (field) => {
+    if (editing[field]) {
+      try {
+        let value = studentData[field] === 'N/A' ? null : studentData[field];
+        if (['tenthMark', 'twelfthMark'].includes(field) && value) {
+          value = parseFloat(value.replace('%', '')) || null;
+        } else if (['cgpa', 'noOfArrears'].includes(field) && value) {
+          value = parseFloat(value) || null;
+        }
+  
+        const updateData = {
+          [field === 'emailId' ? 'email' : field]: value,
+        };
+  
+        console.log('Sending update:', updateData);
+  
+        const response = await axios.patch('http://localhost:9999/student/resume', updateData, {
+          withCredentials: true,
+        });
+        console.log('Update Response:', response.data);
+  
+        setStudentData((prev) => ({
+          ...prev,
+          [field]: response.data[field] || studentData[field],
+        }));
+      } catch (err) {
+        console.error('Error updating field:', err.response?.data || err.message);
+        setError(`Failed to update ${field}: ${err.response?.data?.error || 'Unknown error'}`);
+        return;
+      }
     }
-  }
-  setEditing((prev) => ({ ...prev, [field]: !prev[field] }));
-};
-
+    setEditing((prev) => ({ ...prev, [field]: !prev[field] }));
+  };
   const handleChange = (field, value) => {
     setStudentData((prev) => ({ ...prev, [field]: value }));
   };
