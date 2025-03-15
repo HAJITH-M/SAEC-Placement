@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Home, User, FileText, HelpCircle, Menu, X, Plus } from "lucide-react";
 import { CSVLink } from "react-csv";
-import AddStudentView from "./AddStudentView";
 import axios from "axios";
-import AddJobView from "./AddJobView";
 import StaffProfileView from "./StaffProfileView";
+import StaffStudentAddView from "./StaffStudentAddView";
+import StaffStudentSeeView from "./StaffStudentSeeView";
+import StaffJobAddView from "./StaffJobAddView";
+import StaffSeeRegistrations from "./StaffSeeRegistrations"; // Corrected import
 
 const ExportCSV = ({ job, interestedStudents }) => {
   const prepareCsvData = () => {
@@ -69,13 +71,15 @@ const StaffDashboardView = () => {
       case "home":
         return <HomeComponent />;
       case "addStudent":
-        return <AddStudentView />;
+        return <StaffStudentAddView />;
       case "addJob":
-        return <AddJobView />;
+        return <StaffJobAddView />;
+      case "jobRegisteredStudents":
+        return <StaffSeeRegistrations />;
       case "profile":
         return <StaffProfileView staffDetails={staffDetails} />;
-      case "help":
-        return <StaffHelpView />;
+      case "viewStudents":
+        return <StaffStudentSeeView />;
       default:
         return <HomeComponent />;
     }
@@ -148,7 +152,20 @@ const StaffDashboardView = () => {
               }}
             >
               <FileText size={20} className={activeComponent === "addJob" ? "text-white" : "text-blue-500"} />
-              <span>Add Job Opportunity</span>
+              <span>Post Job</span>
+            </div>
+
+            <div
+              className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${
+                activeComponent === "jobRegisteredStudents" ? "bg-orange-500 text-white" : "text-black"
+              }`}
+              onClick={() => {
+                setActiveComponent("jobRegisteredStudents");
+                setIsOpen(false);
+              }}
+            >
+              <FileText size={20} className={activeComponent === "jobRegisteredStudents" ? "text-white" : "text-blue-500"} />
+              <span>Registered Students</span>
             </div>
 
             <div
@@ -166,15 +183,15 @@ const StaffDashboardView = () => {
 
             <div
               className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${
-                activeComponent === "help" ? "bg-orange-500 text-white" : "text-black"
+                activeComponent === "viewStudents" ? "bg-orange-500 text-white" : "text-black"
               }`}
               onClick={() => {
-                setActiveComponent("help");
+                setActiveComponent("viewStudents");
                 setIsOpen(false);
               }}
             >
-              <HelpCircle size={20} className={activeComponent === "help" ? "text-white" : "text-blue-500"} />
-              <span>Help</span>
+              <HelpCircle size={20} className={activeComponent === "viewStudents" ? "text-white" : "text-blue-500"} />
+              <span>View Students</span>
             </div>
           </div>
         </div>
@@ -210,13 +227,6 @@ const HomeComponent = () => (
   <div className="bg-white p-6 rounded-lg shadow">
     <h2 className="text-2xl font-bold mb-4">Home</h2>
     <p>Welcome to the staff dashboard. Use the menu to manage students and job opportunities.</p>
-  </div>
-);
-
-const StaffHelpView = () => (
-  <div className="bg-white p-6 rounded-lg shadow">
-    <h2 className="text-2xl font-bold mb-4">Help & Support</h2>
-    <p>If you need help, here are some resources for you.</p>
   </div>
 );
 

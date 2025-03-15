@@ -26,3 +26,9 @@ export const loginSchema = z.object({
     ),
   password: z.string().min(8, 'Password must be at least 8 characters'),
 });
+
+
+// New registration schema extending loginSchema
+export const registerSchema = loginSchema.extend({
+  staffEmail: z.string().email('Invalid staff email address').min(1, 'Staff email is required'),
+});

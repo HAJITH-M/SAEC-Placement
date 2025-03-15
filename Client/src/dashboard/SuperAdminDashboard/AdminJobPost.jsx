@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 const BASE_URL = 'http://localhost:9999';
+const GEMINI_API_KEY = 'AIzaSyAKjPqMsw7-5u26tkvnXEyAtIYyzrCxbQo'; // Replace with your real key from Google AI Studio
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
-const JobManagementView = () => {
-  const [jobs, setJobs] = useState([]);
+const AdminJobPost = () => {
   const [formData, setFormData] = useState({
     companyName: '',
     jobDescription: '',
@@ -14,36 +15,14 @@ const JobManagementView = () => {
     department: [],
     driveLink: '',
   });
-
-  const [expandedJobId, setExpandedJobId] = useState(null);
+  const [rawDescription, setRawDescription] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
-  useEffect(() => {
-    fetchJobs();
-  }, []);
-
-  const fetchJobs = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(`${BASE_URL}/superadmin/jobs-with-students`, {
-        withCredentials: true,
-      });
-      console.log('API Response:', response.data);
-      setJobs(Array.isArray(response.data.jobs) ? response.data.jobs : []);
-    } catch (err) {
-      console.error('Fetch Jobs Error:', err);
-      setError('Failed to fetch jobs: ' + (err.response?.data?.error || err.message));
-      setJobs([]);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     if (name === 'department') {
-      setFormData({ ...formData, [name]: value.split(',').map(d => d.trim()) });
+      setFormData({ ...formData, [name]: value.split(',').map(d => d.trim()).filter(d => d) });
     } else {
       setFormData({ ...formData, [name]: value });
     }
@@ -64,6 +43,108 @@ const JobManagementView = () => {
     } catch (err) {
       console.error('Date formatting error:', err.message);
       return dateStr;
+    }
+  };
+
+  const analyzeJobDescription = async (description) => {
+    if (!description) {
+      setError(null);
+      setFormData({
+        companyName: '',
+        jobDescription: '',
+        driveDate: '',
+        expiration: '',
+        batch: '',
+        department: [],
+        driveLink: '',
+      });
+      return;
+    }
+    try {
+      setLoading(true);
+
+      const prompt = `
+        Extract the following fields from the job description below and return them in JSON format. Ensure each field is identified accurately and separately:
+        - companyName (string, the name of the company)
+        - jobDescription (string, the job role or summary, excluding other details)
+        - driveDate (string, format MM/DD/YYYY, the date of the job drive)
+        - expiration (string, format MM/DD/YYYY HH:MM:SS, the application deadline)
+        - batch (string, e.g., "2025", the batch year)
+        - department (array of strings, list of departments like "Computer Science")
+        - driveLink (string, URL, the link to the drive or application)
+
+        If a field is not present, return an empty string or empty array as appropriate. Do not combine fields unless specified.
+
+        Job Description:
+        ${description}
+      `;
+
+      const response = await axios.post(
+        `${GEMINI_API_URL}?key=${GEMINI_API_KEY}`,
+        {
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { response_mime_type: 'application/json' },
+        },
+        {
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+
+      const aiDataText = response.data.candidates[0].content.parts[0].text;
+      console.log('Raw Gemini Response:', aiDataText);
+      
+      let parsedData;
+      
+      try {
+        parsedData = JSON.parse(aiDataText);
+      } catch (parseError) {
+        try {
+          const cleanedText = aiDataText.replace(/|/g, '').trim();
+          parsedData = JSON.parse(cleanedText);
+        } catch (parseError2) {
+          const jsonMatch = aiDataText.match(/(\{.*\}|\[.*\])/s);
+          if (jsonMatch) {
+            parsedData = JSON.parse(jsonMatch[0]);
+          } else {
+            throw new Error('Could not parse JSON response');
+          }
+        }
+      }
+      
+      console.log('Parsed data:', parsedData);
+      
+      let aiData;
+      if (Array.isArray(parsedData)) {
+        aiData = parsedData[0] || {};
+      } else {
+        aiData = parsedData;
+      }
+      
+      console.log('Data to use for form:', aiData);
+      
+      setFormData({
+        companyName: aiData.companyName || '',
+        jobDescription: aiData.jobDescription || '',
+        driveDate: aiData.driveDate || '',
+        expiration: aiData.expiration || '',
+        batch: aiData.batch || '',
+        department: Array.isArray(aiData.department) ? aiData.department : [],
+        driveLink: aiData.driveLink || '',
+      });
+      
+      setError(null);
+    } catch (err) {
+      const errorMsg = err.response?.data?.error?.message || err.message;
+      console.error('Gemini API Error:', err.response?.data || err);
+      setError(`Failed to analyze job description: ${errorMsg}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAutoFill = () => {
+    if (rawDescription.trim()) {
+      analyzeJobDescription(rawDescription);
     }
   };
 
@@ -92,7 +173,9 @@ const JobManagementView = () => {
         department: [],
         driveLink: '',
       });
-      fetchJobs();
+      setRawDescription('');
+      setError(null);
+      alert('Job created successfully!');
     } catch (err) {
       console.error('Create Job Error:', err.response?.data);
       const errorMsg = err.response?.data?.errors
@@ -104,29 +187,31 @@ const JobManagementView = () => {
     }
   };
 
-  const handleDelete = async (jobId) => {
-    try {
-      setLoading(true);
-      await axios.delete(`${BASE_URL}/superadmin/job/${jobId}`, {
-        withCredentials: true,
-      });
-      fetchJobs();
-    } catch (err) {
-      setError('Failed to delete job: ' + (err.response?.data?.error || err.message));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const toggleStudentList = (jobId) => {
-    setExpandedJobId(expandedJobId === jobId ? null : jobId);
-  };
-
   return (
     <div className="container mx-auto p-4">
-      {/* Job Creation Form */}
       <div className="mb-8 bg-white p-6 rounded-lg shadow">
         <h2 className="text-2xl font-bold mb-4">Create New Job</h2>
+        {error && <div className="text-red-500 mb-4">{error}</div>}
+        
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700">Paste Job Description for AI Analysis</label>
+          <textarea
+            value={rawDescription}
+            onChange={(e) => setRawDescription(e.target.value)}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+            placeholder="Paste the full job description here..."
+            rows={5}
+          />
+          <button
+            onClick={handleAutoFill}
+            disabled={loading || !rawDescription.trim()}
+            className="mt-2 py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400"
+          >
+            {loading ? 'Analyzing...' : 'Auto Fill'}
+          </button>
+          {loading && <div className="mt-2 text-sm text-gray-500">Analyzing job description...</div>}
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Company Name</label>
@@ -147,6 +232,7 @@ const JobManagementView = () => {
               onChange={handleInputChange}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
               required
+              rows={3}
             />
           </div>
           <div>
@@ -218,96 +304,8 @@ const JobManagementView = () => {
           </button>
         </form>
       </div>
-
-      {/* Jobs List */}
-      <div className="bg-white p-6 rounded-lg shadow">
-        <h2 className="text-2xl font-bold mb-4">Job Listings</h2>
-        {error && <div className="text-red-500 mb-4">{error}</div>}
-        {loading && <div className="text-gray-500 mb-4">Loading...</div>}
-        {!loading && jobs.length === 0 && (
-          <div className="text-gray-500 mb-4">No jobs available</div>
-        )}
-        <div className="space-y-4">
-          {jobs && jobs.map((job) => (
-            <div key={job.jobId} className="border p-4 rounded-md">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h3 className="text-lg font-semibold">{job.companyName}</h3>
-                  <p className="text-gray-600">{job.jobDescription}</p>
-                  <p className="text-sm text-gray-500">Drive Date: {job.driveDate}</p>
-                  <p className="text-sm text-gray-500">Batch: {job.batch}</p>
-                  <p className="text-sm text-gray-500">
-                    Departments: {job.department?.join(', ') || 'N/A'}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Drive Link: <a href={job.driveLink} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
-                      {job.driveLink || 'N/A'}
-                    </a>
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Registered Students: {job.students ? job.students.length : 0}
-                  </p>
-                </div>
-                <div className="space-x-2">
-                  <button
-                    onClick={() => toggleStudentList(job.jobId)}
-                    className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-                  >
-                    {expandedJobId === job.jobId ? 'Hide Students' : 'View Students'}
-                  </button>
-                  <button
-                    onClick={() => handleDelete(job.jobId)}
-                    className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-
-              {/* Expandable Students List */}
-              {expandedJobId === job.jobId && (
-                <div className="mt-4 border-t pt-4">
-                  <h4 className="font-semibold mb-2">Registered Students</h4>
-                  {job.students && job.students.length > 0 ? (
-                    <table className="w-full">
-                      <thead>
-                        <tr className="bg-gray-100">
-                          <th className="p-2 text-left">Name</th>
-                          <th className="p-2 text-left">Email</th>
-                          <th className="p-2 text-left">Batch</th>
-                          <th className="p-2 text-left">Department</th>
-                          <th className="p-2 text-left">CGPA</th>
-                          <th className="p-2 text-left">Phone Number</th>
-                          <th className="p-2 text-left">Arrears</th>
-                          <th className="p-2 text-left">Applied At</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {job.students.map((student) => (
-                          <tr key={student.applicationId} className="border-t">
-                            <td className="p-2">{student.studentName || 'N/A'}</td>
-                            <td className="p-2">{student.email || 'N/A'}</td>
-                            <td className="p-2">{student.batch || 'N/A'}</td>
-                            <td className="p-2">{student.department || 'N/A'}</td>
-                            <td className="p-2">{student.cgpa ?? 'N/A'}</td>
-                            <td className="p-2">{student.phoneNumber ?? 'N/A'}</td>
-                            <td className="p-2">{student.noOfArrears ?? 'N/A'}</td>
-                            <td className="p-2">{student.appliedAt || 'N/A'}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  ) : (
-                    <p>No students registered for this job yet.</p>
-                  )}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   );
 };
 
-export default JobManagementView;
+export default AdminJobPost;

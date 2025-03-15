@@ -6,6 +6,8 @@ import { useNavigate } from 'react-router-dom';
 import StudentManagementView from "./StudentManagementView";
 import StaffManagementView from "./StaffManagementView";
 import JobManagementView from "./JobManagementView";
+import AdminJobPost from "./AdminJobPost";
+import AdminJobRegistrations from "./AdminJobRegistrations";
 
 const SuperAdminDashboardView = () => {
   const [activeComponent, setActiveComponent] = useState("home");
@@ -86,10 +88,13 @@ const SuperAdminDashboardView = () => {
         return <StaffManagementView staff={staffList} onStaffCreated={fetchData} onStaffRemoved={fetchData} />;
       case "events":
         return <EventManagementView />;
-      case "jobs":
-        return <JobManagementView onJobCreated={fetchData} onJobRemoved={fetchData} />;
-      case "help":
-        return <HelpComponent />;
+
+
+      case "adminJobPost":
+        return <AdminJobPost/>
+      case "jobRegistrations":
+        return <AdminJobRegistrations/>
+
       default:
         return <HomeComponent staffCount={staffList.length} studentCount={studentList.length} />;
     }
@@ -117,7 +122,7 @@ const SuperAdminDashboardView = () => {
     <div className="flex relative">
       {/* Sidebar */}
       <div className={`
-        fixed lg:static lg:translate-x-0 z-40 w-96 h-screen bg-white text-orange-500 transform transition-transform duration-300 ease-in-out
+        fixed lg:static lg:translate-x-0 z-40 w-64 h-screen bg-white text-orange-500 transform transition-transform duration-300 ease-in-out
         ${isOpen ? "translate-x-0" : "-translate-x-full"}
       `}>
         <div className="p-4 h-full overflow-y-auto">
@@ -129,13 +134,13 @@ const SuperAdminDashboardView = () => {
           </button>
           <div className="space-y-4">
             <div className="mb-6">
-              <h2 className="text-2xl font-bold text-black">Super Admin Dashboard</h2>
+              <h2 className="text-2xl font-bold text-black">Welcome Admin!</h2>
               <div className="flex items-center mt-2">
-                <div className="w-9 h-9 mt-1 rounded-full bg-orange-500 text-white flex items-center justify-center mr-2">
+                <div className="flex-shrink-0 w-9 h-9 rounded-full bg-orange-500 text-white flex items-center justify-center">
                   {firstLetter}
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-base text-gray-600">{adminEmail || "No email available"}</span>
+                <div className="flex flex-col ml-2 min-w-0">
+                  <span className="text-sm text-gray-600 truncate w-full block" style={{ minWidth: "150px" }}>{adminEmail || "No email available"}</span>
                   <span className="text-xs text-gray-600">Super Admin</span>
                 </div>
               </div>
@@ -143,6 +148,14 @@ const SuperAdminDashboardView = () => {
             <div onClick={() => { setActiveComponent("home"); setIsOpen(false); }} className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${activeComponent === "home" ? "bg-orange-500 text-white" : "text-black"}`}>
               <Home size={20} className={activeComponent === "home" ? "text-white" : "text-orange-500"} />
               <span>Dashboard</span>
+            </div>
+            <div onClick={() => { setActiveComponent("adminJobPost"); setIsOpen(false); }} className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${activeComponent === "adminJobPost" ? "bg-orange-500 text-white" : "text-black"}`}>
+              <Calendar size={20} className={activeComponent === "adminJobPost" ? "text-white" : "text-orange-500"} />
+              <span>Post Job</span>
+            </div>
+            <div onClick={() => { setActiveComponent("jobRegistrations"); setIsOpen(false); }} className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${activeComponent === "jobRegistrations" ? "bg-orange-500 text-white" : "text-black"}`}>
+              <FileText size={20} className={activeComponent === "jobRegistrations" ? "text-white" : "text-orange-500"} />
+              <span>Job Registrations</span>
             </div>
             <div onClick={() => { setActiveComponent("students"); setIsOpen(false); }} className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${activeComponent === "students" ? "bg-orange-500 text-white" : "text-black"}`}>
               <User size={20} className={activeComponent === "students" ? "text-white" : "text-orange-500"} />
@@ -152,18 +165,12 @@ const SuperAdminDashboardView = () => {
               <Users size={20} className={activeComponent === "staff" ? "text-white" : "text-orange-500"} />
               <span>Staff Management</span>
             </div>
-            <div onClick={() => { setActiveComponent("jobs"); setIsOpen(false); }} className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${activeComponent === "jobs" ? "bg-orange-500 text-white" : "text-black"}`}>
-              <Calendar size={20} className={activeComponent === "jobs" ? "text-white" : "text-orange-500"} />
-              <span>Job Management</span>
-            </div>
+            
             <div onClick={() => { setActiveComponent("events"); setIsOpen(false); }} className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${activeComponent === "events" ? "bg-orange-500 text-white" : "text-black"}`}>
               <Calendar size={20} className={activeComponent === "events" ? "text-white" : "text-orange-500"} />
               <span>Event Management</span>
             </div>
-            <div onClick={() => { setActiveComponent("help"); setIsOpen(false); }} className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${activeComponent === "help" ? "bg-orange-500 text-white" : "text-black"}`}>
-              <HelpCircle size={20} className={activeComponent === "help" ? "text-white" : "text-orange-500"} />
-              <span>Help</span>
-            </div>
+            
             <div onClick={handleLogout} className="flex items-center space-x-2 p-2 cursor-pointer hover:bg-red-500 hover:text-white rounded transition-all duration-200 text-black">
               <span>Logout</span>
             </div>
@@ -212,11 +219,5 @@ const EventManagementView = () => (
   </div>
 );
 
-const HelpComponent = () => (
-  <div className="bg-white p-6 rounded-lg shadow">
-    <h2 className="text-2xl font-bold mb-4">Help & Support</h2>
-    <p>Need help? Find resources and support here.</p>
-  </div>
-);
 
 export default SuperAdminDashboardView;

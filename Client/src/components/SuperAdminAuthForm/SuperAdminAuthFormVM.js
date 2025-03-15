@@ -2,24 +2,32 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema } from '../../zodSchema/AuthSchema';
+import { registerSchema } from '../../zodSchema/AuthSchema'; // Ensure this is defined
 
-const SuperAdminAuthFormVM = ({ onSubmit }) => {
+const SuperAdminAuthFormVM = ({ onSubmit, userType }) => {
   const [authError, setAuthError] = useState(null);
+  const isRegistration = userType.toLowerCase().includes('registration');
 
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm({
-    resolver: zodResolver(loginSchema),
+    resolver: zodResolver(isRegistration ? registerSchema : loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+      staffEmail: '',
+    },
   });
 
   const onSubmitForm = async (data) => {
     try {
-      await onSubmit({
-        email: data.email,
-        password: data.password,
-      });
+      setAuthError(null);
+      const submitData = isRegistration
+        ? { email: data.email, password: data.password, staffEmail: data.staffEmail }
+        : { email: data.email, password: data.password };
+      await onSubmit(submitData);
     } catch (error) {
       setAuthError(error.message);
     }
@@ -30,7 +38,7 @@ const SuperAdminAuthFormVM = ({ onSubmit }) => {
     register,
     handleSubmit,
     errors,
-    onSubmitForm,
+    onSubmitForm: handleSubmit(onSubmitForm),
   };
 };
 

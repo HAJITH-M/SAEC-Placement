@@ -1,9 +1,11 @@
 import React from 'react';
-import { FaLock, FaEnvelope, FaGoogle } from 'react-icons/fa';
+import { FaLock, FaEnvelope, FaGoogle, FaUser } from 'react-icons/fa';
 import SuperAdminAuthFormVM from './SuperAdminAuthFormVM';
 
-const SuperAdminAuthFormView = ({ onSubmit, onOAuth, userType }) => {
-  const vm = SuperAdminAuthFormVM({ onSubmit });
+const SuperAdminAuthFormView = ({ onSubmit, onOAuth, userType, toggleAuthMode }) => {
+  const vm = SuperAdminAuthFormVM({ onSubmit, userType });
+
+  const isRegistration = userType.toLowerCase().includes('registration');
 
   return (
     <section className="h-screen flex items-center bg-white">
@@ -15,7 +17,9 @@ const SuperAdminAuthFormView = ({ onSubmit, onOAuth, userType }) => {
                 Welcome Back {userType.split(' ')[0]}!
               </h2>
               <p className="max-w-xl mx-auto mt-4 text-base leading-relaxed text-gray-600">
-                Access your {userType.toLowerCase()} dashboard
+                {isRegistration
+                  ? `Register for your ${userType.toLowerCase()} account`
+                  : `Access your ${userType.toLowerCase()} dashboard`}
               </p>
             </div>
           </div>
@@ -61,41 +65,73 @@ const SuperAdminAuthFormView = ({ onSubmit, onOAuth, userType }) => {
                       <p className="mt-1 text-sm text-red-600">{vm.errors.password.message}</p>
                     )}
                   </div>
+                  {isRegistration && (
+                    <div>
+                      <label className="text-base font-medium text-gray-900">Staff Email</label>
+                      <div className="mt-2 relative">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                          <FaUser />
+                        </span>
+                        <input
+                          type="email"
+                          {...vm.register('staffEmail')}
+                          className="block w-full px-10 py-3 text-black placeholder-gray-500 transition-all duration-200 bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500 caret-orange-500"
+                          placeholder="Enter staff email"
+                        />
+                      </div>
+                      {vm.errors.staffEmail && (
+                        <p className="mt-1 text-sm text-red-600">{vm.errors.staffEmail.message}</p>
+                      )}
+                    </div>
+                  )}
                   <div className="flex justify-end">
-                    <a href="/forgot-password" className="text-sm text-orange-500 hover:underline">
-                      Forgot Password?
-                    </a>
+                    {!isRegistration && (
+                      <a href="/forgot-password" className="text-sm text-orange-500 hover:underline">
+                        Forgot Password?
+                      </a>
+                    )}
                   </div>
                   <div>
                     <button
                       type="submit"
                       className="inline-flex items-center justify-center w-full px-4 py-3 text-base font-semibold text-white transition-all duration-200 bg-orange-500 border border-transparent rounded-md focus:outline-none hover:bg-orange-600 focus:bg-orange-600"
                     >
-                      Sign in
+                      {isRegistration ? 'Register' : 'Sign in'}
                     </button>
                   </div>
                 </form>
 
-                <div className="mt-4">
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-gray-300"></div>
+                {!isRegistration && (
+                  <div className="mt-4">
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-gray-300"></div>
+                      </div>
+                      <div className="relative flex justify-center text-sm">
+                        <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                      </div>
                     </div>
-                    <div className="relative flex justify-center text-sm">
-                      <span className="px-2 bg-white text-gray-500">Or continue with</span>
-                    </div>
+                    <button
+                      onClick={onOAuth}
+                      className="mt-4 w-full inline-flex items-center justify-center px-4 py-3 text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                    >
+                      <FaGoogle className="mr-2" />
+                      Sign in with Google
+                    </button>
                   </div>
-                  <button
-                    onClick={onOAuth}
-                    className="mt-4 w-full inline-flex items-center justify-center px-4 py-3 text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
-                  >
-                    <FaGoogle className="mr-2" />
-                    Sign in with Google
-                  </button>
-                </div>
+                )}
 
                 <div className="mt-4 text-center">
-                  <p className="text-sm text-gray-600">{userType} Access Only</p>
+                  <p className="text-sm text-gray-600">
+                    {isRegistration ? 'Already have an account?' : "Don't have an account?"}{' '}
+                    <button
+                      onClick={toggleAuthMode}
+                      className="text-orange-500 hover:underline focus:outline-none"
+                    >
+                      {isRegistration ? 'Sign in' : 'Sign up'}
+                    </button>
+                  </p>
+                  <p className="text-sm text-gray-600 mt-2">{userType} Access Only</p>
                 </div>
               </div>
             </div>
