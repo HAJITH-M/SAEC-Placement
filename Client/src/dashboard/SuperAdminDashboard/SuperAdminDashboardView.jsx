@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { Home, User, FileText, HelpCircle, Menu, X, Calendar, Users } from "lucide-react";
+import { Home, User, FileText, HelpCircle, Menu, X, Calendar, Users, LogOut } from "lucide-react";
 import axios from 'axios';
 import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
 import StudentManagementView from "./StudentManagementView";
 import StaffManagementView from "./StaffManagementView";
-import JobManagementView from "./JobManagementView";
 import AdminJobPost from "./AdminJobPost";
 import AdminJobRegistrations from "./AdminJobRegistrations";
+import AdminHomeViewDashboard from "./AdminHomeView";
 
 const SuperAdminDashboardView = () => {
   const [activeComponent, setActiveComponent] = useState("home");
@@ -80,7 +80,7 @@ const SuperAdminDashboardView = () => {
   const renderComponent = () => {
     switch (activeComponent) {
       case "home":
-        return <HomeComponent staffCount={staffList.length} studentCount={studentList.length} />;
+        return <AdminHomeViewDashboard/>
       case "students":
         return <StudentManagementView students={studentList} />;
       case "staff":
@@ -88,9 +88,9 @@ const SuperAdminDashboardView = () => {
       case "events":
         return <EventManagementView />;
       case "adminJobPost":
-        return <AdminJobPost/>;
+        return <AdminJobPost />;
       case "jobRegistrations":
-        return <AdminJobRegistrations/>;
+        return <AdminJobRegistrations />;
       default:
         return <HomeComponent staffCount={staffList.length} studentCount={studentList.length} />;
     }
@@ -98,11 +98,19 @@ const SuperAdminDashboardView = () => {
 
   const handleLogout = async () => {
     try {
-      await axios.post('http://localhost:9999/auth/logout', {}, { withCredentials: true });
-      navigate('/auth/superadmin', { replace: true });
+      const response = await axios.post(
+        'http://localhost:9999/superadmin/logout',
+        {},
+        { withCredentials: true }
+      );
+      if (response.data.message === "Logged out successfully") {
+        navigate('/auth/superadmin', { replace: true });
+      } else {
+        throw new Error('Logout failed: ' + (response.data.message || 'Unknown error'));
+      }
     } catch (error) {
-      console.error('Logout failed:', error);
-      setError('Logout failed');
+      console.error('Logout failed:', error.response?.data || error.message);
+      setError('Logout failed. Please try again.');
     }
   };
 
@@ -152,10 +160,10 @@ const SuperAdminDashboardView = () => {
               <FileText size={20} className={activeComponent === "jobRegistrations" ? "text-white" : "text-orange-500"} />
               <span>Job Registrations</span>
             </div>
-            <div onClick={() => { setActiveComponent("students"); setIsOpen(false); }} className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${activeComponent === "students" ? "bg-orange-500 text-white" : "text-black"}`}>
+            {/* <div onClick={() => { setActiveComponent("students"); setIsOpen(false); }} className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${activeComponent === "students" ? "bg-orange-500 text-white" : "text-black"}`}>
               <User size={20} className={activeComponent === "students" ? "text-white" : "text-orange-500"} />
               <span>Student Management</span>
-            </div>
+            </div> */}
             <div onClick={() => { setActiveComponent("staff"); setIsOpen(false); }} className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${activeComponent === "staff" ? "bg-orange-500 text-white" : "text-black"}`}>
               <Users size={20} className={activeComponent === "staff" ? "text-white" : "text-orange-500"} />
               <span>Staff Management</span>
@@ -165,6 +173,7 @@ const SuperAdminDashboardView = () => {
               <span>Event Management</span>
             </div>
             <div onClick={handleLogout} className="flex items-center space-x-2 p-2 cursor-pointer hover:bg-red-500 hover:text-white rounded transition-all duration-200 text-black">
+              <LogOut size={20} className="text-red-500" />
               <span>Logout</span>
             </div>
           </div>
