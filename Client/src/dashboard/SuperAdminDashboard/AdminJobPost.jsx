@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 
 const BASE_URL = 'http://localhost:9999';
-const GEMINI_API_KEY = 'AIzaSyAKjPqMsw7-5u26tkvnXEyAtIYyzrCxbQo'; // Replace with your real key from Google AI Studio
+const GEMINI_API_KEY = 'AIzaSyAKjPqMsw7-5u26tkvnXEyAtIYyzrCxbQo';
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
 const AdminJobPost = () => {
@@ -30,18 +30,38 @@ const AdminJobPost = () => {
 
   const formatDateForBackend = (dateStr, includeTime = false) => {
     try {
-      const parts = dateStr.split(' ');
-      const dateParts = parts[0].split('/');
-      if (dateParts.length !== 3) throw new Error('Invalid date format');
-      const formattedDate = `${dateParts[2]}-${dateParts[0].padStart(2, '0')}-${dateParts[1].padStart(2, '0')}`;
-      if (includeTime && parts[1]) {
-        const timeParts = parts[1].split(':');
-        if (timeParts.length !== 3) throw new Error('Invalid time format');
-        return `${formattedDate} ${parts[1]}`;
+      if (!dateStr) return '';
+      const date = new Date(dateStr);
+      if (includeTime) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = '00'; // Assuming seconds are not critical
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+      } else {
+        return date.toISOString().split('T')[0];
       }
-      return formattedDate;
     } catch (err) {
       console.error('Date formatting error:', err.message);
+      return dateStr;
+    }
+  };
+
+  const formatDateForInput = (dateStr) => {
+    // Convert backend or AI-provided date to datetime-local format (YYYY-MM-DDTHH:MM)
+    try {
+      if (!dateStr) return '';
+      const date = new Date(dateStr);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      return `${year}-${month}-${day}T${hours}:${minutes}`;
+    } catch (err) {
+      console.error('Date formatting for input error:', err.message);
       return dateStr;
     }
   };
@@ -49,103 +69,60 @@ const AdminJobPost = () => {
   const analyzeJobDescription = async (description) => {
     if (!description) {
       setError(null);
-      setFormData({
-        companyName: '',
-        jobDescription: '',
-        driveDate: '',
-        expiration: '',
-        batch: '',
-        department: [],
-        driveLink: '',
-      });
+      setFormData({ companyName: '', jobDescription: '', driveDate: '', expiration: '', batch: '', department: [], driveLink: '' });
       return;
     }
     try {
       setLoading(true);
-
       const prompt = `
-        Extract the following fields from the job description below and return them in JSON format. Ensure each field is identified accurately and separately:
-        - companyName (string, the name of the company)
-        - jobDescription (string, the job role or summary, excluding other details)
-        - driveDate (string, format MM/DD/YYYY, the date of the job drive)
-        - expiration (string, format MM/DD/YYYY HH:MM:SS, the application deadline)
-        - batch (string, e.g., "2025", the batch year)
-        - department (array of strings, list of departments like "Computer Science")
-        - driveLink (string, URL, the link to the drive or application)
-
-        If a field is not present, return an empty string or empty array as appropriate. Do not combine fields unless specified.
-
-        Job Description:
-        ${description}
+        Extract the following fields from the job description below and return them in JSON format:
+        - companyName (string)
+        - jobDescription (string)
+        - driveDate (string, MM/DD/YYYY)
+        - expiration (string, MM/DD/YYYY hh:mm AM/PM)
+        - batch (string)
+        - department (array of strings)
+        - driveLink (string, URL)
+        Job Description: ${description}
       `;
-
       const response = await axios.post(
         `${GEMINI_API_URL}?key=${GEMINI_API_KEY}`,
-        {
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { response_mime_type: 'application/json' },
-        },
-        {
-          headers: { 'Content-Type': 'application/json' },
-        }
+        { contents: [{ parts: [{ text: prompt }] }], generationConfig: { response_mime_type: 'application/json' } },
+        { headers: { 'Content-Type': 'application/json' } }
       );
+      const aiData = JSON.parse(response.data.candidates[0].content.parts[0].text);
 
-      const aiDataText = response.data.candidates[0].content.parts[0].text;
-      console.log('Raw Gemini Response:', aiDataText);
-      
-      let parsedData;
-      
-      try {
-        parsedData = JSON.parse(aiDataText);
-      } catch (parseError) {
-        try {
-          const cleanedText = aiDataText.replace(/|/g, '').trim();
-          parsedData = JSON.parse(cleanedText);
-        } catch (parseError2) {
-          const jsonMatch = aiDataText.match(/(\{.*\}|\[.*\])/s);
-          if (jsonMatch) {
-            parsedData = JSON.parse(jsonMatch[0]);
-          } else {
-            throw new Error('Could not parse JSON response');
-          }
-        }
+      let expirationFormatted = '';
+      if (aiData.expiration) {
+        const [datePart, timePart] = aiData.expiration.split(' ');
+        const [month, day, year] = datePart.split('/').map(Number);
+        const [time, period] = timePart.split(/(AM|PM)/);
+        let [hours, minutes] = time.split(':').map(Number);
+        if (period === 'PM' && hours !== 12) hours += 12;
+        if (period === 'AM' && hours === 12) hours = 0;
+        const date = new Date(year, month - 1, day, hours, minutes);
+        expirationFormatted = formatDateForInput(date);
       }
-      
-      console.log('Parsed data:', parsedData);
-      
-      let aiData;
-      if (Array.isArray(parsedData)) {
-        aiData = parsedData[0] || {};
-      } else {
-        aiData = parsedData;
-      }
-      
-      console.log('Data to use for form:', aiData);
-      
+
       setFormData({
         companyName: aiData.companyName || '',
         jobDescription: aiData.jobDescription || '',
-        driveDate: aiData.driveDate || '',
-        expiration: aiData.expiration || '',
+        driveDate: aiData.driveDate ? aiData.driveDate.split('/').reverse().join('-') : '',
+        expiration: expirationFormatted,
         batch: aiData.batch || '',
         department: Array.isArray(aiData.department) ? aiData.department : [],
         driveLink: aiData.driveLink || '',
       });
-      
       setError(null);
     } catch (err) {
-      const errorMsg = err.response?.data?.error?.message || err.message;
-      console.error('Gemini API Error:', err.response?.data || err);
-      setError(`Failed to analyze job description: ${errorMsg}`);
+      setError(`Failed to analyze job description: ${err.message}`);
     } finally {
       setLoading(false);
     }
   };
 
   const handleAutoFill = () => {
-    if (rawDescription.trim()) {
-      analyzeJobDescription(rawDescription);
-    }
+    if (rawDescription.trim()) analyzeJobDescription(rawDescription);
   };
 
   const handleSubmit = async (e) => {
@@ -157,151 +134,147 @@ const AdminJobPost = () => {
         driveDate: formatDateForBackend(formData.driveDate),
         expiration: formatDateForBackend(formData.expiration, true),
       };
-      console.log('Sending job data:', [formattedData]);
-      const response = await axios.post(
-        `${BASE_URL}/superadmin/createjobs`,
-        [formattedData],
-        { withCredentials: true }
-      );
-      console.log('Create Job Response:', response.data);
-      setFormData({
-        companyName: '',
-        jobDescription: '',
-        driveDate: '',
-        expiration: '',
-        batch: '',
-        department: [],
-        driveLink: '',
-      });
+      await axios.post(`${BASE_URL}/superadmin/createjobs`, [formattedData], { withCredentials: true });
+      setFormData({ companyName: '', jobDescription: '', driveDate: '', expiration: '', batch: '', department: [], driveLink: '' });
       setRawDescription('');
       setError(null);
       alert('Job created successfully!');
     } catch (err) {
-      console.error('Create Job Error:', err.response?.data);
-      const errorMsg = err.response?.data?.errors
-        ? err.response.data.errors.map(e => `${e.path}: ${e.message}`).join(', ')
-        : err.response?.data?.error || err.message;
-      setError('Failed to create job: ' + errorMsg);
+      setError(`Failed to create job: ${err.response?.data?.error || err.message}`);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="mb-8 bg-white p-6 rounded-lg shadow">
-        <h2 className="text-2xl font-bold mb-4">Create New Job</h2>
-        {error && <div className="text-red-500 mb-4">{error}</div>}
-        
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">Paste Job Description for AI Analysis</label>
+    <div className="w-full p-2 md:p-6 bg-gray-50 min-h-screen">
+      <div className="bg-white rounded-lg shadow-md p-3 md:p-6 pb-10">
+        <h2 className="text-2xl font-semibold text-gray-800 mb-6">Create New Job Posting</h2>
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md text-sm">
+            {error}
+          </div>
+        )}
+
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">Job Description for AI Analysis</label>
           <textarea
             value={rawDescription}
             onChange={(e) => setRawDescription(e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
             placeholder="Paste the full job description here..."
-            rows={5}
+            rows={4}
           />
           <button
             onClick={handleAutoFill}
             disabled={loading || !rawDescription.trim()}
-            className="mt-2 py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400"
+            className="mt-3 px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
           >
             {loading ? 'Analyzing...' : 'Auto Fill'}
           </button>
-          {loading && <div className="mt-2 text-sm text-gray-500">Analyzing job description...</div>}
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Company Name</label>
-            <input
-              type="text"
-              name="companyName"
-              value={formData.companyName}
-              onChange={handleInputChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-              required
-            />
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Company Name</label>
+              <input
+                type="text"
+                name="companyName"
+                value={formData.companyName}
+                onChange={handleInputChange}
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                required
+                placeholder="e.g., TechCorp"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Drive Date</label>
+              <input
+                type="date"
+                name="driveDate"
+                value={formData.driveDate}
+                onChange={handleInputChange}
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Batch</label>
+              <input
+                type="text"
+                name="batch"
+                value={formData.batch}
+                onChange={handleInputChange}
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                required
+                placeholder="e.g., 2025"
+              />
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Job Description</label>
-            <textarea
-              name="jobDescription"
-              value={formData.jobDescription}
-              onChange={handleInputChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-              required
-              rows={3}
-            />
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Job Description</label>
+              <textarea
+                name="jobDescription"
+                value={formData.jobDescription}
+                onChange={handleInputChange}
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                required
+                rows={3}
+                placeholder="e.g., Software Engineer role..."
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Expiration</label>
+              <input
+                type="datetime-local"
+                name="expiration"
+                value={formData.expiration}
+                onChange={handleInputChange}
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                required
+              />
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Drive Date (MM/DD/YYYY)</label>
-            <input
-              type="text"
-              name="driveDate"
-              value={formData.driveDate}
-              onChange={handleInputChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-              required
-              placeholder="e.g., 12/31/2025"
-            />
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Departments (comma-separated)</label>
+              <input
+                type="text"
+                name="department"
+                value={formData.department.join(', ')}
+                onChange={handleInputChange}
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                required
+                placeholder="e.g., Computer Science, IT"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Drive Link</label>
+              <input
+                type="text"
+                name="driveLink"
+                value={formData.driveLink}
+                onChange={handleInputChange}
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                required
+                placeholder="e.g., https://example.com/drive"
+              />
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Expiration (MM/DD/YYYY HH:MM:SS)</label>
-            <input
-              type="text"
-              name="expiration"
-              value={formData.expiration}
-              onChange={handleInputChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-              required
-              placeholder="e.g., 12/31/2025 23:59:59"
-            />
+
+          <div className="col-span-full flex justify-start">
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-6 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
+            >
+              {loading ? 'Posting...' : 'Post Job'}
+            </button>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Batch</label>
-            <input
-              type="text"
-              name="batch"
-              value={formData.batch}
-              onChange={handleInputChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-              required
-              placeholder="e.g., 2025"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Departments (comma-separated)</label>
-            <input
-              type="text"
-              name="department"
-              value={formData.department.join(', ')}
-              onChange={handleInputChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-              required
-              placeholder="e.g., Computer Science, IT"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Drive Link</label>
-            <input
-              type="text"
-              name="driveLink"
-              value={formData.driveLink}
-              onChange={handleInputChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-              required
-              placeholder="e.g., https://example.com/drive"
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-2 px-4 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:bg-gray-400"
-          >
-            {loading ? 'Creating...' : 'Create Job'}
-          </button>
         </form>
       </div>
     </div>

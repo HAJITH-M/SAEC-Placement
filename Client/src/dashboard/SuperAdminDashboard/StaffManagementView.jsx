@@ -1,51 +1,66 @@
 import React, { useState } from "react";
 import AdminAddStaff from "./AdminAddStaff";
 import AdminViewStaff from "./AdminViewStaff";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Users, Plus } from "lucide-react";
 
 const StaffManagementView = () => {
-  const [viewMode, setViewMode] = useState(null); // Default to null for initial state
+  const [viewMode, setViewMode] = useState(null);
 
   const handleBack = () => {
     setViewMode(null);
   };
 
   return (
-    <div className="container mx-auto p-4">
-
-      <div className="grid grid-cols-3  mb-4 gap-2">
+    <div className="container mx-auto p-6 mt-3 lg:p-6  min-h-screen">
+      {/* Header Section */}
+      <div className="relative flex items-center justify-between mb-3 lg:mb-8">
         {viewMode && (
-          <div>
+          <button
+            onClick={handleBack}
+            className="group flex items-center gap-5 px-4 py-2  text-white rounded-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-orange-300"
+          >
+            <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform text-stone-800" />
+            <span className="hidden sm:inline">Back</span>
+          </button>
+        )}
+        <h2 className="text-2xl  lg:text-3xl font-extrabold text-gray-800 text-center flex-grow tracking-tight">
+          Staff Management
+        </h2>
+        {viewMode && <div className="w-16"></div>} {/* Spacer for symmetry */}
+      </div>
+
+      {/* Main Content */}
+      {!viewMode ? (
+        <div className="flex flex-col items-center justify-center space-y-6">
+          <div className="text-center">
+            <p className="text-gray-600 text-lg">Manage your staff efficiently</p>
+            <p className="text-gray-500 text-sm">Choose an action below to get started</p>
+          </div>
+          <div className="flex flex-col sm:flex-row justify-center gap-6 w-full max-w-md">
             <button
-              onClick={handleBack}
-              className="py-2 px-4 rounded-md text-white bg-orange-400 hover:bg-orange-500 flex items-center gap-2"
+              onClick={() => setViewMode("add")}
+              className="group relative flex-1 px-6 py-4 bg-gradient-to-r from-orange-400 to-orange-500 text-white rounded-xl shadow-md hover:from-orange-500 hover:to-orange-600 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-orange-200"
             >
-              <ArrowLeft size={18} />
-             
+              <div className="flex items-center justify-center gap-2">
+                <Plus size={24} className="group-hover:rotate-90 transition-transform duration-300" />
+                <span className="text-lg font-semibold">Add Staff</span>
+              </div>
+              <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 rounded-xl transition-opacity"></div>
+            </button>
+            <button
+              onClick={() => setViewMode("view")}
+              className="group relative flex-1 px-6 py-4 bg-gradient-to-r from-orange-400 to-orange-500 text-white rounded-xl shadow-md hover:from-orange-500 hover:to-orange-600 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-orange-200"
+            >
+              <div className="flex items-center justify-center gap-2">
+                <Users size={24} className="group-hover:scale-110 transition-transform duration-300" />
+                <span className="text-lg font-semibold">View Staff</span>
+              </div>
+              <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 rounded-xl transition-opacity"></div>
             </button>
           </div>
-        )}
-
-        <h2 className="text-2xl font-bold col-start-2 text-center">Staff Management</h2>
-      </div>
-      {!viewMode ? (
-        <div className="flex justify-center space-x-4 mb-6">
-          <button
-            onClick={() => setViewMode("add")}
-            className="py-2 px-4 rounded-md text-white bg-orange-400 hover:bg-orange-500"
-          >
-            Add Staff
-          </button>
-          <button
-            onClick={() => setViewMode("view")}
-            className="py-2 px-4 rounded-md text-white bg-orange-400 hover:bg-orange-500"
-          >
-            View Staff
-          </button>
         </div>
-      ) : null}
-      {viewMode && (
-        <div className="bg-white p-6 rounded-lg shadow">
+      ) : (
+        <div className="w-full max-w-4xl mx-auto p-6 animate-fade-in">
           {viewMode === "add" ? <AdminAddStaff /> : <AdminViewStaff />}
         </div>
       )}
@@ -54,3 +69,15 @@ const StaffManagementView = () => {
 };
 
 export default StaffManagementView;
+
+// Add this CSS in your global stylesheet or as a styled component
+const styles = `
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+`;

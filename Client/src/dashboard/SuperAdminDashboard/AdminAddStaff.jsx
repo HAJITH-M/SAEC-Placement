@@ -132,25 +132,27 @@ const AdminAddStaff = ({ onStaffCreated }) => {
   };
 
   return (
-    <div>
-      <div className="flex mb-4">
+    <div className="w-full px-2 sm:px-4 lg:px-6 py-0">
+      {/* Tabs */}
+      <div className="flex flex-col sm:flex-row justify-center gap-2 sm:gap-4 mb-6">
         <button
-          className={`mr-4 px-4 py-2 rounded-md ${activeTab === 'single' ? 'bg-orange-500 text-white' : 'bg-gray-200'}`}
+          className={`w-full sm:w-auto px-4 py-2 rounded-md text-sm ${activeTab === 'single' ? 'bg-orange-500 text-white' : 'bg-gray-200 text-gray-700'} hover:bg-orange-400 hover:text-white transition-colors`}
           onClick={() => setActiveTab('single')}
         >
           Single Staff
         </button>
         <button
-          className={`px-4 py-2 rounded-md ${activeTab === 'bulk' ? 'bg-orange-500 text-white' : 'bg-gray-200'}`}
+          className={`w-full sm:w-auto px-4 py-2 rounded-md text-sm ${activeTab === 'bulk' ? 'bg-orange-500 text-white' : 'bg-gray-200 text-gray-700'} hover:bg-orange-400 hover:text-white transition-colors`}
           onClick={() => setActiveTab('bulk')}
         >
           Bulk Upload
         </button>
       </div>
 
+      {/* Single Staff Form */}
       {activeTab === 'single' && (
-        <div className="mb-6 max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-xl font-semibold mb-4 text-center text-gray-800">Create Single Staff</h3>
+        <div className="w-full max-w-s mx-auto">
+          <h3 className="text-lg font-semibold mb-4 text-center text-gray-800">Create Single Staff</h3>
           <form onSubmit={handleCreateStaff} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
@@ -159,7 +161,7 @@ const AdminAddStaff = ({ onStaffCreated }) => {
                 name="email"
                 value={newStaff.email}
                 onChange={handleInputChange}
-                className="mt-1 block w-full p-2.5 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500 text-sm"
                 required
                 placeholder="Enter email address"
               />
@@ -171,7 +173,7 @@ const AdminAddStaff = ({ onStaffCreated }) => {
                 name="password"
                 value={newStaff.password}
                 onChange={handleInputChange}
-                className="mt-1 block w-full p-2.5 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500 text-sm"
                 required
                 placeholder="Enter password"
               />
@@ -183,13 +185,13 @@ const AdminAddStaff = ({ onStaffCreated }) => {
                 name="department"
                 value={newStaff.department}
                 onChange={handleInputChange}
-                className="mt-1 block w-full p-2.5 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500 text-sm"
                 placeholder="e.g., Computer Science"
               />
             </div>
             <button
               type="submit"
-              className="w-full bg-orange-500 text-white py-2.5 px-4 rounded-md hover:bg-orange-600 transition duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
+              className="w-full bg-orange-500 text-white py-2 px-4 rounded-md hover:bg-orange-600 transition duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 text-sm"
             >
               Create Staff
             </button>
@@ -197,12 +199,13 @@ const AdminAddStaff = ({ onStaffCreated }) => {
         </div>
       )}
 
+      {/* Bulk Upload Form */}
       {activeTab === 'bulk' && (
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold mb-2 text-center">Upload Multiple Staff (Excel)</h3>
-          <form onSubmit={handleUploadStaff} className="space-y-4 max-w-md mx-auto">
+        <div className="w-full max-w-sm mx-auto">
+          <h3 className="text-lg font-semibold mb-4 text-center">Upload Multiple Staff (Excel)</h3>
+          <form onSubmit={handleUploadStaff} className="space-y-4">
             <div
-              className={`border-2 border-dashed rounded-lg p-8 flex flex-col items-center justify-center ${
+              className={`border-2 border-dashed rounded-lg p-4 flex flex-col items-center justify-center ${
                 isDragging ? 'border-orange-500 bg-orange-50' : 'border-gray-300'
               }`}
               onDragOver={handleDragOver}
@@ -211,7 +214,7 @@ const AdminAddStaff = ({ onStaffCreated }) => {
             >
               <div className="space-y-2 text-center">
                 <svg
-                  className="h-12 w-12 text-gray-400 mx-auto"
+                  className="h-8 w-8 text-gray-400 mx-auto"
                   stroke="currentColor"
                   fill="none"
                   viewBox="0 0 48 48"
@@ -224,7 +227,7 @@ const AdminAddStaff = ({ onStaffCreated }) => {
                     strokeLinejoin="round"
                   />
                 </svg>
-                <div className="flex justify-center text-sm text-gray-600">
+                <div className="flex flex-col sm:flex-row justify-center items-center text-sm text-gray-600 gap-2">
                   <label className="relative cursor-pointer rounded-md font-medium text-orange-600 hover:text-orange-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-orange-500">
                     <span>Upload a file</span>
                     <input
@@ -234,11 +237,11 @@ const AdminAddStaff = ({ onStaffCreated }) => {
                       onChange={handleFileChange}
                     />
                   </label>
-                  <p className="pl-1">or drag and drop</p>
+                  <p>or drag and drop</p>
                 </div>
                 <p className="text-xs text-gray-500">Excel files only (.xlsx, .xls)</p>
                 {file && (
-                  <p className="text-sm text-gray-600 mt-2">
+                  <p className="text-sm text-gray-600 mt-2 break-all">
                     Selected file: {file.name}
                   </p>
                 )}
@@ -246,16 +249,19 @@ const AdminAddStaff = ({ onStaffCreated }) => {
             </div>
             <button
               type="submit"
-              className="bg-orange-500 text-white p-2 rounded-md hover:bg-orange-600 w-full"
+              className="w-full bg-orange-500 text-white py-2 px-4 rounded-md hover:bg-orange-600 text-sm"
             >
               Upload Staff
             </button>
           </form>
         </div>
       )}
-      {error && <p className="text-red-500 text-center mt-4">{error}</p>}
-      {success && <p className="text-green-500 text-center mt-4">{success}</p>}
+
+      {/* Error and Success Messages */}
+      {error && <p className="text-red-500 text-center mt-4 text-sm px-2">{error}</p>}
+      {success && <p className="text-green-500 text-center mt-4 text-sm px-2">{success}</p>}
     </div>
-  );};
+  );
+};
 
 export default AdminAddStaff;

@@ -14,15 +14,14 @@ const SuperAdminDashboardView = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [staffList, setStaffList] = useState([]);
   const [studentList, setStudentList] = useState([]);
-  const [adminEmail, setAdminEmail] = useState(""); // Initial state is empty string
-  const [isLoading, setIsLoading] = useState(true); // Loading state
-  const [error, setError] = useState(null); // Added error state for debugging
+  const [adminEmail, setAdminEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
   const IdUUIDParamsSchema = z.object({
     staffId: z.string().uuid({ message: "Invalid UUID format" }),
   });
 
-  // Guard clause to handle undefined or null adminEmail
   const firstLetter = adminEmail ? adminEmail.charAt(0).toUpperCase() : "?";
 
   const fetchData = async () => {
@@ -30,11 +29,11 @@ const SuperAdminDashboardView = () => {
       const response = await axios.get('http://localhost:9999/superadmin', {
         withCredentials: true,
       });
-      console.log('Full /superadmin response:', response.data); // Log full response
+      console.log('Full /superadmin response:', response.data);
       if (response.data.success) {
         setStaffList(response.data.staff || []);
         setStudentList(response.data.students || []);
-        setAdminEmail(response.data.email || ""); // Ensure email is set
+        setAdminEmail(response.data.email || "");
         console.log('Email set from /superadmin:', response.data.email);
       } else {
         throw new Error('Failed to fetch superadmin data');
@@ -42,7 +41,7 @@ const SuperAdminDashboardView = () => {
     } catch (error) {
       console.error('Error fetching dashboard data:', error.response?.data || error.message);
       setError('Failed to load dashboard data');
-      navigate('/auth/superadmin', { replace: true }); // Updated to match your login route
+      navigate('/auth/superadmin', { replace: true });
     }
   };
 
@@ -51,7 +50,7 @@ const SuperAdminDashboardView = () => {
       const response = await axios.get('http://localhost:9999/auth/session', {
         withCredentials: true,
       });
-      console.log('Full /auth/session response:', response.data); // Log full response
+      console.log('Full /auth/session response:', response.data);
       if (response.data.success && response.data.role === "super_admin") {
         setAdminEmail(response.data.email || "");
         console.log('Email set from /auth/session:', response.data.email);
@@ -61,16 +60,16 @@ const SuperAdminDashboardView = () => {
     } catch (error) {
       console.error('Session check failed:', error.response?.data || error.message);
       setError('Session validation failed');
-      navigate('/auth/superadmin', { replace: true }); // Updated to match your login route
+      navigate('/auth/superadmin', { replace: true });
     }
   };
 
   useEffect(() => {
     const initializeData = async () => {
       try {
-        await Promise.all([checkSession(), fetchData()]); // Wait for both to complete
+        await Promise.all([checkSession(), fetchData()]);
       } finally {
-        setIsLoading(false); // Only set loading false after both calls
+        setIsLoading(false);
       }
     };
     initializeData();
@@ -88,13 +87,10 @@ const SuperAdminDashboardView = () => {
         return <StaffManagementView staff={staffList} onStaffCreated={fetchData} onStaffRemoved={fetchData} />;
       case "events":
         return <EventManagementView />;
-
-
       case "adminJobPost":
-        return <AdminJobPost/>
+        return <AdminJobPost/>;
       case "jobRegistrations":
-        return <AdminJobRegistrations/>
-
+        return <AdminJobRegistrations/>;
       default:
         return <HomeComponent staffCount={staffList.length} studentCount={studentList.length} />;
     }
@@ -103,7 +99,7 @@ const SuperAdminDashboardView = () => {
   const handleLogout = async () => {
     try {
       await axios.post('http://localhost:9999/auth/logout', {}, { withCredentials: true });
-      navigate('/auth/superadmin', { replace: true }); // Updated to match your login route
+      navigate('/auth/superadmin', { replace: true });
     } catch (error) {
       console.error('Logout failed:', error);
       setError('Logout failed');
@@ -120,7 +116,6 @@ const SuperAdminDashboardView = () => {
 
   return (
     <div className="flex relative">
-      {/* Sidebar */}
       <div className={`
         fixed lg:static lg:translate-x-0 z-40 w-64 h-screen bg-white text-orange-500 transform transition-transform duration-300 ease-in-out
         ${isOpen ? "translate-x-0" : "-translate-x-full"}
@@ -165,12 +160,10 @@ const SuperAdminDashboardView = () => {
               <Users size={20} className={activeComponent === "staff" ? "text-white" : "text-orange-500"} />
               <span>Staff Management</span>
             </div>
-            
             <div onClick={() => { setActiveComponent("events"); setIsOpen(false); }} className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${activeComponent === "events" ? "bg-orange-500 text-white" : "text-black"}`}>
               <Calendar size={20} className={activeComponent === "events" ? "text-white" : "text-orange-500"} />
               <span>Event Management</span>
             </div>
-            
             <div onClick={handleLogout} className="flex items-center space-x-2 p-2 cursor-pointer hover:bg-red-500 hover:text-white rounded transition-all duration-200 text-black">
               <span>Logout</span>
             </div>
@@ -178,17 +171,14 @@ const SuperAdminDashboardView = () => {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 p-8 lg:ml-0 ml-0 mt-16 lg:mt-0 overflow-y-auto h-screen">
+      <div className="flex-1 lg:ml-0 ml-0 mt-16 lg:mt-0 overflow-y-auto h-screen">
         {renderComponent()}
       </div>
 
-      {/* Overlay */}
       {isOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden" onClick={() => setIsOpen(false)} />
       )}
 
-      {/* Mobile Menu Button and Dashboard Title */}
       {!isOpen && (
         <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white p-4 flex justify-between items-center shadow-md">
           <h2 className="text-xl font-bold text-black">Super Admin Dashboard</h2>
@@ -218,6 +208,5 @@ const EventManagementView = () => (
     <p>Manage events here (placeholder).</p>
   </div>
 );
-
 
 export default SuperAdminDashboardView;
