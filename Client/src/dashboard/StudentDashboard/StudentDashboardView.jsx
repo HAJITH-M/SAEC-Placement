@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Home, User, FileText, HelpCircle, Menu, X, Calendar } from "lucide-react";
+import { Home, User, FileText, HelpCircle, Menu, X, Calendar, LogOut } from "lucide-react";
 import StudentProfileView from "./StudentProfileView";
 import StudentJobView from "./StudentJobView";
 import StudentEventView from "./StudentEventView";
@@ -65,6 +65,18 @@ const StudentDashboardView = () => {
         return <HomeComponent />;
     }
   };
+
+  const handleLogout = async () => {
+    try {
+      const response = await axios.post("http://localhost:9999/student/logout", {}, { withCredentials: true });
+      if (response.data.message === "Logged out successfully" || response.status === 200) {
+        navigate("/auth/student");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
 
   return (
     <div className="flex relative">
@@ -159,6 +171,13 @@ const StudentDashboardView = () => {
             >
               <HelpCircle size={20} className={activeComponent === "help" ? "text-white" : "text-orange-500"} />
               <span>Help</span>
+            </div>
+            <div
+              onClick={handleLogout}
+              className="flex items-center space-x-2 p-2 cursor-pointer hover:bg-red-500 hover:text-white rounded transition-all duration-200 text-black"
+            >
+              <LogOut size={20} className="text-red-500" />
+              <span>Logout</span>
             </div>
           </div>
         </div>

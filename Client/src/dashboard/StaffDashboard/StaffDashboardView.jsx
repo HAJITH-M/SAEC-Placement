@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { Home, User, FileText, HelpCircle, Menu, X, Plus } from "lucide-react";
+import { Home, User, FileText, HelpCircle, Menu, X, Plus, LogOut, Users, Briefcase, ClipboardList, UserCircle } from "lucide-react";
 import { CSVLink } from "react-csv";
 import axios from "axios";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 import StaffProfileView from "./StaffProfileView";
 import StaffStudentAddView from "./StaffStudentAddView";
 import StaffStudentSeeView from "./StaffStudentSeeView";
 import StaffJobAddView from "./StaffJobAddView";
-import StaffSeeRegistrations from "./StaffSeeRegistrations"; // Corrected import
+import StaffSeeRegistrations from "./StaffSeeRegistrations";
+import StaffStudentManagementView from "./StaffStudentManagementView";
 
 const ExportCSV = ({ job, interestedStudents }) => {
   const prepareCsvData = () => {
@@ -38,6 +40,8 @@ const StaffDashboardView = () => {
   const [interestedStudents, setInterestedStudents] = useState({});
   const [staffDetails, setStaffDetails] = useState({ email: "", name: "", department: "" });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const navigate = useNavigate(); // Initialize navigate hook
 
   useEffect(() => {
     const fetchStaffDetails = async () => {
@@ -80,10 +84,29 @@ const StaffDashboardView = () => {
         return <StaffProfileView staffDetails={staffDetails} />;
       case "viewStudents":
         return <StaffStudentSeeView />;
+      case "studentManagement":
+        return <StaffStudentManagementView />;
       default:
         return <HomeComponent />;
     }
   };
+
+  const deleteCookie = (name) => {
+    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/`;
+  };
+
+  const handleLogout = async () => {
+    try {
+      const response = await axios.post("http://localhost:9999/staff/logout", {}, { withCredentials: true });
+      if (response.data.message === "Logged out successfully" || response.status === 200) {
+        navigate("/auth/staff");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  
+
 
   if (loading) {
     return <div>Loading...</div>;
@@ -117,9 +140,8 @@ const StaffDashboardView = () => {
               </div>
             </div>
             <div
-              className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${
-                activeComponent === "home" ? "bg-orange-500 text-white" : "text-black"
-              }`}
+              className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${activeComponent === "home" ? "bg-orange-500 text-white" : "text-black"
+                }`}
               onClick={() => {
                 setActiveComponent("home");
                 setIsOpen(false);
@@ -130,74 +152,69 @@ const StaffDashboardView = () => {
             </div>
 
             <div
-              className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${
-                activeComponent === "addStudent" ? "bg-orange-500 text-white" : "text-black"
-              }`}
+              className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${activeComponent === "studentManagement" ? "bg-orange-500 text-white" : "text-black"
+                }`}
               onClick={() => {
-                setActiveComponent("addStudent");
+                setActiveComponent("studentManagement");
                 setIsOpen(false);
               }}
             >
-              <Plus size={20} className={activeComponent === "addStudent" ? "text-white" : "text-blue-500"} />
-              <span>Add Student</span>
+              <Users size={20} className={activeComponent === "studentManagement" ? "text-white" : "text-blue-500"} />
+              <span>Student Management</span>
             </div>
 
             <div
-              className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${
-                activeComponent === "addJob" ? "bg-orange-500 text-white" : "text-black"
-              }`}
+              className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${activeComponent === "addJob" ? "bg-orange-500 text-white" : "text-black"
+                }`}
               onClick={() => {
                 setActiveComponent("addJob");
                 setIsOpen(false);
               }}
             >
-              <FileText size={20} className={activeComponent === "addJob" ? "text-white" : "text-blue-500"} />
+              <Briefcase size={20} className={activeComponent === "addJob" ? "text-white" : "text-blue-500"} />
               <span>Post Job</span>
             </div>
 
             <div
-              className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${
-                activeComponent === "jobRegisteredStudents" ? "bg-orange-500 text-white" : "text-black"
-              }`}
+              className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${activeComponent === "jobRegisteredStudents" ? "bg-orange-500 text-white" : "text-black"
+                }`}
               onClick={() => {
                 setActiveComponent("jobRegisteredStudents");
                 setIsOpen(false);
               }}
             >
-              <FileText size={20} className={activeComponent === "jobRegisteredStudents" ? "text-white" : "text-blue-500"} />
+              <ClipboardList size={20} className={activeComponent === "jobRegisteredStudents" ? "text-white" : "text-blue-500"} />
               <span>Registered Students</span>
             </div>
 
             <div
-              className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${
-                activeComponent === "profile" ? "bg-orange-500 text-white" : "text-black"
-              }`}
+              className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${activeComponent === "profile" ? "bg-orange-500 text-white" : "text-black"
+                }`}
               onClick={() => {
                 setActiveComponent("profile");
                 setIsOpen(false);
               }}
             >
-              <User size={20} className={activeComponent === "profile" ? "text-white" : "text-blue-500"} />
+
+              <UserCircle size={20} className={activeComponent === "profile" ? "text-white" : "text-blue-500"} />
               <span>Profile</span>
             </div>
 
+          
+
             <div
-              className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${
-                activeComponent === "viewStudents" ? "bg-orange-500 text-white" : "text-black"
-              }`}
-              onClick={() => {
-                setActiveComponent("viewStudents");
-                setIsOpen(false);
-              }}
+              onClick={handleLogout}
+              className="flex items-center space-x-2 p-2 cursor-pointer hover:bg-red-500 hover:text-white rounded transition-all duration-200 text-black"
             >
-              <HelpCircle size={20} className={activeComponent === "viewStudents" ? "text-white" : "text-blue-500"} />
-              <span>View Students</span>
+              <LogOut size={20} className="text-red-500" />
+              <span>Logout</span>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="flex-1 p-8 lg:ml-0 ml-0 mt-16 lg:mt-0 overflow-y-auto h-screen">
+      <div className="flex-1 lg:ml-0 ml-0 mt-16 lg:mt-0 overflow-y-auto h-screen">
+        {error && <div className="p-4 text-red-500">{error}</div>} {/* Display error */}
         {renderComponent()}
       </div>
 
