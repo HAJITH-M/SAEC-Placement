@@ -14,6 +14,7 @@ const AdminJobPost = () => {
     batch: '',
     department: [],
     driveLink: '',
+    notificationEmail: '', // Added notification email field
   });
   const [rawDescription, setRawDescription] = useState('');
   const [loading, setLoading] = useState(false);
@@ -116,6 +117,7 @@ const AdminJobPost = () => {
         batch: '',
         department: [],
         driveLink: '',
+        notificationEmail: '', // Reset when description is empty
       });
       return;
     }
@@ -232,6 +234,7 @@ const AdminJobPost = () => {
         batch: jobData.batch || '',
         department: department.length > 0 ? department : [],
         driveLink: jobData.driveLink || '',
+        notificationEmail: formData.notificationEmail, // Preserve the existing notification email from input
       };
 
       console.log('Updated Form Data:', updatedFormData);
@@ -247,6 +250,7 @@ const AdminJobPost = () => {
         ...prev,
         companyName: prev.companyName || 'Error Parsing',
         jobDescription: description,
+        notificationEmail: prev.notificationEmail || '', // Preserve notification email on error
       }));
       
       setRetryCount(retryCount + 1);
@@ -272,8 +276,20 @@ const AdminJobPost = () => {
         driveDate: formatDateForBackend(formData.driveDate),
         expiration: formatDateForBackend(formData.expiration, true),
       };
+      // Log the data before sending it to the server
+      console.log('Data being sent to /superadmin/createjobs:', [formattedData]);
       await axios.post(`${BASE_URL}/superadmin/createjobs`, [formattedData], { withCredentials: true });
-      setFormData({ companyName: '', jobDescription: '', driveDate: '', expiration: '', batch: '', department: [], driveLink: '' });
+      setFormData({ 
+        companyName: '', 
+        jobDescription: '', 
+        driveDate: '', 
+        expiration: '', 
+        batch: '', 
+        department: [], 
+        driveLink: '',
+        notificationEmail: '' // Reset notification email
+      });
+      console.log("Hello ", formattedData.notificationEmail);
       setRawDescription('');
       setError(null);
       alert('Job created successfully!');
@@ -416,6 +432,18 @@ const AdminJobPost = () => {
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
                 required
                 placeholder="e.g., https://example.com/drive"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Notification Email</label>
+              <input
+                type="email"
+                name="notificationEmail"
+                value={formData.notificationEmail}
+                onChange={handleInputChange}
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                required
+                placeholder="e.g., recipient@example.com"
               />
             </div>
           </div>
