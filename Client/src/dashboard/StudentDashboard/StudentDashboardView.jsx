@@ -52,9 +52,14 @@ const StudentDashboardView = () => {
   const renderComponent = () => {
     switch (activeComponent) {
       case "home":
-        return <HomeComponent />;
+        return (
+          
+            <HomeComponent />
+          
+        );
       case "profile":
-        return <StudentProfileView />;
+        return <StudentProfileView />
+          
       case "jobview":
         return <StudentJobView />;
       case "events":
@@ -83,7 +88,7 @@ const StudentDashboardView = () => {
       {/* Sidebar */}
       <div
         className={`
-          fixed lg:static lg:translate-x-0 z-40 w-64 h-screen bg-white text-orange-500 transform transition-transform duration-300 ease-in-out
+          fixed lg:static lg:translate-x-0 z-40 w-64 h-screen bg-white text-orange-500 shadow-xl transform transition-transform duration-300 ease-in-out
           ${isOpen ? "translate-x-0" : "-translate-x-full"}
         `}
       >
@@ -184,7 +189,8 @@ const StudentDashboardView = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-8 lg:ml-0 ml-0 mt-16 lg:mt-0 overflow-y-auto h-screen">
+      <div className="flex-1 p-8 bg-slate-50 lg:ml-0 ml-0 mt-16 lg:mt-0 overflow-y-auto h-screen">
+        
         {renderComponent()}
       </div>
 

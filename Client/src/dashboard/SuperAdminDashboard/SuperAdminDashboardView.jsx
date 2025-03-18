@@ -8,6 +8,7 @@ import StaffManagementView from "./StaffManagementView";
 import AdminJobPost from "./AdminJobPost";
 import AdminJobRegistrations from "./AdminJobRegistrations";
 import AdminHomeViewDashboard from "./AdminHomeView";
+import AdminAddMailForm from "./AdminAddMailForm";
 
 const SuperAdminDashboardView = () => {
   const [activeComponent, setActiveComponent] = useState("home");
@@ -81,6 +82,8 @@ const SuperAdminDashboardView = () => {
     switch (activeComponent) {
       case "home":
         return <AdminHomeViewDashboard/>
+      case "addMail":
+        return <AdminAddMailForm/>;
       case "students":
         return <StudentManagementView students={studentList} />;
       case "staff":
@@ -125,7 +128,7 @@ const SuperAdminDashboardView = () => {
   return (
     <div className="flex relative">
       <div className={`
-        fixed lg:static lg:translate-x-0 z-40 w-64 h-screen bg-white text-orange-500 transform transition-transform duration-300 ease-in-out
+        fixed lg:static lg:translate-x-0 z-40 w-64 h-screen bg-white shadow-xl text-orange-500 transform transition-transform duration-300 ease-in-out
         ${isOpen ? "translate-x-0" : "-translate-x-full"}
       `}>
         <div className="p-4 h-full overflow-y-auto">
@@ -160,10 +163,10 @@ const SuperAdminDashboardView = () => {
               <FileText size={20} className={activeComponent === "jobRegistrations" ? "text-white" : "text-orange-500"} />
               <span>Job Registrations</span>
             </div>
-            {/* <div onClick={() => { setActiveComponent("students"); setIsOpen(false); }} className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${activeComponent === "students" ? "bg-orange-500 text-white" : "text-black"}`}>
-              <User size={20} className={activeComponent === "students" ? "text-white" : "text-orange-500"} />
-              <span>Student Management</span>
-            </div> */}
+            <div onClick={() => { setActiveComponent("addMail"); setIsOpen(false); }} className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${activeComponent === "addMail" ? "bg-orange-500 text-white" : "text-black"}`}>
+              <User size={20} className={activeComponent === "addMail" ? "text-white" : "text-orange-500"} />
+              <span>Add Mail</span>
+            </div>
             <div onClick={() => { setActiveComponent("staff"); setIsOpen(false); }} className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${activeComponent === "staff" ? "bg-orange-500 text-white" : "text-black"}`}>
               <Users size={20} className={activeComponent === "staff" ? "text-white" : "text-orange-500"} />
               <span>Staff Management</span>
@@ -180,7 +183,7 @@ const SuperAdminDashboardView = () => {
         </div>
       </div>
 
-      <div className="flex-1 lg:ml-0 ml-0 mt-16 lg:mt-0 overflow-y-auto h-screen">
+      <div className="flex-1 bg-slate-50 lg:ml-0 ml-0 mt-16 lg:mt-0 overflow-y-auto h-screen">
         {renderComponent()}
       </div>
 

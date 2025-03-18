@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
-  Building2, MapPin, Banknote, Calendar, Link, CheckCircle2, Navigation, ThumbsUp, ThumbsDown,
+  Building2, MapPin, Banknote, Calendar, Link, CheckCircle2, Navigation, ThumbsUp, ThumbsDown,Loader
 } from "lucide-react";
 
 const StudentJobView = () => {
@@ -9,7 +9,8 @@ const StudentJobView = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
-
+  const [endsOn, setEndsOn] = useState([])
+  // setEndsOn(`${daysLeft.toString().padStart(2, "0")} days left`);
   useEffect(() => {
     const fetchJobsAndStatus = async () => {
       try {
@@ -64,6 +65,16 @@ const StudentJobView = () => {
 
     fetchJobsAndStatus();
   }, []);
+
+  useEffect(() => {
+    for  (const job of jobs) {
+      const endDate = new Date(job.endDate);
+      const today = new Date();
+      const daysLeft = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
+      console.log({ endDate, today, daysLeft });
+      setEndsOn((prevEndsOn) => [...prevEndsOn, `${daysLeft.toString().padStart(2, "0")} days left`]);
+    }
+  }, [jobs]);
 
   // Corrected checkApplicationStatus using the dedicated endpoint
   const checkApplicationStatus = async (driveId) => {
@@ -170,7 +181,13 @@ const StudentJobView = () => {
       : jobs.filter((job) => job.status.toLowerCase() === filter.toLowerCase());
 
   if (loading && !jobs.length) {
-    return <div className="p-6">Loading jobs...</div>;
+    return (<div className="w-full h-full flex flex-col justify-center items-center">
+      <div className="flex flex-col justify-center space-y-2">
+        <Loader className="animate-spin w-15 h-15"/>
+        <span>Brewing Jobs</span>
+      </div>
+    </div>)
+    // return <div className="p-6">Loading jobs...</div>;
   }
 
   if (error && !jobs.length) {
@@ -209,23 +226,22 @@ const StudentJobView = () => {
         {filteredJobs.map((job, index) => (
           <div
             key={job.id}
-            className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow overflow-hidden"
+            className="bg-white flex flex-col justify-between rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow overflow-hidden"
           >
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h3 className="text-xl font-semibold text-gray-800 break-words">{job.title}</h3>
-                <div className="flex items-center mt-2 text-gray-600">
+                {/* <div className="flex items-center mt-2 text-gray-600">
                   <Building2 size={18} className="mr-2 flex-shrink-0 text-orange-500" />
                   <span className="truncate">{job.company}</span>
-                </div>
+                </div> */}
               </div>
               <div className="flex flex-col gap-2">
                 <span
-                  className={`px-3 py-1 rounded-full text-sm whitespace-nowrap ${
-                    job.status === "Registered"
-                      ? "bg-green-100 text-green-600"
-                      : "bg-orange-100 text-orange-600"
-                  }`}
+                  className={`px-3 py-1 rounded-full text-sm whitespace-nowrap ${job.status === "Registered"
+                    ? "bg-green-100 text-green-600"
+                    : "bg-orange-100 text-orange-600"
+                    }`}
                 >
                   {job.status}
                 </span>
@@ -233,25 +249,33 @@ const StudentJobView = () => {
             </div>
 
             <div className="space-y-3">
-              <div className="flex items-center text-gray-600">
-                <MapPin size={18} className="mr-2 flex-shrink-0 text-orange-500" />
-                <span className="truncate">{job.location}</span>
-              </div>
-              <div className="flex items-center text-gray-600">
-                <Banknote size={18} className="mr-2 flex-shrink-0 text-orange-500" />
-                <span className="truncate">{job.salary}</span>
-              </div>
-              <div className="flex items-center text-gray-600">
-                <Calendar size={18} className="mr-2 flex-shrink-0 text-orange-500" />
-                <span className="truncate">Ends on: {job.endDate}</span>
-              </div>
-              <div className="flex items-center text-gray-600">
-                <Navigation size={18} className="mr-2 flex-shrink-0 text-orange-500" />
-                <span className="truncate">{job.driveType}</span>
-              </div>
-              <div className="flex items-center text-gray-600">
-                <CheckCircle2 size={18} className="mr-2 flex-shrink-0 text-orange-500" />
-                <span className="truncate">Registration Status: {job.registrationStatus}</span>
+              <div className="grid grid-cols-2 gap-2">
+                {/* <div> */}
+                  <div className="flex items-center mt-2 text-gray-600">
+                    <Building2 size={18} className="mr-2 flex-shrink-0 text-orange-500" />
+                    <span className="truncate">{job.company}</span>
+                  {/* </div> */}
+                </div>
+                <div className="flex items-center text-gray-600">
+                  <MapPin size={18} className="mr-2 flex-shrink-0 text-orange-500" />
+                  <span className="truncate">{job.location}</span>
+                </div>
+                <div className="flex items-center text-gray-600">
+                  <Banknote size={18} className="mr-2 flex-shrink-0 text-orange-500" />
+                  <span className="truncate">{job.salary}</span>
+                </div>
+                <div className="flex items-center text-gray-600">
+                  <Calendar size={18} className="mr-2 flex-shrink-0 text-orange-500" />
+                  <span className="truncate">{endsOn[index]}</span>
+                </div>
+                <div className="flex items-center text-gray-600">
+                  <Navigation size={18} className="mr-2 flex-shrink-0 text-orange-500" />
+                  <span className="truncate">{job.driveType}</span>
+                </div>
+                {/* <div className="flex items-center text-gray-600">
+                  <CheckCircle2 size={18} className="mr-2 flex-shrink-0 text-orange-500" />
+                  <span className="truncate">Registration Status: {job.registrationStatus}</span>
+                </div> */}
               </div>
               <div className="flex items-center text-gray-600">
                 <span className="truncate">Departments: {job.department.join(", ") || "N/A"}</span>
@@ -271,11 +295,10 @@ const StudentJobView = () => {
               <div className="flex justify-between gap-1.5">
                 <button
                   onClick={() => handleThumbsUp(index)}
-                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded text-sm text-white transition-colors ${
-                    job.status === "Registered" || loading
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-orange-400 hover:bg-orange-500"
-                  }`}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded text-sm text-white transition-colors ${job.status === "Registered" || loading
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-orange-400 hover:bg-orange-500"
+                    }`}
                   disabled={job.status === "Registered" || loading}
                 >
                   <ThumbsUp size={16} />
@@ -283,11 +306,10 @@ const StudentJobView = () => {
                 </button>
                 <button
                   onClick={() => handleThumbsDown(index)}
-                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded text-sm text-white transition-colors ${
-                    loading
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-orange-400 hover:bg-orange-500"
-                  }`}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded text-sm text-white transition-colors ${loading
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-orange-400 hover:bg-orange-500"
+                    }`}
                   disabled={loading}
                 >
                   <ThumbsDown size={16} />

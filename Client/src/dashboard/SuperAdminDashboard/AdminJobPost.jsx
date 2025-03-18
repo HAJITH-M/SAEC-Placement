@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 const BASE_URL = 'http://localhost:9999';
@@ -14,21 +14,55 @@ const AdminJobPost = () => {
     batch: '',
     department: [],
     driveLink: '',
-    notificationEmail: '', // Added notification email field
+    notificationEmail: [],
   });
   const [rawDescription, setRawDescription] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [groupEmails, setGroupEmails] = useState([]);
+  const [searchQuery, setSearchQuery] = useState(''); // New state for search input
   const MAX_RETRIES = 3;
+
+  // Fetch group emails on component mount
+  useEffect(() => {
+    const fetchGroupEmails = async () => {
+      try {
+        const response = await axios.get(`${BASE_URL}/superadmin/getfeedgroupmail`, { withCredentials: true });
+        console.log('Received group emails:', response.data.groupMailList);
+        if (response.data && Array.isArray(response.data.groupMailList)) {
+          const emailList = response.data.groupMailList.map(item => 
+            typeof item === 'string' ? item : item.email
+          ).filter(Boolean);
+          setGroupEmails(emailList);
+        } else {
+          console.error('Unexpected response format:', response.data);
+          setError('Failed to parse notification email options');
+        }
+      } catch (err) {
+        console.error('Failed to fetch group emails:', err);
+        setError('Failed to load notification email options');
+      }
+    };
+    fetchGroupEmails();
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     if (name === 'department') {
       setFormData({ ...formData, [name]: value.split(',').map(d => d.trim()).filter(d => d) });
+    } else if (name === 'notificationEmail') {
+      const updatedEmails = e.target.checked
+        ? [...formData.notificationEmail, value]
+        : formData.notificationEmail.filter((em) => em !== value);
+      setFormData({ ...formData, notificationEmail: updatedEmails });
     } else {
       setFormData({ ...formData, [name]: value });
     }
+  };
+
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
   };
 
   const formatDateForBackend = (dateStr, includeTime = false) => {
@@ -68,7 +102,6 @@ const AdminJobPost = () => {
     }
   };
   
-  // Function to add delay between requests
   const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
   const makeApiRequest = async (prompt, currentRetry = 0) => {
@@ -86,22 +119,18 @@ const AdminJobPost = () => {
         },
         { 
           headers: { 'Content-Type': 'application/json' },
-          timeout: 10000 // 10 second timeout
+          timeout: 10000
         }
       );
-      
       return response.data;
     } catch (err) {
       console.error(`API Request failed (attempt ${currentRetry + 1}):`, err.message);
-      
       if (currentRetry < MAX_RETRIES - 1) {
-        // Wait longer between each retry
         const waitTime = Math.pow(2, currentRetry) * 1000;
         console.log(`Retrying in ${waitTime}ms...`);
         await delay(waitTime);
         return makeApiRequest(prompt, currentRetry + 1);
       }
-      
       throw err;
     }
   };
@@ -117,7 +146,7 @@ const AdminJobPost = () => {
         batch: '',
         department: [],
         driveLink: '',
-        notificationEmail: '', // Reset when description is empty
+        notificationEmail: [],
       });
       return;
     }
@@ -146,11 +175,9 @@ const AdminJobPost = () => {
 
       let aiData;
       try {
-        // Get the raw text from the response
         const rawText = responseData.candidates[0].content.parts[0].text;
         console.log('Raw Text Before Parsing:', rawText);
 
-        // Clean the text: Remove ```json and ``` markers if present
         let cleanedText = rawText.trim();
         if (cleanedText.startsWith('```json')) {
           cleanedText = cleanedText.replace('```json', '').replace(/```$/g, '').trim();
@@ -158,13 +185,11 @@ const AdminJobPost = () => {
           cleanedText = cleanedText.replace(/^```/, '').replace(/```$/g, '').trim();
         }
         
-        // Handle cases where JSON might be nested in other text
         const jsonMatch = cleanedText.match(/({[\s\S]*})/);
         if (jsonMatch) {
           cleanedText = jsonMatch[1];
         }
 
-        // Parse the cleaned text as JSON
         aiData = JSON.parse(cleanedText);
         console.log('Parsed AI Data:', aiData);
       } catch (parseErr) {
@@ -173,7 +198,6 @@ const AdminJobPost = () => {
           responseData.candidates[0].content.parts[0].text.substring(0, 100) + '...');
       }
 
-      // Handle case where aiData is an array
       const jobData = Array.isArray(aiData) ? aiData[0] : aiData;
 
       let driveDateFormatted = '';
@@ -193,20 +217,17 @@ const AdminJobPost = () => {
       let expirationFormatted = '';
       if (jobData.expiration) {
         try {
-          // Handle various date formats that might come from the AI
           const dateParts = jobData.expiration.split(/\s+/);
           if (dateParts.length >= 3) {
             const [datePart, timePart, period] = dateParts;
             const [month, day, year] = datePart.split('/').map(Number);
             
-            // Handle time with or without period (AM/PM)
             let hours = 0, minutes = 0;
             if (timePart) {
               const [h, m] = timePart.split(':').map(Number);
               hours = h;
               minutes = m || 0;
               
-              // Adjust for AM/PM if present
               if (period) {
                 if (period.toUpperCase() === 'PM' && hours !== 12) hours += 12;
                 if (period.toUpperCase() === 'AM' && hours === 12) hours = 0;
@@ -234,7 +255,7 @@ const AdminJobPost = () => {
         batch: jobData.batch || '',
         department: department.length > 0 ? department : [],
         driveLink: jobData.driveLink || '',
-        notificationEmail: formData.notificationEmail, // Preserve the existing notification email from input
+        notificationEmail: formData.notificationEmail,
       };
 
       console.log('Updated Form Data:', updatedFormData);
@@ -245,12 +266,11 @@ const AdminJobPost = () => {
       const errorMsg = `Failed to analyze job description: ${err.message}`;
       setError(errorMsg);
       
-      // Don't reset the form completely on error, just mark that there was an error
       setFormData(prev => ({
         ...prev,
         companyName: prev.companyName || 'Error Parsing',
         jobDescription: description,
-        notificationEmail: prev.notificationEmail || '', // Preserve notification email on error
+        notificationEmail: prev.notificationEmail,
       }));
       
       setRetryCount(retryCount + 1);
@@ -275,8 +295,8 @@ const AdminJobPost = () => {
         ...formData,
         driveDate: formatDateForBackend(formData.driveDate),
         expiration: formatDateForBackend(formData.expiration, true),
+        notificationEmail: formData.notificationEmail
       };
-      // Log the data before sending it to the server
       console.log('Data being sent to /superadmin/createjobs:', [formattedData]);
       await axios.post(`${BASE_URL}/superadmin/createjobs`, [formattedData], { withCredentials: true });
       setFormData({ 
@@ -287,7 +307,7 @@ const AdminJobPost = () => {
         batch: '', 
         department: [], 
         driveLink: '',
-        notificationEmail: '' // Reset notification email
+        notificationEmail: []
       });
       console.log("Hello ", formattedData.notificationEmail);
       setRawDescription('');
@@ -299,6 +319,11 @@ const AdminJobPost = () => {
       setLoading(false);
     }
   };
+
+  // Filter emails based on search query
+  const filteredEmails = groupEmails.filter(email =>
+    email.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="w-full p-2 md:p-6 bg-gray-50 min-h-screen">
@@ -435,16 +460,37 @@ const AdminJobPost = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Notification Email</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Notification Emails</label>
               <input
-                type="email"
-                name="notificationEmail"
-                value={formData.notificationEmail}
-                onChange={handleInputChange}
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
-                required
-                placeholder="e.g., recipient@example.com"
+                type="text"
+                value={searchQuery}
+                onChange={handleSearchChange}
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all mb-2"
+                placeholder="Search emails..."
               />
+              <div className="max-h-48 overflow-y-auto border border-gray-300 rounded-md p-2">
+                {filteredEmails.map((email, index) => (
+                  <div key={index} className="flex items-center mb-2">
+                    <input
+                      type="checkbox"
+                      id={`email-${index}`}
+                      name="notificationEmail"
+                      value={email}
+                      checked={formData.notificationEmail.includes(email)}
+                      onChange={handleInputChange}
+                      className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor={`email-${index}`} className="ml-2 text-sm text-gray-700">
+                      {email}
+                    </label>
+                  </div>
+                ))}
+                {filteredEmails.length === 0 && (
+                  <p className="text-sm text-gray-500 p-2">
+                    {searchQuery ? 'No emails match your search' : 'No email groups available'}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
 
