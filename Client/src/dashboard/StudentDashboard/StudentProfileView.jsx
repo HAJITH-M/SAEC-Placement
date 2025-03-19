@@ -47,23 +47,22 @@ const StudentProfileView = () => {
     if (editing[field]) {
       try {
         let value = studentData[field] === 'N/A' ? null : studentData[field];
-        if (['tenthMark', 'twelfthMark'].includes(field) && value) {
-          value = parseFloat(value.replace('%', '')) || null;
-        } else if (['cgpa', 'noOfArrears'].includes(field) && value) {
-          value = parseFloat(value) || null;
+        if (['tenthMark', 'twelfthMark', 'cgpa', 'noOfArrears'].includes(field) && value) {
+          value = parseInt(value, 10); // Parse as integer
+          if (isNaN(value)) value = null; // Handle invalid input
         }
-  
+
         const updateData = {
           [field === 'emailId' ? 'email' : field]: value,
         };
-  
+
         console.log('Sending update:', updateData);
-  
+
         const response = await axios.patch('http://localhost:9999/student/resume', updateData, {
           withCredentials: true,
         });
         console.log('Update Response:', response.data);
-  
+
         setStudentData((prev) => ({
           ...prev,
           [field]: response.data[field] || studentData[field],
@@ -76,29 +75,38 @@ const StudentProfileView = () => {
     }
     setEditing((prev) => ({ ...prev, [field]: !prev[field] }));
   };
+
   const handleChange = (field, value) => {
-    setStudentData((prev) => ({ ...prev, [field]: value }));
+    if (['tenthMark', 'twelfthMark', 'cgpa', 'noOfArrears'].includes(field)) {
+      // Allow only integers
+      const intValue = value.replace(/[^0-9]/g, ''); // Remove non-numeric characters
+      setStudentData((prev) => ({ ...prev, [field]: intValue }));
+    } else {
+      setStudentData((prev) => ({ ...prev, [field]: value }));
+    }
   };
 
-  const renderField = (field, value, label) => {
+  const renderField = (field, value, label, isPercentage = false) => {
+    const displayValue = isPercentage && value !== 'N/A' ? `${value}%` : value;
     return editing[field] ? (
       <div className="flex items-center">
         <input
           type="text"
           value={value}
           onChange={(e) => handleChange(field, e.target.value)}
-          className="font-medium border-b border-gray-300 focus:outline-none"
+          className="font-medium border-b border-gray-300 focus:outline-none focus:border-orange-500 py-1 px-2 rounded"
+          placeholder={isPercentage ? "Enter integer (e.g., 85)" : ""}
         />
         <Check
-          className="w-4 h-4 ml-2 text-green-500 cursor-pointer hover:text-green-600"
+          className="w-5 h-5 ml-2 text-green-500 cursor-pointer hover:text-green-600"
           onClick={() => handleEdit(field)}
         />
       </div>
     ) : (
       <div className="flex items-center">
-        <p className="font-medium">{value}</p>
+        <p className="font-medium text-gray-800">{displayValue}</p>
         <Edit2
-          className="w-4 h-4 ml-2 text-gray-500 cursor-pointer hover:text-blue-600"
+          className="w-5 h-5 ml-2 text-gray-500 cursor-pointer hover:text-orange-500"
           onClick={() => handleEdit(field)}
         />
       </div>
@@ -106,133 +114,147 @@ const StudentProfileView = () => {
   };
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="text-gray-600 text-lg">Loading...</div>
+      </div>
+    );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-red-500">
-        {error}
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="text-red-500 text-lg">{error}</div>
       </div>
     );
   }
 
   if (!studentData) {
-    return <div className="min-h-screen flex items-center justify-center">No student data available.</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="text-gray-600 text-lg">No student data available.</div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen">
-      <div className="mx-auto max-w-4xl">
-        <div className="bg-white shadow-lg rounded-lg overflow-hidden">
-          <div className="bg-orange-500 text-white p-3">
-            <h1 className="text-xl font-bold">{renderField('name', studentData.name)}</h1>
+    <div className="min-h-screen ">
+      <div className="mx-auto w-full ">
+        <div className="bg-white shadow-xl rounded-lg overflow-hidden">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-6">
+
+
+
+            <h1 className="text-2xl font-bold">
+              <div>{renderField('name', studentData.name, 'Name')}</div>
+            </h1>
           </div>
 
-          <div className="p-6 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="flex items-center space-x-3">
-                <Mail className="w-5 h-5 text-gray-500" />
-                <div>
-                  <p className="text-sm text-gray-500">Email</p>
-                  {renderField('emailId', studentData.emailId)}
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-3">
-                <Phone className="w-5 h-5 text-gray-500" />
-                <div>
-                  <p className="text-sm text-gray-500">Phone Number</p>
-                  {renderField('phoneNumber', studentData.phoneNumber)}
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-3">
-                <Hash className="w-5 h-5 text-gray-500" />
-                <div>
-                  <p className="text-sm text-gray-500">Registration Number</p>
-                  {renderField('regNo', studentData.regNo)}
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-3">
-                <Building className="w-5 h-5 text-gray-500" />
-                <div>
-                  <p className="text-sm text-gray-500">Department</p>
-                  {renderField('department', studentData.department)}
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-3">
-                <Building className="w-5 h-5 text-gray-500" />
-                <div>
-                  <p className="text-sm text-gray-500">Batch</p>
-                  {renderField('batch', studentData.batch)}
-                </div>
-              </div>
-            </div>
-
-            <div className="border-t pt-6">
-              <h2 className="text-xl font-semibold mb-4">Academic Information</h2>
+          {/* Content */}
+          <div className="p-8 space-y-8">
+            {/* Personal Information */}
+            <div className="">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">Personal Information</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="flex items-center space-x-3">
-                  <Award className="w-5 h-5 text-gray-500" />
+                  <Mail className="w-6 h-6 text-orange-500" />
+                  <div>
+                    <p className="text-sm text-gray-500">Email</p>
+                    {renderField('emailId', studentData.emailId, 'Email')}
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Phone className="w-6 h-6 text-orange-500" />
+                  <div>
+                    <p className="text-sm text-gray-500">Phone Number</p>
+                    {renderField('phoneNumber', studentData.phoneNumber, 'Phone Number')}
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Hash className="w-6 h-6 text-orange-500" />
+                  <div>
+                    <p className="text-sm text-gray-500">Registration Number</p>
+                    {renderField('regNo', studentData.regNo, 'Registration Number')}
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Building className="w-6 h-6 text-orange-500" />
+                  <div>
+                    <p className="text-sm text-gray-500">Department</p>
+                    {renderField('department', studentData.department, 'Department')}
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Building className="w-6 h-6 text-orange-500" />
+                  <div>
+                    <p className="text-sm text-gray-500">Batch</p>
+                    {renderField('batch', studentData.batch, 'Batch')}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Academic Information */}
+            <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">Academic Information</h2>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div className="flex items-center space-x-3">
+                  <Award className="w-6 h-6 text-orange-500" />
                   <div>
                     <p className="text-sm text-gray-500">10th Mark</p>
-                    {renderField('tenthMark', `${studentData.tenthMark}%`)}
+                    {renderField('tenthMark', studentData.tenthMark, '10th Mark', true)}
                   </div>
                 </div>
-
                 <div className="flex items-center space-x-3">
-                  <Award className="w-5 h-5 text-gray-500" />
+                  <Award className="w-6 h-6 text-orange-500" />
                   <div>
                     <p className="text-sm text-gray-500">12th Mark</p>
-                    {renderField('twelfthMark', `${studentData.twelfthMark}%`)}
+                    {renderField('twelfthMark', studentData.twelfthMark, '12th Mark', true)}
                   </div>
                 </div>
-
                 <div className="flex items-center space-x-3">
-                  <Book className="w-5 h-5 text-gray-500" />
+                  <Book className="w-6 h-6 text-orange-500" />
                   <div>
                     <p className="text-sm text-gray-500">CGPA</p>
-                    {renderField('cgpa', studentData.cgpa)}
+                    {renderField('cgpa', studentData.cgpa, 'CGPA', true)}
                   </div>
                 </div>
-
                 <div className="flex items-center space-x-3">
-                  <AlertCircle className="w-5 h-5 text-gray-500" />
+                  <AlertCircle className="w-6 h-6 text-orange-500" />
                   <div>
                     <p className="text-sm text-gray-500">Arrears</p>
-                    {renderField('noOfArrears', studentData.noOfArrears)}
+                    {renderField('noOfArrears', studentData.noOfArrears, 'Arrears')}
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="border-t pt-6">
-              <h2 className="text-xl font-semibold mb-4">Skills & Languages</h2>
+            {/* Skills & Languages */}
+            <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">Skills & Languages</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="flex items-center space-x-3">
-                  <Code className="w-5 h-5 text-gray-500" />
+                  <Code className="w-6 h-6 text-orange-500" />
                   <div>
                     <p className="text-sm text-gray-500">Skills</p>
-                    {renderField('skillSet', studentData.skillSet)}
+                    {renderField('skillSet', studentData.skillSet, 'Skills')}
                   </div>
                 </div>
-
                 <div className="flex items-center space-x-3">
-                  <Languages className="w-5 h-5 text-gray-500" />
+                  <Languages className="w-6 h-6 text-orange-500" />
                   <div>
                     <p className="text-sm text-gray-500">Languages Known</p>
-                    {renderField('languagesKnown', studentData.languagesKnown)}
+                    {renderField('languagesKnown', studentData.languagesKnown, 'Languages Known')}
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="border-t pt-6">
-              <h2 className="text-xl font-semibold mb-4">Professional Links</h2>
-              <div className="flex space-x-4">
+            {/* Professional Links */}
+            <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">Professional Links</h2>
+              <div className="flex flex-col space-y-4 md:flex-row md:space-y-0 md:space-x-8">
                 <div className="flex items-center">
                   {editing.linkedinUrl ? (
                     <div className="flex items-center">
@@ -240,10 +262,10 @@ const StudentProfileView = () => {
                         type="text"
                         value={studentData.linkedinUrl}
                         onChange={(e) => handleChange('linkedinUrl', e.target.value)}
-                        className="font-medium border-b border-gray-300 focus:outline-none"
+                        className="font-medium border-b border-gray-300 focus:outline-none focus:border-orange-500 py-1 px-2 rounded"
                       />
                       <Check
-                        className="w-4 h-4 ml-2 text-green-500 cursor-pointer hover:text-green-600"
+                        className="w-5 h-5 ml-2 text-green-500 cursor-pointer hover:text-green-600"
                         onClick={() => handleEdit('linkedinUrl')}
                       />
                     </div>
@@ -253,13 +275,13 @@ const StudentProfileView = () => {
                         href={studentData.linkedinUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center space-x-2 text-blue-600 hover:text-blue-800"
+                        className="flex items-center space-x-2 text-orange-500 hover:text-orange-600"
                       >
-                        <Linkedin className="w-5 h-5" />
+                        <Linkedin className="w-6 h-6" />
                         <span>LinkedIn</span>
                       </a>
                       <Edit2
-                        className="w-4 h-4 ml-2 text-gray-500 cursor-pointer hover:text-blue-600"
+                        className="w-5 h-5 ml-2 text-gray-500 cursor-pointer hover:text-orange-500"
                         onClick={() => handleEdit('linkedinUrl')}
                       />
                     </>
@@ -272,10 +294,10 @@ const StudentProfileView = () => {
                         type="text"
                         value={studentData.githubUrl}
                         onChange={(e) => handleChange('githubUrl', e.target.value)}
-                        className="font-medium border-b border-gray-300 focus:outline-none"
+                        className="font-medium border-b border-gray-300 focus:outline-none focus:border-orange-500 py-1 px-2 rounded"
                       />
                       <Check
-                        className="w-4 h-4 ml-2 text-green-500 cursor-pointer hover:text-green-600"
+                        className="w-5 h-5 ml-2 text-green-500 cursor-pointer hover:text-green-600"
                         onClick={() => handleEdit('githubUrl')}
                       />
                     </div>
@@ -285,13 +307,13 @@ const StudentProfileView = () => {
                         href={studentData.githubUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center space-x-2 text-gray-600 hover:text-gray-800"
+                        className="flex items-center space-x-2 text-orange-500 hover:text-orange-600"
                       >
-                        <Github className="w-5 h-5" />
+                        <Github className="w-6 h-6" />
                         <span>GitHub</span>
                       </a>
                       <Edit2
-                        className="w-4 h-4 ml-2 text-gray-500 cursor-pointer hover:text-blue-600"
+                        className="w-5 h-5 ml-2 text-gray-500 cursor-pointer hover:text-orange-500"
                         onClick={() => handleEdit('githubUrl')}
                       />
                     </>

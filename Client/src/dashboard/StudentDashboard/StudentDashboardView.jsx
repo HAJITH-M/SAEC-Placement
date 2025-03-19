@@ -189,7 +189,7 @@ const StudentDashboardView = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-8 bg-slate-50 lg:ml-0 ml-0 mt-16 lg:mt-0 overflow-y-auto h-screen">
+      <div className="flex-1  bg-slate-50 lg:ml-0 ml-0 mt-16 lg:mt-0 overflow-y-auto h-screen">
         
         {renderComponent()}
       </div>
