@@ -1,5 +1,5 @@
 import React from "react";
-import { Route, BrowserRouter as Router, Routes } from 'react-router-dom'
+import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import StudentLogin from "../pages/LoginPage/StudentLogin/StudentLogin";
 import StaffLogin from "../pages/LoginPage/StaffLogin/StaffLogin";
 import AuthOptionPage from "../pages/AuthOptionPage/AuthOptionPage";
@@ -10,45 +10,62 @@ import HomeView from "../pages/HomePage/HomeView";
 import StudentDashboardView from "../dashboard/StudentDashboard/StudentDashboardView";
 import SuperAdminDashboardView from "../dashboard/SuperAdminDashboard/SuperAdminDashboardView";
 import OAuthSuccess from "../pages/LoginPage/OAuth/OAuthSuccess";
+import StudentForgotPassword from "../pages/LoginPage/StudentLogin/StudentForgotPassword";
+import StaffForgotPassword from "../pages/LoginPage/StaffLogin/StaffForgotPassword";
+import StudentResetPassword from "../pages/LoginPage/StudentLogin/StudentResetPassword";
+import StaffResetPassword from "../pages/LoginPage/StaffLogin/StaffResetPassword";
 import ProtectedRoute from "../pages/LoginPage/OAuth/ProtectedRoute";
 import StaffDashboardView from "../dashboard/StaffDashboard/StaffDashboardView";
-
-
 
 const AppRouter = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<SplashScreenView/>} />
-        <Route path="/home" element={<HomeView/>} />
-        <Route path="/auth/options" element={<AuthOptionPage/>} />
-        <Route path="/auth/student" element={<StudentLogin/>} />
-        <Route path="/auth/staff" element={<StaffLogin/>} />
-        <Route path="/auth/superadmin" element={<SuperAdminLogin/>} />
-        <Route path="/auth/superadmin/register" element={<SuperAdminRegister/>} />
-        <Route path="/dashboard/student" element={<StudentDashboardView/>} />
+        <Route path="/" element={<SplashScreenView />} />
+        <Route path="/home" element={<HomeView />} />
+        <Route path="/auth/options" element={<AuthOptionPage />} />
+        <Route path="/auth/student" element={<StudentLogin />} />
+        <Route path="/auth/staff" element={<StaffLogin />} />
+        <Route path="/auth/superadmin" element={<SuperAdminLogin />} />
+        <Route
+          path="/auth/superadmin/register"
+          element={<SuperAdminRegister />}
+        />
+        <Route path="/dashboard/student" element={<StudentDashboardView />} />
         {/* <Route element={<ProtectedRoute />}>
           <Route path="/dashboard/superadmin" element={<SuperAdminDashboardView />} />
         </Route>        <Route path="/ssss" element={<Ssss/>} /> */}
 
-    <Route element={<ProtectedRoute allowedRole="super_admin" />}>
-      <Route path="/dashboard/superadmin" element={<SuperAdminDashboardView />} />
-    </Route>
+        <Route element={<ProtectedRoute allowedRole="super_admin" />}>
+          <Route
+            path="/dashboard/superadmin"
+            element={<SuperAdminDashboardView />}
+          />
+        </Route>
 
+        <Route element={<ProtectedRoute allowedRole="student" />}>
+          <Route path="/dashboard/student" element={<StudentDashboardView />} />
+        </Route>
 
-    <Route element={<ProtectedRoute allowedRole="student" />}>
-      <Route path="/dashboard/student" element={<StudentDashboardView />} />
-    </Route>
+        <Route element={<ProtectedRoute allowedRole="staff" />}>
+          <Route path="/dashboard/staff" element={<StaffDashboardView />} />
+        </Route>
 
-
-    <Route element={<ProtectedRoute allowedRole="staff" />}>
-      <Route path="/dashboard/staff" element={<StaffDashboardView />} />
-    </Route>
-
-
+        <Route
+          path="auth/student/forgot-password"
+          element={<StudentForgotPassword />}
+        />
+        <Route
+          path="auth/staff/forgot-password"
+          element={<StaffForgotPassword />}
+        />
+        <Route
+          path="auth/student/reset-password"
+          element={<StudentResetPassword />}
+        />
+        <Route path="auth/staff/reset-password" element={<StaffResetPassword />} />
 
         <Route path="/auth/success" element={<OAuthSuccess />} />
-
       </Routes>
     </Router>
   );

@@ -86,7 +86,7 @@ const SuperAdminAuthFormView = ({ onSubmit, onOAuth, userType, toggleAuthMode })
                   )}
                   <div className="flex justify-end">
                     {!isRegistration && (
-                      <a href="/forgot-password" className="text-sm text-orange-500 hover:underline">
+                      <a href={`${userType}/forgot-password`} className="text-sm text-orange-500 hover:underline">
                         Forgot Password?
                       </a>
                     )}

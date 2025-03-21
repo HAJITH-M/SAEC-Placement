@@ -73,7 +73,7 @@ const StudentLogin = () => {
       <SuperAdminAuthFormView 
         onSubmit={handleSubmit} 
         onOAuth={handleOAuth}
-        userType={isRegistration ? 'Student Registration' : 'Student Login'} 
+        userType={isRegistration ? 'Student Registration' : 'student'} 
         toggleAuthMode={toggleAuthMode} // Pass the toggle function
       />
     </div>
