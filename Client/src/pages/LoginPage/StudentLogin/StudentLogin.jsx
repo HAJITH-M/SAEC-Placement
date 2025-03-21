@@ -8,7 +8,7 @@ const StudentLogin = () => {
   const [isRegistration, setIsRegistration] = useState(false);
 
   const handleSubmit = async (authData) => {
-    const endpoint = isRegistration ? '/student/signup' : '/student/login'; // Define endpoint here
+    const endpoint = isRegistration ? '/student/signup' : '/student/login';
     try {
       console.log(`${isRegistration ? 'Registration' : 'Login'} Request Data:`, authData);
       const authResponse = await axios.post(
@@ -74,7 +74,7 @@ const StudentLogin = () => {
         onSubmit={handleSubmit} 
         onOAuth={handleOAuth}
         userType={isRegistration ? 'Student Registration' : 'student'} 
-        toggleAuthMode={toggleAuthMode} // Pass the toggle function
+        toggleAuthMode={toggleAuthMode} // Keep this for students
       />
     </div>
   );

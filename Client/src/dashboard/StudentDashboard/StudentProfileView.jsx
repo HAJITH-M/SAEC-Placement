@@ -1,12 +1,58 @@
 import React, { useState, useEffect } from 'react';
 import { Mail, Phone, Book, Code, Languages, Award, Briefcase, Github, Linkedin, Hash, Building, AlertCircle, Edit2, Check } from 'lucide-react';
 import axios from 'axios';
+import { User } from 'lucide-react';
 
 const StudentProfileView = () => {
   const [studentData, setStudentData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [editing, setEditing] = useState({});
+  const [uploading, setUploading] = useState(false);
+
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setUploading(true);
+
+    try {
+      // Convert file to base64
+      const reader = new FileReader();
+      const base64Promise = new Promise((resolve, reject) => {
+        reader.onload = () => resolve(reader.result.split(',')[1]); // Remove data:image/jpeg;base64,
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const base64File = await base64Promise;
+
+      // Prepare data to send to backend
+      const uploadData = {
+        file: base64File,
+        fileName: file.name,
+        fileType: file.type,
+      };
+
+      const response = await axios.patch(
+        'http://localhost:9999/student/resume',
+        uploadData,
+        { withCredentials: true }
+      );
+
+      const updatedStudent = response.data;
+      setStudentData((prev) => ({
+        ...prev,
+        url: updatedStudent.url, // Update the url field with the new URL
+      }));
+    } catch (err) {
+      console.error('Error uploading profile picture:', err.response?.data || err.message);
+      setError('Failed to upload profile picture. Please try again.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
 
   useEffect(() => {
     const fetchStudentData = async () => {
@@ -25,6 +71,7 @@ const StudentProfileView = () => {
           tenthMark: response.data.tenthMark || 'N/A',
           twelfthMark: response.data.twelfthMark || 'N/A',
           cgpa: response.data.cgpa || 'N/A',
+          url:response.data.url,
           noOfArrears: response.data.noOfArrears || '0',
           skillSet: response.data.skillSet || 'N/A',
           languagesKnown: response.data.languagesKnown || 'N/A',
@@ -42,6 +89,8 @@ const StudentProfileView = () => {
 
     fetchStudentData();
   }, []);
+
+
 
   const handleEdit = async (field) => {
     if (editing[field]) {
@@ -152,44 +201,69 @@ const StudentProfileView = () => {
           </div>
 
           {/* Content */}
-          <div className="p-8 space-y-8">
+          <div className="p-8 space-y-8 ">
             {/* Personal Information */}
             <div className="">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Personal Information</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="flex items-center space-x-3">
-                  <Mail className="w-6 h-6 text-orange-500" />
-                  <div>
-                    <p className="text-sm text-gray-500">Email</p>
-                    {renderField('emailId', studentData.emailId, 'Email')}
+              <div className="flex gap-8 md:flex">
+                {/* Profile Picture on Left */}
+                <div className="w-48">
+                  <div className="w-48 h-48 rounded-full bg-gray-200 flex items-center justify-center">
+                    {studentData.url ? (
+                      <img 
+                        src={studentData.url} 
+                        alt="Profile" 
+                 className="w-full h-full rounded-full object-cover"
+                      />
+                    ) : (
+                      <User className="w-20 h-20 text-gray-400" />
+                    )}
                   </div>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <Phone className="w-6 h-6 text-orange-500" />
-                  <div>
-                    <p className="text-sm text-gray-500">Phone Number</p>
-                    {renderField('phoneNumber', studentData.phoneNumber, 'Phone Number')}
+                  <div className="mt-4 flex items-center justify-center">
+                    <label className="cursor-pointer bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors">
+                      <input type="file" onChange={handleFileUpload} className="hidden" accept="image/*" />
+                      {uploading ? 'Uploading...' : 'Upload Photo'}
+                    </label>
                   </div>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <Hash className="w-6 h-6 text-orange-500" />
-                  <div>
-                    <p className="text-sm text-gray-500">Registration Number</p>
-                    {renderField('regNo', studentData.regNo, 'Registration Number')}
+                </div>     
+
+                {/* Information on Right */}
+                <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="flex items-center space-x-3">
+                    <Mail className="w-6 h-6 text-orange-500" />
+                    <div>
+                      <p className="text-sm text-gray-500">Email</p>
+                      {renderField('emailId', studentData.emailId, 'Email')}
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <Building className="w-6 h-6 text-orange-500" />
-                  <div>
-                    <p className="text-sm text-gray-500">Department</p>
-                    {renderField('department', studentData.department, 'Department')}
+                  
+                  <div className="flex items-center space-x-3">
+                    <Phone className="w-6 h-6 text-orange-500" />
+                    <div>
+                      <p className="text-sm text-gray-500">Phone Number</p>
+                      {renderField('phoneNumber', studentData.phoneNumber, 'Phone Number')}
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <Building className="w-6 h-6 text-orange-500" />
-                  <div>
-                    <p className="text-sm text-gray-500">Batch</p>
-                    {renderField('batch', studentData.batch, 'Batch')}
+                  <div className="flex items-center space-x-3">
+                    <Hash className="w-6 h-6 text-orange-500" />
+                    <div>
+                      <p className="text-sm text-gray-500">Registration Number</p>
+                      {renderField('regNo', studentData.regNo, 'Registration Number')}
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <Building className="w-6 h-6 text-orange-500" />
+                    <div>
+                      <p className="text-sm text-gray-500">Department</p>
+                      {renderField('department', studentData.department, 'Department')}
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <Building className="w-6 h-6 text-orange-500" />
+                    <div>
+                      <p className="text-sm text-gray-500">Batch</p>
+                      {renderField('batch', studentData.batch, 'Batch')}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -198,7 +272,7 @@ const StudentProfileView = () => {
             {/* Academic Information */}
             <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Academic Information</h2>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="flex items-center space-x-3">
                   <Award className="w-6 h-6 text-orange-500" />
                   <div>

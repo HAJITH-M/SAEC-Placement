@@ -1,24 +1,31 @@
 import React, { useState, useEffect } from "react";
 import {
-  Building2, MapPin, Banknote, Calendar, Link, CheckCircle2, Navigation, ThumbsUp, ThumbsDown, Loader
+  Building2, MapPin, Banknote, Calendar, Link, Navigation, ThumbsUp, ThumbsDown, Loader
 } from "lucide-react";
 
 const StudentJobView = () => {
   const [jobs, setJobs] = useState([]);
   const [filter, setFilter] = useState("all");
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
+  const [toasts, setToasts] = useState([]); // State for managing toasts
   const [endsOn, setEndsOn] = useState([]);
-  const [loadingStates, setLoadingStates] = useState({}); // Per-job loading
-  const [isFetching, setIsFetching] = useState(false); // New state for initial fetch
+  const [loadingStates, setLoadingStates] = useState({});
+  const [isFetching, setIsFetching] = useState(false);
+
+  // Function to add a toast
+  const addToast = (message, type = "success") => {
+    const id = Date.now(); // Unique ID for each toast
+    setToasts((prev) => [...prev, { id, message, type }]);
+    // Auto-remove toast after 3 seconds
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((toast) => toast.id !== id));
+    }, 3000);
+  };
 
   useEffect(() => {
     const fetchJobsAndStatus = async () => {
       try {
-        setIsFetching(true); // Indicate fetch has started
-        setError(null);
-        setSuccess(null);
-        setLoadingStates({}); // Reset loading states
+        setIsFetching(true);
+        setLoadingStates({});
 
         const drivesResponse = await fetch("http://localhost:9999/student/displaydrives", {
           method: "GET",
@@ -31,8 +38,6 @@ const StudentJobView = () => {
         }
 
         const drivesData = await drivesResponse.json();
-        console.log("Raw drives data:", drivesData);
-
         const formattedJobs = drivesData.drives_list.map((drive) => ({
           title: drive.jobDescription || "Untitled Job",
           company: drive.companyName,
@@ -49,21 +54,18 @@ const StudentJobView = () => {
 
         const initialLoadingStates = {};
         for (const job of formattedJobs) {
-          initialLoadingStates[job.id] = true; // Start with loading true for each job
+          initialLoadingStates[job.id] = true;
           const applied = await checkApplicationStatus(job.id);
-          console.log(`Drive ${job.id} - Applied: ${applied}`);
           job.status = applied ? "Registered" : "Open";
-          initialLoadingStates[job.id] = false; // Set to false after status check
+          initialLoadingStates[job.id] = false;
         }
 
-        console.log("Final jobs state:", formattedJobs);
         setJobs(formattedJobs);
         setLoadingStates(initialLoadingStates);
       } catch (err) {
-        setError(err.message || "Failed to fetch jobs");
-        console.error("Fetch error:", err);
+        addToast(err.message || "Failed to fetch jobs", "error");
       } finally {
-        setIsFetching(false); // Indicate fetch has completed
+        setIsFetching(false);
       }
     };
 
@@ -75,7 +77,6 @@ const StudentJobView = () => {
       const endDate = new Date(job.endDate);
       const today = new Date();
       const daysLeft = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
-      console.log({ endDate, today, daysLeft });
       setEndsOn((prevEndsOn) => [...prevEndsOn, `${daysLeft.toString().padStart(2, "0")} days left`]);
     }
   }, [jobs]);
@@ -100,7 +101,7 @@ const StudentJobView = () => {
   const handleThumbsUp = async (index) => {
     const job = jobs[index];
     if (job.status === "Registered") {
-      setError("You have already registered for this drive");
+      addToast("You have already registered for this drive", "error");
       return;
     }
 
@@ -108,9 +109,7 @@ const StudentJobView = () => {
     if (!confirmRegister) return;
 
     try {
-      setLoadingStates((prev) => ({ ...prev, [job.id]: true })); // Set loading for this job only
-      setError(null);
-      setSuccess(null);
+      setLoadingStates((prev) => ({ ...prev, [job.id]: true }));
 
       const response = await fetch("http://localhost:9999/student/applyfordrive", {
         method: "POST",
@@ -127,12 +126,12 @@ const StudentJobView = () => {
       const updatedJobs = [...jobs];
       updatedJobs[index].status = "Registered";
       setJobs(updatedJobs);
-      setSuccess(data.message || "Successfully registered for the drive");
+      addToast(data.message || "Successfully registered for the drive", "success");
     } catch (err) {
       console.error("Error registering for drive:", err);
-      setError(err.message || "Failed to register for the drive");
+      addToast(err.message || "Failed to register for the drive", "error");
     } finally {
-      setLoadingStates((prev) => ({ ...prev, [job.id]: false })); // Reset loading for this job
+      setLoadingStates((prev) => ({ ...prev, [job.id]: false }));
     }
   };
 
@@ -144,9 +143,7 @@ const StudentJobView = () => {
     if (!confirmDecline) return;
 
     try {
-      setLoadingStates((prev) => ({ ...prev, [job.id]: true })); // Set loading for this job only
-      setError(null);
-      setSuccess(null);
+      setLoadingStates((prev) => ({ ...prev, [job.id]: true }));
 
       if (job.status === "Registered") {
         const response = await fetch("http://localhost:9999/student/remove-application", {
@@ -162,9 +159,9 @@ const StudentJobView = () => {
         }
 
         const data = await response.json();
-        setSuccess(data.message || "Application removed successfully");
+        addToast(data.message || "Application removed successfully", "success");
       } else {
-        setSuccess("Drive declined successfully");
+        addToast("Drive declined successfully", "success");
       }
 
       const updatedJobs = [...jobs];
@@ -172,9 +169,9 @@ const StudentJobView = () => {
       setJobs(updatedJobs);
     } catch (err) {
       console.error("Error removing application:", err);
-      setError(err.message || "Failed to decline the drive");
+      addToast(err.message || "Failed to decline the drive", "error");
     } finally {
-      setLoadingStates((prev) => ({ ...prev, [job.id]: false })); // Reset loading for this job
+      setLoadingStates((prev) => ({ ...prev, [job.id]: false }));
     }
   };
 
@@ -183,7 +180,6 @@ const StudentJobView = () => {
       ? jobs
       : jobs.filter((job) => job.status.toLowerCase() === filter.toLowerCase());
 
-  // Show loading spinner only during initial fetch when no jobs are loaded yet
   if (isFetching && !jobs.length) {
     return (
       <div className="w-full h-full flex flex-col justify-center items-center">
@@ -195,18 +191,22 @@ const StudentJobView = () => {
     );
   }
 
-  if (error && !jobs.length) {
-    return <div className="p-6 text-red-500">Error: {error}</div>;
-  }
-
   return (
-    <div className="p-8">
-      {success && (
-        <div className="p-4 mb-4 bg-green-100 text-green-700 rounded">{success}</div>
-      )}
-      {error && (
-        <div className="p-4 mb-4 bg-red-100 text-red-700 rounded">{error}</div>
-      )}
+    <div className="p-8 relative">
+      {/* Toast Container */}
+      <div className="fixed top-4 right-4 z-50 space-y-2">
+        {toasts.map((toast) => (
+          <div
+            key={toast.id}
+            className={`p-4 rounded shadow-lg text-white transition-all duration-300 ${
+              toast.type === "success" ? "bg-green-500" : "bg-red-500"
+            }`}
+          >
+            {toast.message}
+          </div>
+        ))}
+      </div>
+
       <div className="flex gap-4 mb-6">
         <button
           onClick={() => setFilter("all")}
@@ -251,12 +251,11 @@ const StudentJobView = () => {
             </div>
 
             <div className="space-y-3">
-            <div className="flex items-center text-gray-600">
-                  <Building2 size={18} className="mr-2 flex-shrink-0 text-orange-500" />
-                  <span className="truncate">{job.company}</span>
-                </div>
+              <div className="flex items-center text-gray-600">
+                <Building2 size={18} className="mr-2 flex-shrink-0 text-orange-500" />
+                <span className="truncate">{job.company}</span>
+              </div>
               <div className="grid grid-cols-2 gap-2">
-                
                 <div className="flex items-center text-gray-600">
                   <MapPin size={18} className="mr-2 flex-shrink-0 text-orange-500" />
                   <span className="truncate">{job.location}</span>

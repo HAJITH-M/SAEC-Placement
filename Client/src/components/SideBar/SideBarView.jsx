@@ -2,7 +2,7 @@ import React from 'react';
 import { FaHome, FaUserGraduate, FaBuilding, FaCalendarAlt, FaSignInAlt } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 
-const SideBar = ({ isSidebarOpen, userEmail, showStudents = false, showCompanies = false, showEvents = false }) => {
+const SideBar = ({ isSidebarOpen, userEmail, showCompanies = false, showEvents = false }) => {
   return (
     <div className={`w-full bg-white lg:w-64 text-orange-500 fixed lg:sticky top-0 h-screen transition-transform duration-300 ease-in-out lg:translate-x-0 ${
       isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
@@ -25,14 +25,14 @@ const SideBar = ({ isSidebarOpen, userEmail, showStudents = false, showCompanies
                 <span>Home</span>
               </Link>
             </li>
-            {showStudents && (
+            {/* {showStudents && (
               <li>
                 <Link to="/students" className="flex items-center space-x-2 p-2 text-black hover:bg-orange-500 hover:text-white rounded transition-all duration-200 group">
                   <FaUserGraduate className="text-orange-500 group-hover:text-white" />
                   <span>Students</span>
                 </Link>
               </li>
-            )}
+            )} */}
             {showCompanies && (
               <li>
                 <Link to="/companies" className="flex items-center space-x-2 p-2 text-black hover:bg-orange-500 hover:text-white rounded transition-all duration-200 group">

@@ -4,6 +4,7 @@ import RecentPlacements from '../../components/RecentPlacements/RecentPlacements
 import NavBar from '../../components/NavBar/NavBarView';
 import SideBar from '../../components/SideBar/SideBarView';
 import HomeVM from './HomeVM';
+import PlacedStudents from '../../components/PlacedStudents/PlacedStudents';
 
 const HomeView = () => {
   const viewModel = HomeVM();  // renamed for clarity
@@ -20,6 +21,8 @@ const HomeView = () => {
             <p className="text-xl text-gray-200 mb-6">Shaping Careers, Building Futures</p>
           </div>
         </div>
+
+        <PlacedStudents/>
         
         <PlacementStats />
         <RecentPlacements />

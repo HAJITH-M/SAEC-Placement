@@ -1,17 +1,20 @@
-import React from 'react';
-import { FaLock, FaEnvelope, FaGoogle, FaUser } from 'react-icons/fa';
+
+
+import React, { useState } from 'react';
+import { FaLock, FaEnvelope, FaGoogle, FaUser, FaEye, FaEyeSlash } from 'react-icons/fa';
 import SuperAdminAuthFormVM from './SuperAdminAuthFormVM';
 
 const SuperAdminAuthFormView = ({ onSubmit, onOAuth, userType, toggleAuthMode }) => {
   const vm = SuperAdminAuthFormVM({ onSubmit, userType });
+  const [showPassword, setShowPassword] = useState(false);
 
   const isRegistration = userType.toLowerCase().includes('registration');
 
   return (
     <section className="h-screen flex items-center bg-white">
       <div className="max-w-6xl px-4 mx-auto sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:items-stretch md:grid-cols-2 gap-x-12 lg:gap-x-20 gap-y-10">
-          <div className="flex flex-col justify-between">
+        <div className="grid grid-cols-1 md:items-stretch md:grid-cols-2 gap-x-12 lg:gap-x-20 md:gap-y-10">
+          <div className="p-3 flex flex-col justify-between text-center md:text-left">
             <div>
               <h2 className="text-3xl font-bold leading-tight text-gray-900 sm:text-4xl lg:text-5xl">
                 Welcome Back {userType.split(' ')[0]}!
@@ -26,7 +29,7 @@ const SuperAdminAuthFormView = ({ onSubmit, onOAuth, userType, toggleAuthMode })
 
           <div className="lg:pl-12">
             <div className="overflow-hidden bg-white rounded-md">
-              <div className="p-6">
+              <div className="p-3">
                 {vm.authError && (
                   <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">{vm.authError}</div>
                 )}
@@ -55,11 +58,19 @@ const SuperAdminAuthFormView = ({ onSubmit, onOAuth, userType, toggleAuthMode })
                         <FaLock />
                       </span>
                       <input
-                        type="password"
+
+                        type={showPassword ? "text" : "password"}
                         {...vm.register('password')}
                         className="block w-full px-10 py-3 text-black placeholder-gray-500 transition-all duration-200 bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500 caret-orange-500"
                         placeholder="Enter your password"
                       />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer"
+                      >
+                        {showPassword ? <FaEyeSlash /> : <FaEye />}
+                      </button>
                     </div>
                     {vm.errors.password && (
                       <p className="mt-1 text-sm text-red-600">{vm.errors.password.message}</p>
@@ -122,15 +133,18 @@ const SuperAdminAuthFormView = ({ onSubmit, onOAuth, userType, toggleAuthMode })
                 )}
 
                 <div className="mt-4 text-center">
-                  <p className="text-sm text-gray-600">
-                    {isRegistration ? 'Already have an account?' : "Don't have an account?"}{' '}
-                    <button
-                      onClick={toggleAuthMode}
-                      className="text-orange-500 hover:underline focus:outline-none"
-                    >
-                      {isRegistration ? 'Sign in' : 'Sign up'}
-                    </button>
-                  </p>
+
+                  {toggleAuthMode && (
+                    <p className="text-sm text-gray-600">
+                      {isRegistration ? 'Already have an account?' : "Don't have an account?"}{' '}
+                      <button
+                        onClick={toggleAuthMode}
+                        className="text-orange-500  cursor-pointer hover:underline focus:outline-none"
+                      >
+                        {isRegistration ? 'Sign in' : 'Sign up'}
+                      </button>
+                    </p>
+                  )}
                   <p className="text-sm text-gray-600 mt-2">{userType} Access Only</p>
                 </div>
               </div>

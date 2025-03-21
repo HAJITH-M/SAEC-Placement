@@ -24,7 +24,12 @@ const StaffLogin = () => {
 
   return (
     <div>
-      <SuperAdminAuthFormView onSubmit={handleSubmit} onOAuth={handleOAuthLogin} userType="staff" />
+      <SuperAdminAuthFormView 
+        onSubmit={handleSubmit} 
+        onOAuth={handleOAuthLogin} 
+        userType="staff" 
+        // Do not pass toggleAuthMode here
+      />
     </div>
   );
 };
