@@ -16,6 +16,7 @@ import StudentResetPassword from "../pages/LoginPage/StudentLogin/StudentResetPa
 import StaffResetPassword from "../pages/LoginPage/StaffLogin/StaffResetPassword";
 import ProtectedRoute from "../pages/LoginPage/OAuth/ProtectedRoute";
 import StaffDashboardView from "../dashboard/StaffDashboard/StaffDashboardView";
+import StaffEventAdd from "../dashboard/StaffDashboard/StaffEventAdd";
 
 const AppRouter = () => {
   return (
@@ -51,6 +52,10 @@ const AppRouter = () => {
           <Route path="/dashboard/staff" element={<StaffDashboardView />} />
         </Route>
 
+        <Route element={<ProtectedRoute allowedRole="staff" />}>
+          <Route path="/addevents/staff" element={<StaffEventAdd />} />
+        </Route>
+
         <Route
           path="auth/student/forgot-password"
           element={<StudentForgotPassword />}
@@ -64,7 +69,7 @@ const AppRouter = () => {
           element={<StudentResetPassword />}
         />
         <Route path="auth/staff/reset-password" element={<StaffResetPassword />} />
-
+    
         <Route path="/auth/success" element={<OAuthSuccess />} />
       </Routes>
     </Router>
