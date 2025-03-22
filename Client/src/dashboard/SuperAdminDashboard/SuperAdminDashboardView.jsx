@@ -9,6 +9,7 @@ import AdminJobPost from "./AdminJobPost";
 import AdminJobRegistrations from "./AdminJobRegistrations";
 import AdminHomeViewDashboard from "./AdminHomeView";
 import AdminAddMailForm from "./AdminAddMailForm";
+import AdminAddEvents from "./AdminAddEvents";
 
 const SuperAdminDashboardView = () => {
   const [activeComponent, setActiveComponent] = useState("home");
@@ -89,7 +90,7 @@ const SuperAdminDashboardView = () => {
       case "staff":
         return <StaffManagementView staff={staffList} onStaffCreated={fetchData} onStaffRemoved={fetchData} />;
       case "events":
-        return <EventManagementView />;
+        return <AdminAddEvents />;
       case "adminJobPost":
         return <AdminJobPost />;
       case "jobRegistrations":
@@ -211,13 +212,6 @@ const HomeComponent = ({ staffCount, studentCount }) => (
       <p><strong>Total Staff:</strong> {staffCount}</p>
       <p><strong>Total Students:</strong> {studentCount}</p>
     </div>
-  </div>
-);
-
-const EventManagementView = () => (
-  <div className="bg-white p-6 rounded-lg shadow">
-    <h2 className="text-2xl font-bold mb-4">Event Management</h2>
-    <p>Manage events here (placeholder).</p>
   </div>
 );
 

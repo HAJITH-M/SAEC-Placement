@@ -17,6 +17,7 @@ import StaffResetPassword from "../pages/LoginPage/StaffLogin/StaffResetPassword
 import ProtectedRoute from "../pages/LoginPage/OAuth/ProtectedRoute";
 import StaffDashboardView from "../dashboard/StaffDashboard/StaffDashboardView";
 import StaffEventAdd from "../dashboard/StaffDashboard/StaffEventAdd";
+import AdminAddEvents from "../dashboard/SuperAdminDashboard/AdminAddEvents";
 
 const AppRouter = () => {
   return (
@@ -54,6 +55,9 @@ const AppRouter = () => {
 
         <Route element={<ProtectedRoute allowedRole="staff" />}>
           <Route path="/addevents/staff" element={<StaffEventAdd />} />
+        </Route>
+        <Route element={<ProtectedRoute allowedRole="super_admin" />}>
+          <Route path="/addevents/superadmin" element={<AdminAddEvents />} />
         </Route>
 
         <Route

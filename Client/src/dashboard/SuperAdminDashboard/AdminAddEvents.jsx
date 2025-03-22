@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import { ToastContainer } from "react-toastify";
 
-const StaffEventAdd = () => {
+const AdminAddEvents = () => {
   const [eventData, setEventData] = useState({
     event_name: "",
     event_link: "",
@@ -73,7 +73,7 @@ const StaffEventAdd = () => {
 
       console.log("Sending request to server...");
       const response = await axios.post(
-        "http://localhost:9999/staff/add-events",
+        "http://localhost:9999/superadmin/add-events",
         uploadData,
         {
           withCredentials: true,
@@ -176,4 +176,4 @@ const StaffEventAdd = () => {
   );
 };
 
-export default StaffEventAdd;
+export default AdminAddEvents;
