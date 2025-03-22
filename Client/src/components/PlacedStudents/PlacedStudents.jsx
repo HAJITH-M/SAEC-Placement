@@ -1,3 +1,4 @@
+import { Workflow } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { FaGraduationCap, FaBriefcase, FaChartLine, FaHandshake } from 'react-icons/fa';
 
@@ -32,6 +33,10 @@ const PlacedStudents = () => {
                 <div className="flex items-center text-gray-600">
                   <FaGraduationCap className="mr-2" />
                   <span>{student.department}</span>
+                </div>
+                <div className="flex items-center text-gray-600">
+                  <Workflow className="mr-2" />
+                  <span>{student.companyPlacedIn}</span>
                 </div>
                 <div className="flex items-center text-gray-600">
                   <FaBriefcase className="mr-2" />

@@ -27,49 +27,6 @@ const StaffProfileView = ({ staffDetails }) => {
     }
   };
 
-
-  const handleFileUpload = async (event) => {
-      const file = event.target.files[0];
-      if (!file) return;
-  
-      setUploading(true);
-  
-      try {
-        const reader = new FileReader();
-        const base64Promise = new Promise((resolve, reject) => {
-          reader.onload = () => resolve(reader.result.split(',')[1]); // Remove data:image/jpeg;base64,
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
-  
-        const base64File = await base64Promise;
-  
-        // Prepare data to send to backend
-        const uploadData = {
-          file: base64File,
-          fileName: file.name,
-          fileType: file.type,
-        };
-  
-        const response = await axios.post(
-          'http://localhost:9999/staff/add-events',
-          uploadData,
-          { withCredentials: true }
-        );
-  
-        const updatedEvent = response.data;
-        setStudentData((prev) => ({
-          ...prev,
-          url: updatedStudent.url,
-        }));
-      } catch (err) {
-        console.error('Error uploading event picture:', err.response?.data || err.message);
-        setError('Failed to upload event picture. Please try again.');
-      } finally {
-        setUploading(false);
-      }
-    };
-
   return (
     <div className="w-full max-w-2xl mx-auto bg-white p-4 sm:p-6 md:p-8 rounded-xl shadow-lg">
       <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-gray-800 border-b pb-4">Staff Profile</h2>
@@ -141,8 +98,6 @@ const StaffProfileView = ({ staffDetails }) => {
             <Lock className="w-5 h-5" />
             <span>Update Password</span>
           </button>
-          <label>Upload event picture</label>
-          <input type="file" onChange={handleFileUpload}>Event picture</input>
         </form>
       </div>
     </div>
