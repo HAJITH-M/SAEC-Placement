@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { ToastContainer } from "react-toastify";
+import { ToastContainer, toast } from "react-toastify"; // Added toast import
 
 const StaffEventAdd = () => {
   const [eventData, setEventData] = useState({
@@ -57,11 +57,9 @@ const StaffEventAdd = () => {
         date: eventData.date,
       };
 
-      // Handle file upload
       if (eventData.file) {
         console.log("Converting file to Base64...");
         const base64File = await convertFileToBase64(eventData.file);
-        
         uploadData = {
           ...uploadData,
           file: base64File,
@@ -71,7 +69,7 @@ const StaffEventAdd = () => {
         console.log("File added to upload data:", uploadData);
       }
 
-      console.log("Sending request to server...");
+      console.log("Final upload data:", JSON.stringify(uploadData, null, 2));
       const response = await axios.post(
         "http://localhost:9999/staff/add-events",
         uploadData,
@@ -98,7 +96,7 @@ const StaffEventAdd = () => {
         console.log("Error response data:", err.response.data);
         console.log("Error status:", err.response.status);
         setError(
-          `Failed to upload event: ${err.response.data?.error || "Unknown error"}`
+          `Failed to upload event: ${err.response?.data?.error || "Unknown error"}`
         );
       } else if (err.request) {
         console.log("No response received:", err.request);
@@ -113,65 +111,78 @@ const StaffEventAdd = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6 bg-white shadow-md rounded-lg">
-      <h2 className="text-2xl font-bold mb-6 text-gray-800">Add Event</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Event Name</label>
-          <input
-            type="text"
-            name="event_name"
-            value={eventData.event_name}
-            onChange={handleChange}
-            required
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-          />
-        </div>
+    <div className="w-full p-2 md:p-6 bg-gray-50 min-h-screen">
+      <div className="bg-white rounded-lg shadow-md p-3 md:p-6 pb-10">
+        <h2 className="text-2xl font-semibold text-gray-800 mb-6">Add Event</h2>
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md text-sm">
+            {error}
+          </div>
+        )}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Event Name</label>
+            <input
+              type="text"
+              name="event_name"
+              value={eventData.event_name}
+              onChange={handleChange}
+              required
+              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+              placeholder="Enter event name"
+            />
+          </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Event Link</label>
-          <input
-            type="text"
-            name="event_link"
-            value={eventData.event_link}
-            onChange={handleChange}
-            required
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-          />
-        </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Event Link</label>
+            <input
+              type="text"
+              name="event_link"
+              value={eventData.event_link}
+              onChange={handleChange}
+              required
+              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+              placeholder="Enter event link"
+            />
+          </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Date</label>
-          <input
-            type="date"
-            name="date"
-            value={eventData.date}
-            onChange={handleChange}
-            required
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-          />
-        </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+            <input
+              type="date"
+              name="date"
+              value={eventData.date}
+              onChange={handleChange}
+              required
+              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+            />
+          </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Poster Upload</label>
-          <input
-            type="file"
-            onChange={handleFileChange}
-            className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border file:border-gray-300 file:text-sm file:font-medium file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100"
-          />
-        </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Poster Upload</label>
+            <input
+              type="file"
+              onChange={handleFileChange}
+              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+            />
+          </div>
 
-        <button
-          type="submit"
-          disabled={uploading}
-          className={`w-full py-2 px-4 text-white font-semibold rounded-md shadow-sm ${
-            uploading ? "bg-gray-400 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-700"
-          }`}
-        >
-          {uploading ? "Uploading..." : "Add Event"}
-        </button>
-      </form>
-      <ToastContainer />
+          <div className="flex justify-start">
+            <button
+              type="submit"
+              disabled={uploading}
+              className={`px-6 py-2 text-white rounded-md transition-all ${
+                uploading
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-orange-500 hover:bg-orange-600"
+              }`}
+            >
+              {uploading ? "Uploading..." : "Add Event"}
+            </button>
+          </div>
+        </form>
+        <ToastContainer />
+      </div>
     </div>
   );
 };

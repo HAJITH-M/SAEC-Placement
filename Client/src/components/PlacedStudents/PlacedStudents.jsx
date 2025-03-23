@@ -5,13 +5,39 @@ import { FaGraduationCap, FaBriefcase, FaChartLine, FaHandshake } from 'react-ic
 const PlacedStudents = () => {
   const [students, setStudents] = useState([]);
 
-  useEffect(() => {
-    // Replace with your actual API endpoint
-    fetch('http://localhost:9999/get-placed-students')
-      .then(response => response.json())
-      .then(data => setStudents(data))
-      .catch(error => console.error('Error fetching placed students:', error));
-  }, []);
+  // useEffect(() => {
+  //   // Replace with your actual API endpoint
+  //   fetch('http://localhost:9999/get-placed-students')
+  //     .then(response => response.json())
+  //     .then(data => setStudents(data))
+  //     .catch(error => console.error('Error fetching placed students:', error));
+
+    
+  // }, []);
+
+
+  // useEffect(() => {
+  //   axios.get('http://localhost:9999/get-placed-students')
+  //     .then(response => setStudents(response.data))
+  //     .catch(error => console.error('Error fetching placed students:', error));
+  // }, []);
+
+
+useEffect (() =>{
+
+ const getStudents = async () => {
+  try {
+    const response = await axios.get('http://localhost:9999/get-placed-students');
+    setStudents(response.data);
+    console.log(response.data);
+  } catch (error) {
+    console.error('Error fetching placed students:', error);
+  }
+};
+
+getStudents();
+
+}, [])
 
   return (
     <div className="container mx-auto py-10 lg:py-16 px-4">
@@ -28,7 +54,7 @@ const PlacedStudents = () => {
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent h-20"/>
             </div>
             <div className="p-6">
-              <h3 className="font-bold text-xl mb-2 text-gray-800">{student.name}</h3>
+              <h2 className="font-bold text-xl mb-2 text-gray-800">{student.name}</h2>
               <div className="space-y-2">
                 <div className="flex items-center text-gray-600">
                   <FaGraduationCap className="mr-2" />
@@ -40,7 +66,11 @@ const PlacedStudents = () => {
                 </div>
                 <div className="flex items-center text-gray-600">
                   <FaBriefcase className="mr-2" />
-                  <span>Batch {student.batch}</span>
+                  <span>Batch: {student.batch}</span>
+                </div>
+                <div className="flex items-center text-gray-600">
+                  <FaBriefcase className="mr-2" />
+                  <span>Company: {student.companyPlacedIn}</span>
                 </div>
               </div>
             </div>

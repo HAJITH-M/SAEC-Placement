@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Building2, Calendar, Link, Users, Search, Filter, Download, Trash2 } from 'lucide-react';
+import { Building2, Calendar, Link, Users, Search, Filter, Download, Trash2, CheckCircle } from 'lucide-react';
 import * as XLSX from "xlsx";
 
 const BASE_URL = "http://localhost:9999";
 
-// Modal Component
+// Modal Component for Delete Confirmation
 const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, jobTitle }) => {
   if (!isOpen) return null;
   return (
@@ -35,6 +35,129 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, jobTitle }) => {
   );
 };
 
+// Modified Modal Component for Adding Placed Students with Company Name and Search
+const AddPlacedStudentsModal = ({ isOpen, onClose, onConfirm, jobId, students, companyName }) => {
+  const [selectedEmails, setSelectedEmails] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterBy, setFilterBy] = useState('studentName');
+
+  if (!isOpen) return null;
+
+  const handleEmailToggle = (email) => {
+    setSelectedEmails(prev => 
+      prev.includes(email) 
+        ? prev.filter(e => e !== email)
+        : [...prev, email]
+    );
+  };
+
+  const handleSubmit = () => {
+    onConfirm(selectedEmails);
+    setSelectedEmails([]);
+    setSearchTerm('');
+  };
+
+  const filterStudents = (studentsList) => {
+    if (!searchTerm || filterBy === 'all') return studentsList;
+    return studentsList.filter(student => {
+      const searchValue = String(student[filterBy] || '').toLowerCase();
+      return searchValue.includes(searchTerm.toLowerCase());
+    });
+  };
+
+  const filteredStudents = filterStudents(students);
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-2xl">
+        <h3 className="text-lg font-semibold mb-4">
+          Add Placed Students for <span className="text-green-600">{companyName}</span>
+        </h3>
+        
+        {/* Search Section */}
+        <div className="flex flex-row gap-2 mb-4">
+          <div className="flex items-center border rounded p-1.5 w-1/3">
+            <Filter size={16} className="text-orange-500 mr-1.5" />
+            <select
+              value={filterBy}
+              onChange={(e) => setFilterBy(e.target.value)}
+              className="w-full focus:outline-none text-sm"
+            >
+              <option value="all">All</option>
+              <option value="studentName">Name</option>
+              <option value="email">Email</option>
+              <option value="department">Department</option>
+            </select>
+          </div>
+          <div className="flex items-center flex-1 border rounded p-1.5">
+            <Search size={16} className="text-orange-500 mr-1.5" />
+            <input
+              type="text"
+              placeholder="Search students..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full focus:outline-none text-sm"
+            />
+          </div>
+        </div>
+
+        <div className="max-h-96 overflow-y-auto mb-4">
+          {filteredStudents && filteredStudents.length > 0 ? (
+            <div className="overflow-x-auto rounded-lg border">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gray-50">
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Select</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Name</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Email</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Department</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {filteredStudents.map((student) => (
+                    <tr key={student.email} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-4 py-3">
+                        <input
+                          type="checkbox"
+                          checked={selectedEmails.includes(student.email)}
+                          onChange={() => handleEmailToggle(student.email)}
+                          className="h-4 w-4"
+                        />
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-900">{student.studentName || 'N/A'}</td>
+                      <td className="px-4 py-3 text-sm text-gray-900">{student.email || 'N/A'}</td>
+                      <td className="px-4 py-3 text-sm text-gray-900">{student.department || 'N/A'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="text-gray-500 text-center py-4">
+              {searchTerm ? 'No students match your search.' : 'No students available to mark as placed.'}
+            </p>
+          )}
+        </div>
+        <div className="flex justify-end gap-4">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit}
+            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+            disabled={selectedEmails.length === 0}
+          >
+            Add Selected ({selectedEmails.length})
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const StaffSeeRegistrations = () => {
   const [jobs, setJobs] = useState([]);
   const [expandedJobId, setExpandedJobId] = useState(null);
@@ -47,7 +170,9 @@ const StaffSeeRegistrations = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [jobToDelete, setJobToDelete] = useState(null);
   const [currentStaffEmail, setCurrentStaffEmail] = useState(null);
-  const [viewMode, setViewMode] = useState("all"); // Toggle between "all" and "your" students
+  const [viewMode, setViewMode] = useState("all");
+  const [showPlacedModal, setShowPlacedModal] = useState(false);
+  const [selectedJobId, setSelectedJobId] = useState(null);
 
   useEffect(() => {
     fetchJobs();
@@ -56,14 +181,11 @@ const StaffSeeRegistrations = () => {
   const fetchJobs = async () => {
     try {
       setLoading(true);
-
-      // Fetch current staff email (assuming /staff provides it)
       const staffResponse = await axios.get(`${BASE_URL}/staff`, { withCredentials: true });
       const staffEmail = staffResponse.data.staffEmail;
       setCurrentStaffEmail(staffEmail);
       console.log('Current Staff Email:', staffEmail);
 
-      // Fetch drives
       const response = await axios.get(`${BASE_URL}/staff/displaydrives`, { withCredentials: true });
       console.log('Display Drives Response:', response.data);
       const drives = response.data.drives_list || [];
@@ -111,18 +233,38 @@ const StaffSeeRegistrations = () => {
     setJobToDelete(null);
   };
 
+  const handleAddPlacedClick = (jobId) => {
+    setSelectedJobId(jobId);
+    setShowPlacedModal(true);
+  };
+
+  const handleAddPlacedConfirm = async (emails) => {
+    if (!selectedJobId || !emails.length) return;
+    try {
+      setLoading(true);
+      await axios.post(`${BASE_URL}/staff/mark-placed/${selectedJobId}`, 
+        { emails },
+        { withCredentials: true }
+      );
+      await fetchJobs();
+    } catch (err) {
+      setError(err.response?.data?.error || "Failed to mark students as placed");
+    } finally {
+      setLoading(false);
+      setShowPlacedModal(false);
+      setSelectedJobId(null);
+    }
+  };
+
   const toggleStudentList = (jobId) => {
     setExpandedJobId(expandedJobId === jobId ? null : jobId);
   };
 
   const filterStudents = (students) => {
-    // Filter by viewMode: "all" or "your"
     let filteredStudents = students;
     if (viewMode === "your" && currentStaffEmail) {
       filteredStudents = students.filter(student => student.staffEmail === currentStaffEmail);
     }
-
-    // Apply search term filter
     if (!searchTerm || filterBy === 'all') return filteredStudents;
     return filteredStudents.filter(student => {
       const searchValue = String(student[filterBy] || '').toLowerCase();
@@ -160,15 +302,16 @@ const StaffSeeRegistrations = () => {
       Batch: student.batch || 'N/A',
       Department: student.department || 'N/A',
       CGPA: student.cgpa ?? 'N/A',
-      'Phone Number': `'${student.phoneNumber ?? 'N/A'}`, // Match superadmin format
-      'No. of Arrears': student.noOfArrears ?? 'N/A', // Match superadmin field
+      'Phone Number': `'${student.phoneNumber ?? 'N/A'}`,
+      'No. of Arrears': student.noOfArrears ?? 'N/A',
       'Applied At': student.appliedAt || 'N/A',
+      'Placement Status': student.isPlaced ? 'Placed' : 'Not Placed'
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(data);
     worksheet['!cols'] = [
       { wch: 20 }, { wch: 30 }, { wch: 10 }, { wch: 15 },
-      { wch: 10 }, { wch: 15 }, { wch: 12 }, { wch: 20 }
+      { wch: 10 }, { wch: 15 }, { wch: 12 }, { wch: 20 }, { wch: 15 }
     ];
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Students');
@@ -241,13 +384,20 @@ const StaffSeeRegistrations = () => {
                 <h3 className="text-lg sm:text-xl font-semibold text-gray-800 break-words">{job.companyName}</h3>
                 <p className="text-gray-600 mt-2">{job.jobDescription}</p>
               </div>
-              <div className="flex gap-2 w-full sm:w-auto">
+              <div className="flex gap-2 w-full sm:w-auto flex-wrap">
                 <button
                   onClick={() => toggleStudentList(job.id)}
                   className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-orange-500 text-white py-1.5 px-3 rounded hover:bg-orange-600 transition-colors text-sm"
                 >
                   <Users size={16} />
                   {expandedJobId === job.id ? 'Hide Students' : 'View Students'}
+                </button>
+                <button
+                  onClick={() => handleAddPlacedClick(job.id)}
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-green-500 text-white py-1.5 px-3 rounded hover:bg-green-600 transition-colors text-sm"
+                >
+                  <CheckCircle size={16} />
+                  Add Placed Students
                 </button>
                 <button
                   onClick={() => handleDeleteClick(job.id, job.companyName)}
@@ -352,6 +502,7 @@ const StaffSeeRegistrations = () => {
                             <th className="px-2 sm:px-4 py-3 text-left text-xs sm:text-sm font-semibold text-gray-600">Arrears</th>
                             <th className="px-2 sm:px-4 py-3 text-left text-xs sm:text-sm font-semibold text-gray-600">Applied At</th>
                             <th className="px-2 sm:px-4 py-3 text-left text-xs sm:text-sm font-semibold text-gray-600">Added By</th>
+                            <th className="px-2 sm:px-4 py-3 text-left text-xs sm:text-sm font-semibold text-gray-600">Placement Status</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200">
@@ -366,6 +517,13 @@ const StaffSeeRegistrations = () => {
                               <td className="px-2 sm:px-4 py-3 text-xs sm:text-sm text-gray-900">{student.noOfArrears ?? 'N/A'}</td>
                               <td className="px-2 sm:px-4 py-3 text-xs sm:text-sm text-gray-900">{student.appliedAt || 'N/A'}</td>
                               <td className="px-2 sm:px-4 py-3 text-xs sm:text-sm text-gray-900">{student.staffEmail || 'Unknown'}</td>
+                              <td className="px-2 sm:px-4 py-3 text-xs sm:text-sm text-gray-900">
+                                {student.isPlaced ? (
+                                  <span className="text-green-600">Placed</span>
+                                ) : (
+                                  <span className="text-red-600">Not Placed</span>
+                                )}
+                              </td>
                             </tr>
                           ))}
                         </tbody>
@@ -389,6 +547,15 @@ const StaffSeeRegistrations = () => {
         onClose={handleDeleteCancel}
         onConfirm={handleDeleteConfirm}
         jobTitle={jobToDelete?.companyName}
+      />
+
+      <AddPlacedStudentsModal
+        isOpen={showPlacedModal}
+        onClose={() => setShowPlacedModal(false)}
+        onConfirm={handleAddPlacedConfirm}
+        jobId={selectedJobId}
+        students={jobs.find(job => job.id === selectedJobId)?.students || []}
+        companyName={jobs.find(job => job.id === selectedJobId)?.companyName || 'Unknown Company'}
       />
     </div>
   );

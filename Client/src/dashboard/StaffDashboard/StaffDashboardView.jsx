@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Home, User, FileText, HelpCircle, Menu, X, Plus, LogOut, Users, Briefcase, ClipboardList, UserCircle } from "lucide-react";
+import { Home, User, FileText, HelpCircle, Menu, X, Plus, LogOut, Users, Briefcase, ClipboardList, UserCircle, PlusCircle } from "lucide-react";
 import { CSVLink } from "react-csv";
 import axios from "axios";
 import { useNavigate } from "react-router-dom"; // Import useNavigate
@@ -9,6 +9,7 @@ import StaffStudentSeeView from "./StaffStudentSeeView";
 import StaffJobAddView from "./StaffJobAddView";
 import StaffSeeRegistrations from "./StaffSeeRegistrations";
 import StaffStudentManagementView from "./StaffStudentManagementView";
+import StaffEventAdd from "./StaffEventAdd";
 
 const ExportCSV = ({ job, interestedStudents }) => {
   const prepareCsvData = () => {
@@ -86,6 +87,8 @@ const StaffDashboardView = () => {
         return <StaffStudentSeeView />;
       case "studentManagement":
         return <StaffStudentManagementView />;
+      case "staffeventadd":
+        return <StaffEventAdd />;
       default:
         return <HomeComponent />;
     }
@@ -134,8 +137,8 @@ const StaffDashboardView = () => {
                   <span className="text-lg">{firstLetter || "?"}</span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-base text-gray-600">{staffDetails.email || "Unknown"}</span>
-                  <span className="text-xs text-gray-600">{staffDetails.department || "Unknown"} Staff</span>
+                <span className="text-sm text-gray-600 truncate w-full block" style={{ minWidth: "150px" }}>{staffDetails.email || "No email available"}</span>
+                <span className="text-xs text-gray-600">{staffDetails.department || "Unknown"} Staff</span>
                 </div>
               </div>
             </div>
@@ -173,6 +176,19 @@ const StaffDashboardView = () => {
             >
               <Briefcase size={20} className={activeComponent === "addJob" ? "text-white" : "text-blue-500"} />
               <span>Post Job</span>
+            </div>
+
+            <div
+              className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${activeComponent === "staffeventadd" ? "bg-orange-500 text-white" : "text-black"
+                }`}
+              onClick={() => {
+                setActiveComponent("staffeventadd");
+                setIsOpen(false);
+              }}
+            >
+
+              <PlusCircle size={20} className={activeComponent === "staffeventadd" ? "text-white" : "text-blue-500"} />
+              <span>Event Add</span>
             </div>
 
             <div
