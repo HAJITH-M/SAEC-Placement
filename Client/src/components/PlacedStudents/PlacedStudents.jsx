@@ -5,24 +5,6 @@ import { FaGraduationCap, FaBriefcase, FaChartLine, FaHandshake } from 'react-ic
 const PlacedStudents = () => {
   const [students, setStudents] = useState([]);
 
-  // useEffect(() => {
-  //   // Replace with your actual API endpoint
-  //   fetch('http://localhost:9999/get-placed-students')
-  //     .then(response => response.json())
-  //     .then(data => setStudents(data))
-  //     .catch(error => console.error('Error fetching placed students:', error));
-
-    
-  // }, []);
-
-
-  // useEffect(() => {
-  //   axios.get('http://localhost:9999/get-placed-students')
-  //     .then(response => setStudents(response.data))
-  //     .catch(error => console.error('Error fetching placed students:', error));
-  // }, []);
-
-
 useEffect (() =>{
 
  const getStudents = async () => {

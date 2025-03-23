@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Job Management README</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans antialiased">
+    <div class="max-w-4xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        <!-- Header with Search -->
+        <header class="mb-8">
+            <h1 class="text-4xl font-extrabold text-gray-900 mb-2">Staff Job Management</h1>
+            <p class="text-lg text-gray-500 mb-4">A guide to posting and managing job listings.</p>
+            <div class="relative">
+                <input 
+                    type="text" 
+                    id="search-input" 
+                    placeholder="Search the guide..." 
+                    class="w-full p-4 pr-10 text-gray-700 bg-white border border-gray-200 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200"
+                >
+                <svg class="absolute right-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+            </div>
+        </header>
+
+        <!-- README Content -->
+        <div id="readme-content" class="space-y-6">
+            <div class="content-section bg-white p-6 rounded-xl shadow-md border border-gray-100">
+                <h2 class="text-2xl font-semibold text-indigo-600 mb-3">What You Can Post</h2>
+                <ul class="space-y-2 text-gray-600">
+                    <li><span class="font-medium text-gray-800">Batch:</span> e.g., "2025"</li>
+                    <li><span class="font-medium text-gray-800">Job Description:</span> Short job details</li>
+                    <li><span class="font-medium text-gray-800">Department:</span> e.g., "Computer Science, IT" (comma-separated)</li>
+                    <li><span class="font-medium text-gray-800">Drive Link:</span> URL to details (e.g., Google Drive)</li>
+                    <li><span class="font-medium text-gray-800">Expiration:</span> Deadline (e.g., "12/31/2025 23:59:59")</li>
+                    <li><span class="font-medium text-gray-800">Company Name:</span> Company offering the job</li>
+                    <li><span class="font-medium text-gray-800">Drive Date:</span> e.g., "12/31/2025"</li>
+                </ul>
+                <p class="mt-3 text-gray-500">Track jobs and student registrations by department or batch.</p>
+            </div>
+
+            <div class="content-section bg-white p-6 rounded-xl shadow-md border border-gray-100">
+                <h2 class="text-2xl font-semibold text-indigo-600 mb-3">How to Post</h2>
+                <ol class="list-decimal pl-5 space-y-2 text-gray-600">
+                    <li>Go to "Create a New Job Post."</li>
+                    <li>Fill in: Batch, Description, Departments, Link, Expiration, Company, Drive Date.</li>
+                    <li>Click "Create Job."</li>
+                    <li>Success? See confirmation. Errors? Fix and retry.</li>
+                </ol>
+            </div>
+
+            <div class="content-section bg-white p-6 rounded-xl shadow-md border border-gray-100">
+                <h2 class="text-2xl font-semibold text-indigo-600 mb-3">Managing Jobs</h2>
+                <ul class="space-y-2 text-gray-600">
+                    <li><span class="font-medium text-gray-800">View Details:</span> Click "Show Details" for student info.</li>
+                    <li><span class="font-medium text-gray-800">Remove:</span> Click "Remove" to delete a job.</li>
+                    <li><span class="font-medium text-gray-800">Full List:</span> Click "Select for Full List" for details.</li>
+                    <li><span class="font-medium text-gray-800">Refresh:</span> Click "Refresh Job List" to update.</li>
+                </ul>
+            </div>
+
+            <div class="content-section bg-white p-6 rounded-xl shadow-md border border-gray-100">
+                <h2 class="text-2xl font-semibold text-indigo-600 mb-3">Tips</h2>
+                <ul class="space-y-2 text-gray-600">
+                    <li>Use formats: <code class="bg-gray-100 text-gray-800 px-2 py-1 rounded-md">MM/DD/YYYY</code> for Drive Date, <code class="bg-gray-100 text-gray-800 px-2 py-1 rounded-md">MM/DD/YYYY HH:MM:SS</code> for Expiration.</li>
+                    <li>Ensure links are valid.</li>
+                    <li>Check error messages if issues arise.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const searchInput = document.getElementById('search-input');
+        const contentSections = document.querySelectorAll('.content-section');
+
+        searchInput.addEventListener('input', function() {
+            const searchTerm = searchInput.value.toLowerCase().trim();
+
+            contentSections.forEach(section => {
+                const text = section.textContent.toLowerCase();
+                const elements = section.getElementsByTagName('*');
+
+                // Reset previous highlights
+                Array.from(elements).forEach(el => {
+                    el.innerHTML = el.textContent; // Remove previous highlights
+                });
+
+                if (searchTerm === '') {
+                    section.classList.remove('hidden');
+                } else if (text.includes(searchTerm)) {
+                    section.classList.remove('hidden');
+                    // Highlight matching text
+                    Array.from(elements).forEach(el => {
+                        const innerText = el.textContent.toLowerCase();
+                        if (innerText.includes(searchTerm) && el.children.length === 0) {
+                            const regex = new RegExp(`(${searchTerm})`, 'gi');
+                            el.innerHTML = el.textContent.replace(regex, '<span class="bg-yellow-200 px-1">$1</span>');
+                        }
+                    });
+                } else {
+                    section.classList.add('hidden');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
