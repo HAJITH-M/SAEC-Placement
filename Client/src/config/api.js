@@ -1,8 +1,6 @@
-import axios from 'axios';
-
-const API_URL = 'http://localhost:9999';
-
 import { supabaseConfig as supabase } from './SupabaseConfig';
+import { postData } from '../services/apiService';
+import { getApiUrl } from './apiConfig';
 
 export const forgotPassword = async (role, email) => {
     try {
@@ -30,10 +28,11 @@ export const resetPassword = async (role, token, newPassword) => {
     const endpoint = role === 'student' ? '/student/reset-password' : '/staff/reset-password';
   
     try {
-      console.log('Making request to:', `${API_URL}${endpoint}`); 
+      const baseUrl = await getApiUrl();
+      console.log('Making request to:', `${baseUrl}${endpoint}`); 
       console.log('Payload:', { token, newPassword });  
   
-      const response = await axios.post(`${API_URL}${endpoint}`, {
+      const response = await postData(`${endpoint}`, {
         token,                   
         newPassword             
       });

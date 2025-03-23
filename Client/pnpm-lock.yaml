@@ -24,7 +24,7 @@ importers:
         specifier: ^0.1.8
         version: 0.1.8(@supabase/supabase-js@2.48.1)
       '@supabase/supabase-js':
-        specifier: ^2.47.10
+        specifier: ^2.48.1
         version: 2.48.1
       '@tailwindcss/vite':
         specifier: ^4.0.6
