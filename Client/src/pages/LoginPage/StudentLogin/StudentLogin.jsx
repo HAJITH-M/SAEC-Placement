@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import SuperAdminAuthFormView from '../../../components/SuperAdminAuthForm/SuperAdminAuthFormView';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { fetchData, postData } from '../../../services/apiService';
+import { getApiUrl } from '../../../config/apiConfig';
 
 const StudentLogin = () => {
   const navigate = useNavigate();
@@ -11,18 +12,14 @@ const StudentLogin = () => {
     const endpoint = isRegistration ? '/student/signup' : '/student/login';
     try {
       console.log(`${isRegistration ? 'Registration' : 'Login'} Request Data:`, authData);
-      const authResponse = await axios.post(
-        `http://localhost:9999${endpoint}`,
-        authData,
-        { 
-          withCredentials: true,
-          maxRedirects: 0,
-        }
-      );
+      const authResponse = await postData(endpoint, authData, {
+        withCredentials: true,
+        maxRedirects: 0,
+      });
       console.log(`${isRegistration ? 'Registration' : 'Login'} Response:`, authResponse.status, authResponse.headers);
 
       console.log('Fetching session from /student');
-      const sessionResponse = await axios.get('http://localhost:9999/student', {
+      const sessionResponse = await fetchData('/student', {
         withCredentials: true,
       });
       console.log('Session Response:', sessionResponse.data);
@@ -40,7 +37,7 @@ const StudentLogin = () => {
       console.log(`${isRegistration ? 'Registration' : 'Login'} successful, studentId:`, studentId);
       navigate('/dashboard/student', { replace: true });
     } catch (error) {
-      console.error('Full error response:', error.response?.data);
+      console.error('Full error response:', error.response?.data || error.message);
       if (error.response?.status === 400) {
         throw new Error(`Invalid ${isRegistration ? 'registration' : 'login'} data. Please check your inputs.`);
       }
@@ -58,9 +55,25 @@ const StudentLogin = () => {
     }
   };
 
-  const handleOAuth = () => {
+  // const handleOAuth = () => {
+  //   if (!isRegistration) {
+  //     window.location.href = 'http://localhost:9999/auth/oauth/student';
+  //   }
+  // };
+
+
+  const handleOAuth = async () => {
     if (!isRegistration) {
-      window.location.href = 'http://localhost:9999/auth/oauth/student';
+      try {
+        const baseUrl = await getApiUrl(); // Get the dynamic base URL
+        const oauthUrl = `${baseUrl}/auth/oauth/student`;
+        console.log('Redirecting to OAuth URL:', oauthUrl); // Debug
+        window.location.href = oauthUrl;
+      } catch (error) {
+        console.error('Error determining OAuth URL:', error);
+        // Fallback to production URL if determination fails
+        window.location.href = `${PROD_URL}/auth/oauth/student`;
+      }
     }
   };
 
@@ -74,7 +87,7 @@ const StudentLogin = () => {
         onSubmit={handleSubmit} 
         onOAuth={handleOAuth}
         userType={isRegistration ? 'Student Registration' : 'student'} 
-        toggleAuthMode={toggleAuthMode} // Keep this for students
+        toggleAuthMode={toggleAuthMode}
       />
     </div>
   );

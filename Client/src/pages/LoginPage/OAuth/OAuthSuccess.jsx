@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
+import { fetchData } from '../../../services/apiService';
 
 const OAuthSuccess = () => {
   const navigate = useNavigate();
@@ -27,8 +28,8 @@ const OAuthSuccess = () => {
 
     hasRun.current = true;
     try {
-      const response = await axios.get(
-        `http://localhost:9999/auth/users/oauth/success?code=${code}&intendedRole=${intendedRole || 'super_admin'}&returnUrl=${encodeURIComponent(returnUrl || '/auth/superadmin')}`,
+      const response = await fetchData(
+        `/auth/users/oauth/success?code=${code}&intendedRole=${intendedRole || 'super_admin'}&returnUrl=${encodeURIComponent(returnUrl || '/auth/superadmin')}`,
         { withCredentials: true }
       );
       console.log('OAuth response:', response.data);

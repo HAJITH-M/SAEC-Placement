@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import axios from 'axios';
+import { fetchData } from '../../../services/apiService';
 
 const ProtectedRoute = ({ allowedRole }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(null);
@@ -9,7 +10,7 @@ const ProtectedRoute = ({ allowedRole }) => {
     const checkSession = async () => {
       try {
         console.log(`Checking session for role: ${allowedRole}`);
-        const response = await axios.get('http://localhost:9999/auth/session', {
+        const response = await fetchData('/auth/session', {
           withCredentials: true,
         });
         console.log('Session response:', response.data);
