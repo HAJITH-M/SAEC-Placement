@@ -10,6 +10,8 @@ import StaffJobAddView from "./StaffJobAddView";
 import StaffSeeRegistrations from "./StaffSeeRegistrations";
 import StaffStudentManagementView from "./StaffStudentManagementView";
 import StaffEventAdd from "./StaffEventAdd";
+import { toast } from "react-toastify";
+import { ToastContainer } from "react-toastify";
 
 const ExportCSV = ({ job, interestedStudents }) => {
   const prepareCsvData = () => {
@@ -102,6 +104,7 @@ const StaffDashboardView = () => {
     try {
       const response = await axios.post("http://localhost:9999/staff/logout", {}, { withCredentials: true });
       if (response.data.message === "Logged out successfully" || response.status === 200) {
+        toast.success("Logged out successfully")
         navigate("/auth/staff");
       }
     } catch (error) {
@@ -109,8 +112,6 @@ const StaffDashboardView = () => {
     }
   };
   
-
-
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -252,6 +253,7 @@ const StaffDashboardView = () => {
           </button>
         </div>
       )}
+      <ToastContainer />
     </div>
   );
 };

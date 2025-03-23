@@ -1,6 +1,8 @@
 import { Workflow } from 'lucide-react';
+import axios from 'axios';
 import React, { useState, useEffect } from 'react';
 import { FaGraduationCap, FaBriefcase, FaChartLine, FaHandshake } from 'react-icons/fa';
+import { toast } from 'react-toastify';
 
 const PlacedStudents = () => {
   const [students, setStudents] = useState([]);
@@ -14,6 +16,7 @@ useEffect (() =>{
     console.log(response.data);
   } catch (error) {
     console.error('Error fetching placed students:', error);
+    toast.error("Error in getting the details of placed students")
   }
 };
 

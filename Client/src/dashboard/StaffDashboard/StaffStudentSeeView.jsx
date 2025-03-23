@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Users, Search, Filter, Trash2 } from "lucide-react";
+import { toast } from "react-toastify";
 
 const StaffStudentSeeView = () => {
   const [allStudents, setAllStudents] = useState({});
@@ -90,10 +91,12 @@ const StaffStudentSeeView = () => {
       
       setStudentToRemove(null);
       setSuccess("Student removed successfully");
+      toast.success("Student removed successfully")
       setError(null);
     } catch (err) {
       console.error("Error removing student:", err);
       setError(err.response?.data?.error || "Failed to remove student");
+      toast.error("Failed to remove student")
     } finally {
       setLoading(false);
     }
@@ -188,14 +191,7 @@ const StaffStudentSeeView = () => {
       </div>
 
       {loading && <div className="p-4 mb-4 bg-gray-100 text-gray-700 rounded">Loading...</div>}
-      {error && <div className="p-4 mb-4 bg-red-100 text-red-700 rounded">{error}</div>}
-      {success && <div className="p-4 mb-4 bg-green-100 text-green-700 rounded">{success}</div>}
-
       <div className="bg-white rounded-lg shadow-md p-3 sm:p-6">
-
-
-
-
         <h3 className="text-xl font-semibold mb-4">
           {viewMode === "your" ? "Your Students" : "All Students"} by Department and Batch
         </h3>

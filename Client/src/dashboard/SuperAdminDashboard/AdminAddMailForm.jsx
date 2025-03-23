@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import * as XLSX from 'xlsx'; // You'll need to install this: npm install xlsx
+import { toast } from 'react-toastify';
+import { ToastContainer } from 'react-toastify';
 
 const BASE_URL = 'http://localhost:9999';
 
@@ -64,13 +66,13 @@ const AdminAddMailForm = () => {
         }
       );
 
-      setSuccess(`Successfully added ${response.data.inserted} emails`);
+      toast.success("Successfully added emails")
       setEmails(''); // Reset text input
       setFile(null); // Reset file input
       // Reset the file input element
       document.getElementById('excel-upload').value = null;
     } catch (err) {
-      setError(err.response?.data?.error || err.message || 'Failed to add emails');
+      toast.error("Failed to add emails")
     } finally {
       setLoading(false);
     }
@@ -80,17 +82,6 @@ const AdminAddMailForm = () => {
     <div className="w-full p-2 md:p-6 bg-gray-50 min-h-screen">
       <div className="bg-white rounded-lg shadow-md p-3 md:p-6 pb-10">
         <h2 className="text-2xl font-semibold text-gray-800 mb-6">Add Group Notification Emails</h2>
-
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md text-sm">
-            {error}
-          </div>
-        )}
-        {success && (
-          <div className="mb-4 p-3 bg-green-50 text-green-700 rounded-md text-sm">
-            {success}
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
@@ -136,6 +127,7 @@ const AdminAddMailForm = () => {
           </div>
         </form>
       </div>
+      <ToastContainer />
     </div>
   );
 };

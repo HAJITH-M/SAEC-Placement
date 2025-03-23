@@ -10,6 +10,8 @@ import AdminJobRegistrations from "./AdminJobRegistrations";
 import AdminHomeViewDashboard from "./AdminHomeView";
 import AdminAddMailForm from "./AdminAddMailForm";
 import AdminAddEvents from "./AdminAddEvents";
+import { toast } from "react-toastify";
+import { ToastContainer } from "react-toastify";
 
 const SuperAdminDashboardView = () => {
   const [activeComponent, setActiveComponent] = useState("home");
@@ -18,7 +20,6 @@ const SuperAdminDashboardView = () => {
   const [studentList, setStudentList] = useState([]);
   const [adminEmail, setAdminEmail] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
   const navigate = useNavigate();
   const IdUUIDParamsSchema = z.object({
     staffId: z.string().uuid({ message: "Invalid UUID format" }),
@@ -42,7 +43,6 @@ const SuperAdminDashboardView = () => {
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error.response?.data || error.message);
-      setError('Failed to load dashboard data');
       navigate('/auth/superadmin', { replace: true });
     }
   };
@@ -61,7 +61,6 @@ const SuperAdminDashboardView = () => {
       }
     } catch (error) {
       console.error('Session check failed:', error.response?.data || error.message);
-      setError('Session validation failed');
       navigate('/auth/superadmin', { replace: true });
     }
   };
@@ -108,13 +107,14 @@ const SuperAdminDashboardView = () => {
         { withCredentials: true }
       );
       if (response.data.message === "Logged out successfully") {
+        toast.success("Logged out successfully")
         navigate('/auth/superadmin', { replace: true });
       } else {
         throw new Error('Logout failed: ' + (response.data.message || 'Unknown error'));
       }
     } catch (error) {
       console.error('Logout failed:', error.response?.data || error.message);
-      setError('Logout failed. Please try again.');
+      toast.error("Log Out Failed")
     }
   };
 
@@ -122,9 +122,6 @@ const SuperAdminDashboardView = () => {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;
   }
 
-  if (error) {
-    return <div className="flex items-center justify-center h-screen text-red-500">{error}</div>;
-  }
 
   return (
     <div className="flex relative">
@@ -200,6 +197,7 @@ const SuperAdminDashboardView = () => {
           </button>
         </div>
       )}
+      <ToastContainer />
     </div>
   );
 };

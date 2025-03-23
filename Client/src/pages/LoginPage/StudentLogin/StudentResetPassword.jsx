@@ -36,7 +36,7 @@ const StudentResetPassword = () => {
     try {
       const response = await resetPassword('student', token, newPassword);
       console.log("Reset Password Response:", response);
-      toast.success(response.message || 'Password updated successfully!');
+      toast.success('Password updated successfully!');
 
       setTimeout(() => {
         toast.success("redirecting to login page now");
@@ -44,7 +44,7 @@ const StudentResetPassword = () => {
       }, 2000);
     } catch (error) {
       console.error("Error:", error);
-      toast.error(error.message || 'Failed to reset password.');
+      toast.error('Failed to reset password.');
     }
   };
 
