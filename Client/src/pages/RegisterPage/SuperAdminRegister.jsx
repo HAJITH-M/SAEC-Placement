@@ -2,6 +2,8 @@ import React from 'react'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 import SuperAdminAuthFormView from '../../components/SuperAdminAuthForm/SuperAdminAuthFormView'
+import { toast } from 'react-toastify'
+import { ToastContainer } from 'react-toastify'
 
 const SuperAdminRegister = () => {
     const navigate = useNavigate()
@@ -12,6 +14,7 @@ const SuperAdminRegister = () => {
           if (response.data) {
             // Redirect to super admin dashboard after successful login
             console.log('Super Admin registered successfully + id:', response.data);
+            toast.success("Super Admin registered successfully")
             navigate('/super-admin-dashboard');
           }
         } catch (error) {
@@ -22,6 +25,7 @@ const SuperAdminRegister = () => {
   return (
     <div>
 <SuperAdminAuthFormView onSubmit={handleSubmitSuperAdminRegister} userType="Super Admin" />    
+<ToastContainer />
 </div>
   )
 }

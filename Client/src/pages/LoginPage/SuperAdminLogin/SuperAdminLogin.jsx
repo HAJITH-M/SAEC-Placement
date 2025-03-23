@@ -2,6 +2,8 @@ import React from 'react';
 import SuperAdminAuthFormView from '../../../components/SuperAdminAuthForm/SuperAdminAuthFormView';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { ToastContainer } from 'react-toastify';
 
 const SuperAdminLogin = () => {
   const navigate = useNavigate();
@@ -25,6 +27,7 @@ const SuperAdminLogin = () => {
       // Handle errors similar to StudentLogin
       console.error('Error in super admin login:', error);
       const errorMessage = error.response?.data?.error || 'Login failed';
+      toast.error("login failed")
       throw new Error(errorMessage); // This will be caught by the form component
     }
   };
@@ -41,6 +44,7 @@ const SuperAdminLogin = () => {
         onOAuth={handleOAuthLogin} 
         userType="Super Admin Login" 
       />
+      <ToastContainer />
     </div>
   );
 };

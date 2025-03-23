@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { Lock, Mail, User, Building2, KeyRound, Save } from "lucide-react";
+import { toast } from "react-toastify";
 
 const StaffProfileView = ({ staffDetails }) => {
   const [oldPassword, setOldPassword] = useState("");
@@ -19,18 +20,22 @@ const StaffProfileView = ({ staffDetails }) => {
         { oldPassword, newPassword },
         { withCredentials: true }
       );
-      setMessage(response.data.message);
+      // setMessage(response.data.message);
+      toast.success("updated successfully");
       setOldPassword("");
       setNewPassword("");
     } catch (err) {
       setError(err.response?.data?.error || "Failed to update password");
+      toast.error("Failed to update password");
     }
   };
 
   return (
     <div className="w-full max-w-2xl mx-auto bg-white p-4 sm:p-6 md:p-8 rounded-xl shadow-lg">
-      <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-gray-800 border-b pb-4">Staff Profile</h2>
-      
+      <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-gray-800 border-b pb-4">
+        Staff Profile
+      </h2>
+
       <div className="space-y-4 sm:space-y-6 mb-6 sm:mb-8">
         <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
           <Mail className="w-5 h-5 text-gray-500" />
@@ -52,7 +57,9 @@ const StaffProfileView = ({ staffDetails }) => {
           <Building2 className="w-5 h-5 text-gray-500" />
           <div>
             <p className="text-sm text-gray-500">Department</p>
-            <p className="font-medium">{staffDetails.department || "Not set"}</p>
+            <p className="font-medium">
+              {staffDetails.department || "Not set"}
+            </p>
           </div>
         </div>
       </div>
@@ -60,7 +67,9 @@ const StaffProfileView = ({ staffDetails }) => {
       <div className="bg-gray-50 p-4 sm:p-6 rounded-lg">
         <div className="flex items-center space-x-2 mb-4 sm:mb-6">
           <Lock className="w-5 h-5 text-gray-700" />
-          <h3 className="text-lg sm:text-xl font-semibold text-gray-800">Update Password</h3>
+          <h3 className="text-lg sm:text-xl font-semibold text-gray-800">
+            Update Password
+          </h3>
         </div>
 
         <form onSubmit={handlePasswordUpdate} className="space-y-4">
@@ -87,9 +96,6 @@ const StaffProfileView = ({ staffDetails }) => {
               required
             />
           </div>
-
-          {message && <p className="text-green-600 bg-green-50 p-2 sm:p-3 rounded-lg flex items-center text-sm sm:text-base"><Save className="w-4 h-4 mr-2" />{message}</p>}
-          {error && <p className="text-red-600 bg-red-50 p-2 sm:p-3 rounded-lg text-sm sm:text-base">{error}</p>}
 
           <button
             type="submit"

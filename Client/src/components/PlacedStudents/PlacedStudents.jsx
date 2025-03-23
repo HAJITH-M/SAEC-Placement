@@ -1,7 +1,7 @@
 import { Workflow } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
-import { FaGraduationCap, FaBriefcase } from 'react-icons/fa';
 import { fetchData } from '../../services/apiService';
+import { FaGraduationCap, FaBriefcase, FaChartLine, FaHandshake } from 'react-icons/fa';
 
 const PlacedStudents = () => {
   const [students, setStudents] = useState([]); // Already initialized as empty array

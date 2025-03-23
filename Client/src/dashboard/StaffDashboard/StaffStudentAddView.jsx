@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import axios from "axios";
 import * as XLSX from "xlsx";
+import { toast } from "react-toastify";
+import { ToastContainer } from "react-toastify";
 
 const StaffStudentAddView = () => {
   const [name, setName] = useState("");
@@ -47,7 +49,7 @@ const StaffStudentAddView = () => {
         { withCredentials: true }
       );
       console.log("Students added:", response.data);
-      setMessage("Student added successfully!");
+      toast.success("Students added successfully")
       setName("");
       setEmail("");
       setPassword("");
@@ -55,6 +57,7 @@ const StaffStudentAddView = () => {
     } catch (err) {
       console.error("Error adding student:", err.response ? err.response.data : err.message);
       setError(err.response?.data?.error || "Failed to add student");
+      toast.error("Failed to add students")
     } finally {
       setLoading(false);
     }
@@ -88,7 +91,8 @@ const StaffStudentAddView = () => {
       setError(null);
       setMessage("");
     } else {
-      setError("Please upload only Excel files (.xlsx, .xls)");
+      // setError("Please upload only Excel files (.xlsx, .xls)");
+      toast.info("Please upload only Excel files (.xlsx, .xls)")
     }
   };
 
@@ -96,6 +100,7 @@ const StaffStudentAddView = () => {
     e.preventDefault();
     if (!file) {
       setError("Please select an Excel file to upload");
+      toast.error("Please select an Excel file to upload")
       return;
     }
 
@@ -126,6 +131,7 @@ const StaffStudentAddView = () => {
         );
         if (invalidRows.length > 0) {
           setError("Invalid data in Excel: Missing or empty email/password");
+          toast.error("Invalid data in Excel: Missing or empty email/password")
           setLoading(false);
           return;
         }
@@ -143,14 +149,17 @@ const StaffStudentAddView = () => {
           const inserted = response.data.inserted || [];
           if (inserted.length > 0) {
             const yourInserted = inserted.filter((student) => student.staffEmail === currentStaffEmail);
-            setMessage(
-              `Successfully uploaded ${inserted.length} students (${yourInserted.length} assigned to you)`
-            );
+            // setMessage(
+            //   `Successfully uploaded ${inserted.length} students (${yourInserted.length} assigned to you)`
+            // );
+            toast.success("Successfully uploaded")
           } else {
-            setMessage(`No new students uploaded (${response.data.skipped.length} duplicates)`);
+            // setMessage(`No new students uploaded (${response.data.skipped.length} duplicates)`);
+            toast.info("No new students uploaded")
           }
         } else {
           setError(response.data.error || "Upload failed");
+          toast.error("upload error")
         }
       } catch (error) {
         const errorMsg = error.response?.data?.error || "Server error: Failed to upload students";
@@ -302,8 +311,7 @@ const StaffStudentAddView = () => {
       )}
 
       {loading && <p className="text-blue-500 text-center mt-4 text-base">Processing...</p>}
-      {message && <p className="text-green-500 text-center mt-4 text-base">{message}</p>}
-      {error && <p className="text-red-500 text-center mt-4 text-base">{error}</p>}
+      <ToastContainer />
     </div>
   );
 };
