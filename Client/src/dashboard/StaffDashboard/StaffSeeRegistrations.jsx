@@ -54,6 +54,8 @@ const AddPlacedStudentsModal = ({
   jobId,
   students,
   companyName,
+  currentStaffEmail,
+  viewMode,
 }) => {
   const [selectedEmails, setSelectedEmails] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -92,8 +94,14 @@ const AddPlacedStudentsModal = ({
   };
 
   const filterStudents = (studentsList) => {
-    if (!searchTerm || filterBy === "all") return studentsList;
-    return studentsList.filter((student) => {
+    let filtered = studentsList;
+    if (viewMode === "your" && currentStaffEmail) {
+      filtered = filtered.filter(
+        (student) => student.staffEmail === currentStaffEmail
+      );
+    }
+    if (!searchTerm || filterBy === "all") return filtered;
+    return filtered.filter((student) => {
       const searchValue = String(student[filterBy] || "").toLowerCase();
       return searchValue.includes(searchTerm.toLowerCase());
     });
@@ -386,7 +394,8 @@ const StaffSeeRegistrations = () => {
       "Phone Number": `${student.phoneNumber ?? "N/A"}`,
       "No. of Arrears": student.noOfArrears ?? "N/A",
       "Applied At": student.appliedAt || "N/A",
-      "Placement Status": student.isPlaced ? "Placed" : "Not Placed",
+      "Placement Status": student.placedStatus === "yes" ? "Placed" : "Not Placed",
+      "Assigned Staff": student.staffEmail || "Unassigned",
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(data);
@@ -400,6 +409,7 @@ const StaffSeeRegistrations = () => {
       { wch: 12 },
       { wch: 20 },
       { wch: 15 },
+      { wch: 20 },
     ];
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Students");
@@ -655,7 +665,7 @@ const StaffSeeRegistrations = () => {
                               Applied At
                             </th>
                             <th className="px-2 sm:px-4 py-3 text-left text-xs sm:text-sm font-semibold text-gray-600">
-                              Added By
+                              Assigned Staff
                             </th>
                             <th className="px-2 sm:px-4 py-3 text-left text-xs sm:text-sm font-semibold text-gray-600">
                               Placement Status
@@ -693,10 +703,10 @@ const StaffSeeRegistrations = () => {
                                 {student.appliedAt || "N/A"}
                               </td>
                               <td className="px-2 sm:px-4 py-3 text-xs sm:text-sm text-gray-900">
-                                {student.staffEmail || "Unknown"}
+                                {student.staffEmail || "Unassigned"}
                               </td>
                               <td className="px-2 sm:px-4 py-3 text-xs sm:text-sm text-gray-900">
-                                {student.isPlaced ? (
+                                {student.placedStatus === "yes" ? (
                                   <span className="text-green-600">Placed</span>
                                 ) : (
                                   <span className="text-red-600">
@@ -739,6 +749,8 @@ const StaffSeeRegistrations = () => {
           jobs.find((job) => job.id === selectedJobId)?.companyName ||
           "Unknown Company"
         }
+        currentStaffEmail={currentStaffEmail}
+        viewMode={viewMode}
       />
       <ToastContainer />
     </div>

@@ -1,0 +1,18 @@
+/* Hide scrollbar for Chrome, Safari and Opera */
+.placed-students::-webkit-scrollbar {
+  display: none;
+}
+
+/* Smooth scrolling behavior */
+.placed-students {
+  scroll-behavior: smooth;
+}
+
+/* Optional: Add hover effect for individual student items */
+.placed-students .inline-block {
+  transition: transform 0.3s ease;
+}
+
+.placed-students .inline-block:hover {
+  transform: scale(1.05);
+}

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Building2, Calendar, Link, CheckCircle2, Trash2, Users, Search, Filter, Download } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import { fetchData } from '../../services/apiService';
 
 const BASE_URL = 'http://localhost:9999';
 
@@ -55,7 +56,7 @@ const AdminJobRegistrations = () => {
   const fetchJobs = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${BASE_URL}/superadmin/jobs-with-students`, {
+      const response = await fetchData(`/superadmin/jobs-with-students`, {
         withCredentials: true,
       });
       console.log('API Response:', response.data);
@@ -207,9 +208,10 @@ const AdminJobRegistrations = () => {
         {filterJobs(jobs).map((job) => (
           <div key={job.jobId} className="bg-white rounded-lg shadow-md p-3 sm:p-6 hover:shadow-lg transition-shadow overflow-hidden">
             <div className="flex flex-col sm:flex-row justify-between items-start mb-4">
-              <div className="w-full sm:w-auto mb-4 sm:mb-0">
+              <div className="w-full sm:w-auto mb-4 sm:mb-0 ">
                 <h3 className="text-lg sm:text-xl font-semibold text-gray-800 break-words">{job.companyName}</h3>
-                <p className="text-gray-600 mt-2">{job.jobDescription}</p>
+
+                <p className="text-gray-600 mt-2 line-clamp-4 max-w-[900px] overflow-hidden text-ellipsis">{job.jobDescription}</p>
               </div>
               <div className="flex gap-2 w-full sm:w-auto">
                 <button

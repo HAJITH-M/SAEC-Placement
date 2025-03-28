@@ -119,7 +119,7 @@ const StaffDashboardView = () => {
   return (
     <div className="flex relative">
       <div
-        className={`fixed lg:static lg:translate-x-0 z-40 w-64 h-screen bg-white text-blue-500 transform transition-transform duration-300 ease-in-out
+        className={`fixed lg:static lg:translate-x-0 z-40 w-64 h-screen shadow-xl bg-white text-blue-500 transform transition-transform duration-300 ease-in-out
         ${isOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
         <div className="p-4 h-full overflow-y-auto">
@@ -230,7 +230,7 @@ const StaffDashboardView = () => {
         </div>
       </div>
 
-      <div className="flex-1 lg:ml-0 ml-0 mt-16 lg:mt-0 overflow-y-auto h-screen">
+      <div className="flex-1 lg:ml-0 ml-0 mt-16 lg:mt-0 bg-slate-100 overflow-y-auto h-screen">
         {error && <div className="p-4 text-red-500">{error}</div>} {/* Display error */}
         {renderComponent()}
       </div>

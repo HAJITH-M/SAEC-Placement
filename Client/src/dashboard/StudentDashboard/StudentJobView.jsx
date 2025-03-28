@@ -2,20 +2,19 @@ import React, { useState, useEffect } from "react";
 import {
   Building2, MapPin, Banknote, Calendar, Link, Navigation, ThumbsUp, ThumbsDown, Loader
 } from "lucide-react";
+import { fetchData, postData } from "../../services/apiService";
 
 const StudentJobView = () => {
   const [jobs, setJobs] = useState([]);
   const [filter, setFilter] = useState("all");
-  const [toasts, setToasts] = useState([]); // State for managing toasts
-  const [endsOn, setEndsOn] = useState([]);
+  const [toasts, setToasts] = useState([]);
+  const [endsOn, setEndsOn] = useState({});
   const [loadingStates, setLoadingStates] = useState({});
   const [isFetching, setIsFetching] = useState(false);
 
-  // Function to add a toast
   const addToast = (message, type = "success") => {
-    const id = Date.now(); // Unique ID for each toast
+    const id = Date.now();
     setToasts((prev) => [...prev, { id, message, type }]);
-    // Auto-remove toast after 3 seconds
     setTimeout(() => {
       setToasts((prev) => prev.filter((toast) => toast.id !== id));
     }, 3000);
@@ -27,27 +26,24 @@ const StudentJobView = () => {
         setIsFetching(true);
         setLoadingStates({});
 
-        const drivesResponse = await fetch("http://localhost:9999/student/displaydrives", {
-          method: "GET",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-        });
+        const drivesResponse = await fetchData("/student/displaydrives");
+        console.log('Drives Response:', drivesResponse); // Debug log
 
-        if (!drivesResponse.ok) {
-          throw new Error("Failed to fetch drives");
+        const drivesData = drivesResponse.data; // Assuming fetchData returns axios response with data property
+        if (!drivesData?.drives_list) {
+          throw new Error("No drives data received");
         }
 
-        const drivesData = await drivesResponse.json();
         const formattedJobs = drivesData.drives_list.map((drive) => ({
           title: drive.jobDescription || "Untitled Job",
-          company: drive.companyName,
-          location: "Not specified",
-          salary: "Not specified",
-          endDate: drive.expiration,
-          driveType: "On-campus",
+          company: drive.companyName || "Unknown Company",
+          location: drive.location || "Not specified",
+          salary: drive.salary || "Not specified",
+          endDate: drive.expiration || new Date().toISOString(),
+          driveType: drive.driveType || "On-campus",
           registrationStatus: new Date(drive.expiration) > new Date() ? "Open" : "Closed",
           status: "Open",
-          jobLink: drive.driveLink,
+          jobLink: drive.driveLink || "#",
           id: drive.id,
           department: drive.department || [],
         }));
@@ -62,7 +58,19 @@ const StudentJobView = () => {
 
         setJobs(formattedJobs);
         setLoadingStates(initialLoadingStates);
+
+        // Calculate endsOn for each job
+        const endsOnData = {};
+        formattedJobs.forEach((job) => {
+          const endDate = new Date(job.endDate);
+          const today = new Date();
+          const daysLeft = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
+          endsOnData[job.id] = `${daysLeft.toString().padStart(2, "0")} days left`;
+        });
+        setEndsOn(endsOnData);
+
       } catch (err) {
+        console.error('Fetch Error:', err);
         addToast(err.message || "Failed to fetch jobs", "error");
       } finally {
         setIsFetching(false);
@@ -72,28 +80,12 @@ const StudentJobView = () => {
     fetchJobsAndStatus();
   }, []);
 
-  useEffect(() => {
-    for (const job of jobs) {
-      const endDate = new Date(job.endDate);
-      const today = new Date();
-      const daysLeft = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
-      setEndsOn((prevEndsOn) => [...prevEndsOn, `${daysLeft.toString().padStart(2, "0")} days left`]);
-    }
-  }, [jobs]);
-
   const checkApplicationStatus = async (driveId) => {
     try {
-      const response = await fetch(`http://localhost:9999/student/check-application-status/${driveId}`, {
-        method: "GET",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-      });
-
-      if (!response.ok) return false;
-      const data = await response.json();
-      return data.applied;
+      const response = await fetchData(`/student/check-application-status/${driveId}`);
+      return response.data?.applied || false;
     } catch (err) {
-      console.error("Error checking application status:", err);
+      console.error(`Error checking status for drive ${driveId}:`, err);
       return false;
     }
   };
@@ -110,25 +102,12 @@ const StudentJobView = () => {
 
     try {
       setLoadingStates((prev) => ({ ...prev, [job.id]: true }));
-
-      const response = await fetch("http://localhost:9999/student/applyfordrive", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: job.id }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to register for the drive");
-      }
-
-      const data = await response.json();
+      const response = await postData("/student/applyfordrive", { id: job.id });
       const updatedJobs = [...jobs];
       updatedJobs[index].status = "Registered";
       setJobs(updatedJobs);
-      addToast(data.message || "Successfully registered for the drive", "success");
+      addToast(response.data?.message || "Successfully registered for the drive", "success");
     } catch (err) {
-      console.error("Error registering for drive:", err);
       addToast(err.message || "Failed to register for the drive", "error");
     } finally {
       setLoadingStates((prev) => ({ ...prev, [job.id]: false }));
@@ -138,13 +117,13 @@ const StudentJobView = () => {
   const handleThumbsDown = async (index) => {
     const job = jobs[index];
     const confirmDecline = window.confirm(
-      `Are you sure you want to decline "${job.title}" at ${job.company}? This will remove your registration if you were previously registered.`
+      `Are you sure you want to decline "${job.title}" at ${job.company}?`
     );
     if (!confirmDecline) return;
 
     try {
       setLoadingStates((prev) => ({ ...prev, [job.id]: true }));
-
+      
       if (job.status === "Registered") {
         const response = await fetch("http://localhost:9999/student/remove-application", {
           method: "DELETE",
@@ -154,31 +133,26 @@ const StudentJobView = () => {
         });
 
         if (!response.ok) {
-          const responseText = await response.text();
-          throw new Error(`Failed to remove application: ${responseText}`);
+          throw new Error("Failed to remove application");
         }
 
         const data = await response.json();
         addToast(data.message || "Application removed successfully", "success");
-      } else {
-        addToast("Drive declined successfully", "success");
       }
 
       const updatedJobs = [...jobs];
       updatedJobs[index].status = "Open";
       setJobs(updatedJobs);
     } catch (err) {
-      console.error("Error removing application:", err);
       addToast(err.message || "Failed to decline the drive", "error");
     } finally {
       setLoadingStates((prev) => ({ ...prev, [job.id]: false }));
     }
   };
 
-  const filteredJobs =
-    filter === "all"
-      ? jobs
-      : jobs.filter((job) => job.status.toLowerCase() === filter.toLowerCase());
+  const filteredJobs = filter === "all" 
+    ? jobs 
+    : jobs.filter((job) => job.status.toLowerCase() === filter.toLowerCase());
 
   if (isFetching && !jobs.length) {
     return (
@@ -193,7 +167,6 @@ const StudentJobView = () => {
 
   return (
     <div className="p-8 relative">
-      {/* Toast Container */}
       <div className="fixed top-4 right-4 z-50 space-y-2">
         {toasts.map((toast) => (
           <div
@@ -227,27 +200,24 @@ const StudentJobView = () => {
           Open
         </button>
       </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredJobs.map((job, index) => (
           <div
             key={job.id}
-            className="bg-white flex flex-col justify-between rounded-lg shadow-md p-6 hover:shadow-lg hover:shadow-orange-200 transition-shadow overflow-hidden"
+            className="bg-white flex flex-col justify-between rounded-lg shadow-md p-6 hover:shadow-lg hover:shadow-orange-200 transition-shadow"
           >
             <div className="flex justify-between items-start mb-4">
-              <div>
-                <h4 className="text-xl font-semibold text-gray-800 break-words">{job.title}</h4>
-              </div>
-              <div className="flex flex-col gap-2">
-                <span
-                  className={`px-3 py-1 rounded-full text-sm whitespace-nowrap ${
-                    job.status === "Registered"
-                      ? "bg-green-100 text-green-600"
-                      : "bg-orange-100 text-orange-600"
-                  }`}
-                >
-                  {job.status}
-                </span>
-              </div>
+              <h4 className="text-xl font-semibold text-gray-800 break-words">{job.title}</h4>
+              <span
+                className={`px-3 py-1 rounded-full text-sm whitespace-nowrap ${
+                  job.status === "Registered"
+                    ? "bg-green-100 text-green-600"
+                    : "bg-orange-100 text-orange-600"
+                }`}
+              >
+                {job.status}
+              </span>
             </div>
 
             <div className="space-y-3">
@@ -266,7 +236,7 @@ const StudentJobView = () => {
                 </div>
                 <div className="flex items-center text-gray-600">
                   <Calendar size={18} className="mr-2 flex-shrink-0 text-orange-500" />
-                  <span className="truncate">{endsOn[index]}</span>
+                  <span className="truncate">{endsOn[job.id] || "Calculating..."}</span>
                 </div>
                 <div className="flex items-center text-gray-600">
                   <Navigation size={18} className="mr-2 flex-shrink-0 text-orange-500" />

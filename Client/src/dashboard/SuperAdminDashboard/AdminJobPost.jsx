@@ -2,8 +2,9 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
+import { fetchData, postData } from "../../services/apiService";
 
-const BASE_URL = "http://localhost:9999";
+// const BASE_URL = "http://localhost:9999";
 const GEMINI_API_KEY = "AIzaSyAdqUZ6j42IST9GA2jCdPn-zao4NSH4l3Q"; // Replace with your real API key
 const GEMINI_API_URL =
   "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
@@ -26,13 +27,14 @@ const AdminJobPost = () => {
   const [groupEmails, setGroupEmails] = useState([]);
   const [searchQuery, setSearchQuery] = useState(""); // New state for search input
   const MAX_RETRIES = 3;
+  const [isOpen, setIsOpen] = useState(false);
 
   // Fetch group emails on component mount
   useEffect(() => {
     const fetchGroupEmails = async () => {
       try {
-        const response = await axios.get(
-          `${BASE_URL}/superadmin/getfeedgroupmail`,
+        const response = await fetchData(
+          `/superadmin/getfeedgroupmail`,
           { withCredentials: true }
         );
         console.log("Received group emails:", response.data.groupMailList);
@@ -331,7 +333,7 @@ const AdminJobPost = () => {
       console.log("Data being sent to /superadmin/createjobs:", [
         formattedData,
       ]);
-      await axios.post(`${BASE_URL}/superadmin/createjobs`, [formattedData], {
+      await postData(`/superadmin/createjobs`, [formattedData], {
         withCredentials: true,
       });
       setFormData({
@@ -401,7 +403,7 @@ const AdminJobPost = () => {
           <button
             onClick={handleAutoFill}
             disabled={loading || !rawDescription.trim()}
-            className="mt-3 px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
+            className="mt-3 px-4 py-2 bg-orange-500 cursor-pointer text-white rounded-md hover:bg-orange-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
           >
             {loading ? "Analyzing..." : "Auto Fill"}
           </button>
@@ -529,42 +531,59 @@ const AdminJobPost = () => {
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all mb-2"
                 placeholder="Search emails..."
               />
-              <div className="max-h-48 overflow-y-auto border border-gray-300 rounded-md p-2">
-                {filteredEmails.map((email, index) => (
-                  <div key={index} className="flex items-center mb-2">
-                    <input
-                      type="checkbox"
-                      id={`email-${index}`}
-                      name="notificationEmail"
-                      value={email}
-                      checked={formData.notificationEmail.includes(email)}
-                      onChange={handleInputChange}
-                      className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300 rounded"
-                    />
-                    <label
-                      htmlFor={`email-${index}`}
-                      className="ml-2 text-sm text-gray-700"
-                    >
-                      {email}
-                    </label>
+              <div className="relative">
+                <div 
+
+                  onClick={() => setIsOpen(true)} 
+                  className="w-full p-3 border border-gray-300 rounded-md cursor-pointer flex justify-between items-center"
+                >
+                  <span>{formData.notificationEmail.length ? `${formData.notificationEmail.length} selected` : 'Select emails'}</span>
+                  <svg className={`w-4 h-4 transition-transform ${isOpen ? 'transform rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+
+                {(isOpen || searchQuery) && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
+                    <div className="max-h-48 overflow-y-auto p-2">
+                      {filteredEmails.map((email, index) => (
+                        <div key={index} className="flex items-center mb-2">
+                          <input
+                            type="checkbox"
+                            id={`email-${index}`}
+                            name="notificationEmail"
+                            value={email}
+                            checked={formData.notificationEmail.includes(email)}
+                            onChange={handleInputChange}
+                            className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300 rounded"
+                          />
+                          <label
+                            htmlFor={`email-${index}`}
+                            className="ml-2 text-sm text-gray-700"
+                          >
+                            {email}
+                          </label>
+                        </div>
+                      ))}
+                      {filteredEmails.length === 0 && (
+                        <p className="text-sm text-gray-500 p-2">
+                          {searchQuery
+                            ? "No emails match your search"
+                            : "No email groups available"}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                ))}
-                {filteredEmails.length === 0 && (
-                  <p className="text-sm text-gray-500 p-2">
-                    {searchQuery
-                      ? "No emails match your search"
-                      : "No email groups available"}
-                  </p>
                 )}
-              </div>
-            </div>
+
+              </div>                        </div>
           </div>
 
-          <div className="col-span-full flex justify-start">
+          <div className="col-span-full flex justify-end">
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
+              className="px-10 py-2 bg-orange-500 cursor-pointer text-white rounded-md hover:bg-orange-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
             >
               {loading ? "Posting..." : "Post Job"}
             </button>

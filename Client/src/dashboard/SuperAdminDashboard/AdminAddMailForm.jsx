@@ -3,8 +3,9 @@ import axios from 'axios';
 import * as XLSX from 'xlsx'; // You'll need to install this: npm install xlsx
 import { toast } from 'react-toastify';
 import { ToastContainer } from 'react-toastify';
+import { postData } from '../../services/apiService';
 
-const BASE_URL = 'http://localhost:9999';
+// const BASE_URL = 'http://localhost:9999';
 
 const AdminAddMailForm = () => {
   const [emails, setEmails] = useState('');
@@ -57,8 +58,8 @@ const AdminAddMailForm = () => {
         throw new Error('Please enter or upload at least one valid email address');
       }
 
-      const response = await axios.post(
-        `${BASE_URL}/superadmin/feedgroupmail`,
+      const response = await postData(
+        `/superadmin/feedgroupmail`,
         emailArray,
         { 
           withCredentials: true,
@@ -93,13 +94,12 @@ const AdminAddMailForm = () => {
               id="excel-upload"
               accept=".xlsx, .xls"
               onChange={handleFileChange}
-              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100"
+              className="w-full p-3 border po border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100 cursor-pointer"
             />
             <p className="mt-1 text-xs text-gray-500">
               Upload an Excel file with emails in the first column
             </p>
           </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Or Enter Email Addresses Manually
@@ -120,7 +120,7 @@ const AdminAddMailForm = () => {
             <button
               type="submit"
               disabled={loading || (!emails.trim() && !file)}
-              className="px-6 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
+              className="px-6 py-2 bg-orange-500 text-white rounded-md cursor-pointer hover:bg-orange-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
             >
               {loading ? 'Adding...' : 'Add Emails'}
             </button>

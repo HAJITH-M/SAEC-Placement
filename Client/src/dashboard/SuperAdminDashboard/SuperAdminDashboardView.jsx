@@ -12,6 +12,7 @@ import AdminAddMailForm from "./AdminAddMailForm";
 import AdminAddEvents from "./AdminAddEvents";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
+import { postData } from "../../services/apiService";
 
 const SuperAdminDashboardView = () => {
   const [activeComponent, setActiveComponent] = useState("home");
@@ -101,8 +102,8 @@ const SuperAdminDashboardView = () => {
 
   const handleLogout = async () => {
     try {
-      const response = await axios.post(
-        'http://localhost:9999/superadmin/logout',
+      const response = await postData(
+        '/superadmin/logout',
         {},
         { withCredentials: true }
       );

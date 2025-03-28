@@ -12,4 +12,8 @@ export default defineConfig({
       '@': path.resolve(__dirname, 'src'),  // Maps '@' to the 'src' directory
     },
   },
+  server: {
+    host: '0.0.0.0',  // Ensures the server listens on all network interfaces
+    port: 5173,        // Explicitly sets the port
+  },
 })

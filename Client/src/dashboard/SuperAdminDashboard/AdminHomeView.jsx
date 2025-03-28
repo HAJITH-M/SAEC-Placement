@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Users, BookOpen, Briefcase, UserCheck } from "lucide-react";
+import { fetchData } from "../../services/apiService";
 
 const AdminHomeViewDashboard = () => {
   const [staffCount, setStaffCount] = useState(0);
@@ -15,7 +16,7 @@ const AdminHomeViewDashboard = () => {
       setLoading(true);
 
       // Fetch staff and student counts from /superadmin
-      const superAdminResponse = await axios.get("http://localhost:9999/superadmin", {
+      const superAdminResponse = await fetchData("/superadmin", {
         withCredentials: true,
       });
       console.log("SuperAdmin Response:", superAdminResponse.data); // Debug log

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import axios from "axios";
 import * as XLSX from "xlsx";
+import { postData } from "../../services/apiService";
 
 const AdminAddStaff = ({ onStaffCreated }) => {
   const [newStaff, setNewStaff] = useState({ email: "", password: "", department: "" });
@@ -53,8 +53,8 @@ const AdminAddStaff = ({ onStaffCreated }) => {
     setSuccess(null);
 
     try {
-      const response = await axios.post(
-        "http://localhost:9999/superadmin/createstaffs",
+      const response = await postData(
+        "/superadmin/createstaffs",
         [{ ...newStaff }],
         { withCredentials: true }
       );
@@ -66,9 +66,7 @@ const AdminAddStaff = ({ onStaffCreated }) => {
       console.error("Error creating staff:", error);
       if (error.response?.status === 409) {
         setError(error.response.data.error);
-      } else {
-        setError(error.response?.data?.error || "Failed to create staff");
-      }
+      } 
     }
   };
 
@@ -103,8 +101,8 @@ const AdminAddStaff = ({ onStaffCreated }) => {
         }
 
         try {
-          const response = await axios.post(
-            "http://localhost:9999/superadmin/createstaffs",
+          const response = await postData(
+            "/superadmin/createstaffs",
             staffArray,
             { withCredentials: true }
           );
@@ -136,13 +134,13 @@ const AdminAddStaff = ({ onStaffCreated }) => {
       {/* Tabs */}
       <div className="flex flex-col sm:flex-row justify-center gap-2 sm:gap-4 mb-6">
         <button
-          className={`w-full sm:w-auto px-4 py-2 rounded-md text-sm ${activeTab === 'single' ? 'bg-orange-500 text-white' : 'bg-gray-200 text-gray-700'} hover:bg-orange-400 hover:text-white transition-colors`}
+          className={`w-full sm:w-auto cursor-pointer px-4 py-2 rounded-md text-sm ${activeTab === 'single' ? 'bg-orange-500 text-white' : 'bg-gray-200 text-gray-700'} hover:bg-orange-400 hover:text-white transition-colors`}
           onClick={() => setActiveTab('single')}
         >
           Single Staff
         </button>
         <button
-          className={`w-full sm:w-auto px-4 py-2 rounded-md text-sm ${activeTab === 'bulk' ? 'bg-orange-500 text-white' : 'bg-gray-200 text-gray-700'} hover:bg-orange-400 hover:text-white transition-colors`}
+          className={`w-full sm:w-auto cursor-pointer px-4 py-2 rounded-md text-sm ${activeTab === 'bulk' ? 'bg-orange-500 text-white' : 'bg-gray-200 text-gray-700'} hover:bg-orange-400 hover:text-white transition-colors`}
           onClick={() => setActiveTab('bulk')}
         >
           Bulk Upload

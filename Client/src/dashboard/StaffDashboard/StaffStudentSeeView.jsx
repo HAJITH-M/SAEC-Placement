@@ -14,21 +14,25 @@ const StaffStudentSeeView = () => {
   const [studentToRemove, setStudentToRemove] = useState(null);
   const [currentStaffEmail, setCurrentStaffEmail] = useState(null);
   const [selectedBatch, setSelectedBatch] = useState("");
-  const [viewMode, setViewMode] = useState("your"); // Add this state
+  const [viewMode, setViewMode] = useState("your");
+  const [selectedStudentId, setSelectedStudentId] = useState(null); // New state for selected row
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const studentsResponse = await axios.get("http://localhost:9999/staff", { withCredentials: true });
+        const studentsResponse = await axios.get("http://localhost:9999/staff", {
+          withCredentials: true,
+        });
         const { staffEmail, allStudents: all, yourStudents: yours } = studentsResponse.data;
         setCurrentStaffEmail(staffEmail);
-        
-        // Filter allStudents to get only students added by current staff
+
         const filteredStudents = {};
         Object.entries(all || {}).forEach(([dept, batches]) => {
           const filteredBatches = {};
           Object.entries(batches).forEach(([batch, students]) => {
-            const filteredBatchStudents = students.filter(student => student.staffEmail === staffEmail);
+            const filteredBatchStudents = students.filter(
+              (student) => student.staffEmail === staffEmail
+            );
             if (filteredBatchStudents.length > 0) {
               filteredBatches[batch] = filteredBatchStudents;
             }
@@ -37,12 +41,10 @@ const StaffStudentSeeView = () => {
             filteredStudents[dept] = filteredBatches;
           }
         });
-        
-        setAllStudents(all || {});
 
+        setAllStudents(all || {});
         setYourStudents(filteredStudents);
         setError(null);
-
 
         console.log("All Students:", studentsResponse.data);
       } catch (err) {
@@ -61,42 +63,44 @@ const StaffStudentSeeView = () => {
       await axios.delete(`http://localhost:9999/staff/student/${studentId}`, {
         withCredentials: true,
       });
-      
+
       setAllStudents((prev) => {
         const updated = { ...prev };
         Object.keys(updated).forEach((dept) => {
           Object.keys(updated[dept]).forEach((batch) => {
-            updated[dept][batch] = updated[dept][batch].filter((student) => student.studentId !== studentId);
+            updated[dept][batch] = updated[dept][batch].filter(
+              (student) => student.studentId !== studentId
+            );
             if (updated[dept][batch].length === 0) delete updated[dept][batch];
           });
           if (Object.keys(updated[dept]).length === 0) delete updated[dept];
         });
         return updated;
       });
-      
+
       setYourStudents((prev) => {
         const updated = { ...prev };
-
-
-
         Object.keys(updated).forEach((dept) => {
           Object.keys(updated[dept]).forEach((batch) => {
-            updated[dept][batch] = updated[dept][batch].filter((student) => student.studentId !== studentId);
+            updated[dept][batch] = updated[dept][batch].filter(
+              (student) => student.studentId !== studentId
+            );
             if (updated[dept][batch].length === 0) delete updated[dept][batch];
           });
           if (Object.keys(updated[dept]).length === 0) delete updated[dept];
         });
         return updated;
       });
-      
+
       setStudentToRemove(null);
       setSuccess("Student removed successfully");
-      toast.success("Student removed successfully")
+      toast.success("Student removed successfully");
       setError(null);
+      setSelectedStudentId(null); // Reset selection when student is removed
     } catch (err) {
       console.error("Error removing student:", err);
       setError(err.response?.data?.error || "Failed to remove student");
-      toast.error("Failed to remove student")
+      toast.error("Failed to remove student");
     } finally {
       setLoading(false);
     }
@@ -104,7 +108,7 @@ const StaffStudentSeeView = () => {
 
   const filterStudents = (students) => {
     if (!searchTerm) return students;
-    
+
     const filteredDepts = {};
     Object.entries(students).forEach(([dept, batches]) => {
       const filteredBatches = {};
@@ -114,15 +118,31 @@ const StaffStudentSeeView = () => {
             return (
               student.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
               student.regNo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-
-              String(student.placed === "yes" ? "yes" : "no").toLowerCase().includes(searchTerm.toLowerCase())
+              student.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              student.batch?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              student.department?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              String(student.cgpa ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+              String(student.tenthMark ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+              String(student.twelfthMark ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+              String(student.noOfArrears ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+              String(student.phoneNumber ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+              student.skillSet?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              student.languagesKnown?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              student.linkedinUrl?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              student.githubUrl?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              student.companyPlacedIn?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              String(student.placedStatus === "yes" ? "yes" : "no")
+                .toLowerCase()
+                .includes(searchTerm.toLowerCase())
             );
           }
           if (filterBy === "placed") {
-            const placedStatus = student.placed === "yes" ? "yes" : "no";
+            const placedStatus = student.placedStatus === "yes" ? "yes" : "no";
             return placedStatus.toLowerCase().includes(searchTerm.toLowerCase());
           }
-          return String(student[filterBy] || "").toLowerCase().includes(searchTerm.toLowerCase());
+          return String(student[filterBy] || "")
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase());
         });
         if (filtered.length > 0) {
           filteredBatches[batch] = filtered;
@@ -135,18 +155,23 @@ const StaffStudentSeeView = () => {
     return filteredDepts;
   };
 
+  const handleRowClick = (studentId) => {
+    setSelectedStudentId(studentId === selectedStudentId ? null : studentId); // Toggle selection
+  };
+
   return (
-    <div className="p-2 sm:p-4">
-      <div className="bg-white rounded-lg shadow-md p-3 sm:p-6 mb-6">
+    <div className="w-full min-h-screen p-2 sm:p-4">
+      {/* Search Section */}
+      <div className="w-full bg-white rounded-lg shadow-md p-3 sm:p-6 mb-6">
         <h2 className="text-lg sm:text-xl font-semibold mb-4 flex items-center gap-2">
-          <Search size={24} className="text-orange-500" />
+          <Search size={20} className="text-orange-500" />
           Search Students
         </h2>
 
-        <div className="flex flex-row gap-2 mb-4">
+        <div className="flex flex-col sm:flex-row gap-2 mb-4">
           <button
             onClick={() => setViewMode("your")}
-            className={`px-4 py-2 rounded ${
+            className={`w-full sm:w-auto px-4 py-2 rounded ${
               viewMode === "your" ? "bg-orange-500 text-white" : "bg-gray-200"
             }`}
           >
@@ -154,7 +179,7 @@ const StaffStudentSeeView = () => {
           </button>
           <button
             onClick={() => setViewMode("all")}
-            className={`px-4 py-2 rounded ${
+            className={`w-full sm:w-auto px-4 py-2 rounded ${
               viewMode === "all" ? "bg-orange-500 text-white" : "bg-gray-200"
             }`}
           >
@@ -162,8 +187,8 @@ const StaffStudentSeeView = () => {
           </button>
         </div>
 
-        <div className="flex flex-row gap-2">
-          <div className="flex items-center border rounded p-1.5 w-1/4">
+        <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex items-center border rounded p-1.5 w-full sm:w-1/4">
             <Filter size={16} className="text-orange-500 mr-1.5" />
             <select
               value={filterBy}
@@ -173,11 +198,24 @@ const StaffStudentSeeView = () => {
               <option value="all">All Fields</option>
               <option value="email">Email</option>
               <option value="regNo">Registration Number</option>
+              <option value="name">Name</option>
+              <option value="batch">Batch</option>
+              <option value="department">Department</option>
+              <option value="cgpa">CGPA</option>
+              <option value="tenthMark">10th Mark</option>
+              <option value="twelfthMark">12th Mark</option>
+              <option value="noOfArrears">No. of Arrears</option>
+              <option value="phoneNumber">Phone Number</option>
+              <option value="skillSet">Skill Set</option>
+              <option value="languagesKnown">Languages Known</option>
+              <option value="linkedinUrl">LinkedIn URL</option>
+              <option value="githubUrl">GitHub URL</option>
+              <option value="companyPlacedIn">Company Placed In</option>
               <option value="placed">Placement Status</option>
             </select>
           </div>
 
-          <div className="flex items-center flex-1 border rounded p-1.5">
+          <div className="flex items-center w-full sm:flex-1 border rounded p-1.5">
             <Search size={16} className="text-orange-500 mr-1.5" />
             <input
               type="text"
@@ -190,99 +228,249 @@ const StaffStudentSeeView = () => {
         </div>
       </div>
 
-      {loading && <div className="p-4 mb-4 bg-gray-100 text-gray-700 rounded">Loading...</div>}
-      <div className="bg-white rounded-lg shadow-md p-3 sm:p-6">
-        <h3 className="text-xl font-semibold mb-4">
+      {/* Loading State */}
+      {loading && (
+        <div className="w-full p-4 mb-4 bg-gray-100 text-gray-700 rounded text-center">
+          Loading...
+        </div>
+      )}
+
+      {/* Students Section */}
+      <div className="w-full bg-white rounded-lg shadow-md p-3 sm:p-6">
+        <h3 className="text-lg sm:text-xl font-semibold mb-4">
           {viewMode === "your" ? "Your Students" : "All Students"} by Department and Batch
         </h3>
-        {Object.keys(filterStudents(viewMode === "your" ? yourStudents : allStudents)).length === 0 ? (
+        {Object.keys(filterStudents(viewMode === "your" ? yourStudents : allStudents)).length ===
+        0 ? (
           <div className="text-center py-8 text-gray-500">
             <Users size={48} className="mx-auto mb-4 text-gray-400" />
             <p>No students found.</p>
           </div>
         ) : (
-
-
-          Object.entries(filterStudents(viewMode === "your" ? yourStudents : allStudents)).map(([dept, batches]) => (
-            <div key={dept} className="mb-6">
-              <h4 className="text-lg font-semibold text-gray-800 mb-2">Department: {dept}</h4>
-              <div className="mb-4">
-                <select
-                  value={selectedBatch}
-                  onChange={(e) => setSelectedBatch(e.target.value)}
-                  className="border rounded p-2 w-48"
-                >
-                  <option value="">Select Batch</option>
-                  {Object.keys(batches).map((batch) => (
-                    <option key={batch} value={batch}>Batch {batch}</option>
-                  ))}
-                </select>
-              </div>
-              {selectedBatch && batches[selectedBatch] && (
-                <div className="overflow-x-auto rounded-lg border mb-4">
-                  <h5 className="text-md font-medium text-gray-700 p-2 bg-gray-50">
-                    Batch {selectedBatch} [{batches[selectedBatch].length}]
-                  </h5>
-                  <table className="w-full">
-                    <thead>
-                      <tr className="bg-gray-50">
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Email</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Reg. No</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Placement Status</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Added By</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {batches[selectedBatch].map((student) => (
-                        <tr key={student.studentId} className="hover:bg-gray-50">
-                          <td className="px-4 py-3 text-sm text-gray-900">{student.email}</td>
-                          <td className="px-4 py-3 text-sm text-gray-900">{student.regNo || "N/A"}</td>
-                          <td className="px-4 py-3 text-sm text-gray-900">
-
-                            {student.placedStatus}
-                          </td>
-                          <td className="px-4 py-3 text-sm text-gray-900">{student.staffEmail || "Unknown"}</td>
-                          <td className="px-4 py-3 text-sm">
-                            <button
-                              onClick={() => setStudentToRemove(student)}
-                              className="flex items-center gap-1.5 bg-red-500 text-white py-1.5 px-3 rounded hover:bg-red-600 transition-colors text-sm"
-                              disabled={loading}
-                            >
-                              <Trash2 size={16} />
-                              Remove
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+          Object.entries(filterStudents(viewMode === "your" ? yourStudents : allStudents)).map(
+            ([dept, batches]) => (
+              <div key={dept} className="mb-6">
+                <h4 className="text-base sm:text-lg font-semibold text-gray-800 mb-2">
+                  Department: {dept}
+                </h4>
+                <div className="mb-4">
+                  <select
+                    value={selectedBatch}
+                    onChange={(e) => setSelectedBatch(e.target.value)}
+                    className="border rounded p-2 w-full sm:w-48 text-sm"
+                  >
+                    <option value="">Select Batch</option>
+                    {Object.keys(batches).map((batch) => (
+                      <option key={batch} value={batch}>
+                        Batch {batch}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-              )}
-            </div>
-          ))
+                {selectedBatch && batches[selectedBatch] && (
+                  <div className="w-full overflow-x-auto rounded-lg border mb-4">
+                    <h5 className="text-sm sm:text-md font-medium text-gray-700 p-2 bg-gray-50">
+                      Batch {selectedBatch} [{batches[selectedBatch].length}]
+                    </h5>
+                    <table className="w-full min-w-max">
+                      <thead>
+                        <tr className="bg-gray-50">
+                          <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
+                            Name
+                          </th>
+                          <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
+                            Email
+                          </th>
+                          <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
+                            Reg. No
+                          </th>
+                          <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
+                            Roll No
+                          </th>
+                          <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
+                            Batch
+                          </th>
+                          <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
+                            Dept
+                          </th>
+                          <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
+                            CGPA
+                          </th>
+                          <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
+                            10th
+                          </th>
+                          <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
+                            12th
+                          </th>
+                          <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
+                            Arrears
+                          </th>
+                          <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
+                            Phone
+                          </th>
+                          <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
+                            Skills
+                          </th>
+                          <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
+                            Languages
+                          </th>
+                          <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
+                            LinkedIn
+                          </th>
+                          <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
+                            GitHub
+                          </th>
+                          <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
+                            Company
+                          </th>
+                          <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
+                            Status
+                          </th>
+                          <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
+                            Staff
+                          </th>
+                          <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {batches[selectedBatch].map((student) => (
+                          <tr
+                            key={student.studentId}
+                            onClick={() => handleRowClick(student.studentId)}
+                            className={`cursor-pointer hover:bg-gray-50 ${
+                              selectedStudentId === student.studentId ? "bg-yellow-100" : ""
+                            }`}
+                          >
+                            <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
+                              {student.name || "N/A"}
+                            </td>
+                            <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
+                              {student.email}
+                            </td>
+                            <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
+                              {student.regNo || "N/A"}
+                            </td>
+                            <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
+                              {student.rollNo || "N/A"}
+                            </td>
+                            <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
+                              {student.batch || "N/A"}
+                            </td>
+                            <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
+                              {student.department || "N/A"}
+                            </td>
+                            <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
+                              {student.cgpa ?? "N/A"}
+                            </td>
+                            <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
+                              {student.tenthMark ?? "N/A"}
+                            </td>
+                            <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
+                              {student.twelfthMark ?? "N/A"}
+                            </td>
+                            <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
+                              {student.noOfArrears ?? "N/A"}
+                            </td>
+                            <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
+                              {student.phoneNumber ?? "N/A"}
+                            </td>
+                            <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
+                              {student.skillSet || "N/A"}
+                            </td>
+                            <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
+                              {student.languagesKnown || "N/A"}
+                            </td>
+                            <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
+                              {student.linkedinUrl ? (
+                                <a
+                                  href={student.linkedinUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-500 hover:underline"
+                                  onClick={(e) => e.stopPropagation()} // Prevent row click when clicking link
+                                >
+                                  Link
+                                </a>
+                              ) : (
+                                "N/A"
+                              )}
+                            </td>
+                            <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
+                              {student.githubUrl ? (
+                                <a
+                                  href={student.githubUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-500 hover:underline"
+                                  onClick={(e) => e.stopPropagation()} // Prevent row click when clicking link
+                                >
+                                  Link
+                                </a>
+                              ) : (
+                                "N/A"
+                              )}
+                            </td>
+                            <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
+                              {student.companyPlacedIn || "N/A"}
+                            </td>
+                            <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
+                              {student.placedStatus === "yes" ? (
+                                <span className="text-green-600">Placed</span>
+                              ) : (
+                                <span className="text-red-600">Not Placed</span>
+                              )}
+                            </td>
+                            <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
+                              {student.staffEmail || "Unassigned"}
+                            </td>
+                            <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation(); // Prevent row click when clicking button
+                                  setStudentToRemove(student);
+                                }}
+                                className="flex items-center gap-1.5 bg-red-500 text-white py-1 px-2 sm:py-1.5 sm:px-3 rounded hover:bg-red-600 transition-colors text-xs sm:text-sm"
+                                disabled={loading}
+                              >
+                                <Trash2 size={16} />
+                                Remove
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )
+          )
         )}
       </div>
 
+      {/* Confirmation Modal */}
       {studentToRemove && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">Confirm Deletion</h3>
-            <p className="text-gray-600 mb-6">
-              Are you sure you want to remove "<span className="font-medium">{studentToRemove.email}</span>"?
-              This action cannot be undone.
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2">
+          <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-md">
+            <h3 className="text-base sm:text-lg font-semibold mb-4">Confirm Deletion</h3>
+            <p className="text-gray-600 mb-6 text-sm sm:text-base">
+              Are you sure you want to remove "
+              <span className="font-medium">{studentToRemove.email}</span>"? This action
+              cannot be undone.
             </p>
-            <div className="flex justify-end gap-4">
+            <div className="flex flex-col sm:flex-row justify-end gap-4">
               <button
                 onClick={() => setStudentToRemove(null)}
-                className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors"
+                className="w-full sm:w-auto px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors text-sm sm:text-base"
                 disabled={loading}
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleRemoveStudent(studentToRemove.studentId)}
-                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                className="w-full sm:w-auto px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors text-sm sm:text-base"
                 disabled={loading}
               >
                 Remove

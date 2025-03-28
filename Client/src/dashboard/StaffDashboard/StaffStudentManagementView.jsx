@@ -20,7 +20,7 @@ const StaffStudentManagementView = () => {
             onClick={handleBack}
             className="group flex items-center gap-5 px-4 py-2  text-white rounded-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-orange-300"
           >
-            <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform text-stone-800" />
+            <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform text-stone-800 cursor-pointer" />
             <span className="hidden sm:inline">Back</span>
           </button>
         )}
@@ -61,7 +61,7 @@ const StaffStudentManagementView = () => {
           </div>
         </div>
       ) : (
-        <div className="w-full max-w-4xl mx-auto p-0 animate-fade-in">
+        <div className="w-full  mx-auto p-0 animate-fade-in">
           {viewMode === "add" ? <StaffStudentAddView /> : <StaffStudentSeeView />}
         </div>
       )}
