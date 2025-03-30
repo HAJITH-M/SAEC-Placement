@@ -1,12 +1,10 @@
 import { supabaseConfig as supabase } from './SupabaseConfig';
 import { postData } from '../services/apiService';
 import { getApiUrl } from './apiConfig';
-
 import axios from 'axios';
 
-const GEMINI_API_KEY = "AIzaSyAdqUZ6j42IST9GA2jCdPn-zao4NSH4l3Q"; // Should be in env file in production
-const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
-
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY ; // Use environment variable
+const GEMINI_API_URL = import.meta.env.VITE_GEMINI_API_URL ; // Use environment variable
 
 export const forgotPassword = async (role, email) => {
     try {

@@ -35,7 +35,7 @@ const AdminStudentsPlaced = () => {
   const renderStudentCard = (student, index) => (
     <div
       key={index}
-      className="flex-shrink-0 p-4 bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 w-full max-w-[180px]"
+      className="flex-shrink-0 p-4 hover:shadow-orange-300 bg-white rounded-lg shadow-md hover:shadow-md transition-all duration-200 w-full max-w-[180px]"
     >
       <div className="mb-3">
         <img
@@ -45,7 +45,6 @@ const AdminStudentsPlaced = () => {
         />
       </div>
       <div className="text-sm">
-
         <h3 className="font-semibold text-gray-900 mb-2 text-center text-[0.8em]">{student.name || "Unknown"}</h3>
         <div className="space-y-2 text-gray-600">
           <div className="flex items-center justify-center">
@@ -63,7 +62,6 @@ const AdminStudentsPlaced = () => {
         </div>
       </div>
     </div>
-
   );
   const filteredBatches = getBatches().filter((batch) =>
     batchSearchTerm
@@ -106,7 +104,6 @@ const AdminStudentsPlaced = () => {
             }}
             className="px-3 py-1 cursor-pointer bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors text-sm flex items-center gap-2"
           >
-
             <ArrowLeft className="w-4 h-4 font-bold" />
             <span className="hidden md:inline">Back to Batches</span>
           </button>

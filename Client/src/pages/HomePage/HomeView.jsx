@@ -1,18 +1,83 @@
-import React from 'react';  // removed useState since it's not used here
+import React, { useEffect, useState } from 'react';
 import PlacementStats from '../../components/PlacementStats/PlacementStatsView';
 import RecentPlacements from '../../components/RecentPlacements/RecentPlacementsView';
 import NavBar from '../../components/NavBar/NavBarView';
 import SideBar from '../../components/SideBar/SideBarView';
 import HomeVM from './HomeVM';
 import PlacedStudents from '../../components/PlacedStudents/PlacedStudents';
+import { useNavigate } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
+import { fetchData } from '../../services/apiService';
 
 const HomeView = () => {
-  const viewModel = HomeVM();  // renamed for clarity
+  const viewModel = HomeVM();
+  const navigate = useNavigate();
+  const [isChecking, setIsChecking] = useState(true);
+  const [hasSession, setHasSession] = useState(false);
+
+  // Initial session check on mount
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const response = await fetchData('/check-session', { withCredentials: true });
+        const { role } = response.data;
+        setHasSession(true);
+        if (role === 'admin') {
+          navigate('/dashboard/superadmin', { replace: true });
+        } else if (role === 'student') {
+          navigate('/dashboard/student', { replace: true });
+        } else if (role === 'staff') {
+          navigate('/dashboard/staff', { replace: true });
+        }
+      } catch (err) {
+        if (err.response?.status !== 401) {
+        }
+        setHasSession(false); // No session or unauthorized, stay on /home
+      } finally {
+        setIsChecking(false);
+      }
+    };
+    checkSession();
+  }, [navigate]);
+
+  // Continuous guard only if no session initially detected
+  useEffect(() => {
+    if (hasSession) return; // Skip if session was found initially
+
+    const interval = setInterval(async () => {
+      try {
+        const response = await fetchData('/check-session', { withCredentials: true });
+        const { role } = response.data;
+        setHasSession(true);
+        if (role === 'admin') {
+          navigate('/dashboard/superadmin', { replace: true });
+        } else if (role === 'student') {
+          navigate('/dashboard/student', { replace: true });
+        } else if (role === 'staff') {
+          navigate('/dashboard/staff', { replace: true });
+        }
+      } catch (err) {
+        if (err.response?.status !== 401) {
+        }
+        // No session or unauthorized, stay on /home silently
+      }
+    }, 5000); // Check every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [navigate, hasSession]);
+
+  if (isChecking) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <Loader2 className="animate-spin" size={48} />
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen ">
+    <div className="flex flex-col lg:flex-row min-h-screen">
       <NavBar isSidebarOpen={viewModel.isSidebarOpen} toggleSidebar={viewModel.toggleSidebar} />
-      <SideBar isSidebarOpen={viewModel.isSidebarOpen} userEmail={"Demo@gmail.com"} showStudents={true}  />
+      <SideBar isSidebarOpen={viewModel.isSidebarOpen}  showStudents={true} />
 
       <div className={`w-full transition-margin duration-300 ease-in-out ${viewModel.isSidebarOpen ? 'lg:ml-0' : 'ml-0'} flex-1 mt-16 lg:mt-0`}>
         <div className="text-orange-500 py-8 lg:py-12 px-4 shadow-xl bg-orange-500">
@@ -22,8 +87,7 @@ const HomeView = () => {
           </div>
         </div>
 
-        <PlacedStudents/>
-        
+        <PlacedStudents />
         <PlacementStats />
         <RecentPlacements />
       </div>

@@ -19,6 +19,9 @@ import ProtectedRoute from '../pages/LoginPage/OAuth/ProtectedRoute';
 import StaffDashboardView from '../dashboard/StaffDashboard/StaffDashboardView';
 import StaffEventAdd from '../dashboard/StaffDashboard/StaffEventAdd';
 import AdminAddEvents from '../dashboard/SuperAdminDashboard/AdminAddEvents';
+import StudentPage from '../pages/StudentPage/StudentPage';
+import StaffPage from '../pages/StaffPage/StaffPage';
+import SuperAdminPage from '../pages/SuperAdminPage/SuperAdminPage';
 
 // SplashScreen with Cookie Check
 const SplashScreenWithRedirect = () => {
@@ -56,24 +59,24 @@ const AppRouter = () => {
         <Route path="/auth/superadmin/register" element={<SuperAdminRegister />} />
         
         <Route element={<ProtectedRoute allowedRole="student" />}>
-          <Route path="/dashboard/student" element={<StudentDashboardView />} />
+          <Route path="/dashboard/student" element={<StudentPage />} />
         </Route>
         
         <Route element={<ProtectedRoute allowedRole="staff" />}>
-          <Route path="/dashboard/staff" element={<StaffDashboardView />} />
+          <Route path="/dashboard/staff" element={<StaffPage />} />
         </Route>
         
         <Route element={<ProtectedRoute allowedRole="super_admin" />}>
-          <Route path="/dashboard/superadmin" element={<SuperAdminDashboardView />} />
+          <Route path="/dashboard/superadmin" element={<SuperAdminPage />} />
         </Route>
 
-        <Route element={<ProtectedRoute allowedRole="staff" />}>
+        {/* <Route element={<ProtectedRoute allowedRole="staff" />}>
           <Route path="/addevents/staff" element={<StaffEventAdd />} />
-        </Route>
+        </Route> */}
         
-        <Route element={<ProtectedRoute allowedRole="super_admin" />}>
+        {/* <Route element={<ProtectedRoute allowedRole="super_admin" />}>
           <Route path="/addevents/superadmin" element={<AdminAddEvents />} />
-        </Route>
+        </Route> */}
 
         <Route path="/auth/student/forgot-password" element={<StudentForgotPassword />} />
         <Route path="/auth/staff/forgot-password" element={<StaffForgotPassword />} />

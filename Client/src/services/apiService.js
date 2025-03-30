@@ -8,23 +8,19 @@ const ensureApiInitialized = async () => {
   }
   return api;
 };
-
-// GET request
-export const fetchData = async (endpoint, config = {}) => {
-  try {
-    const apiInstance = await ensureApiInitialized();
-    const response = await apiInstance.get(endpoint, {
-      ...config,
-      withCredentials: true,
-    });
-    console.log(`GET ${endpoint} Response:`, response.data);
-    return response; // Return full response object
-  } catch (error) {
-    console.error(`GET ${endpoint} Error:`, error.response?.data || error.message);
-    throw error;
-  }
-};
-
+  // GET request
+  export const fetchData = async (endpoint, config = {}) => {
+    try {
+      const apiInstance = await ensureApiInitialized();
+      const response = await apiInstance.get(endpoint, {
+        ...config,
+        withCredentials: true,
+      });
+      return response; // Return full response object
+    } catch (error) {
+      throw error;
+    }
+  };
 // POST request
 export const postData = async (endpoint, data, config = {}) => {
   try {
@@ -33,10 +29,10 @@ export const postData = async (endpoint, data, config = {}) => {
       ...config,
       withCredentials: true,
     });
-    console.log(`POST ${endpoint} Response:`, response.data);
+    // console.log(`POST ${endpoint} Response:`, response.data);
     return response;
   } catch (error) {
-    console.error(`POST ${endpoint} Error:`, error.response?.data || error.message);
+    // console.error(`POST ${endpoint} Error:`, error.response?.data || error.message);
     throw error;
   }
 };
@@ -49,10 +45,10 @@ export const patchData = async (endpoint, data, config = {}) => {
       ...config,
       withCredentials: true,
     });
-    console.log(`PATCH ${endpoint} Response:`, response.data);
+    // console.log(`PATCH ${endpoint} Response:`, response.data);
     return response;
   } catch (error) {
-    console.error(`PATCH ${endpoint} Error:`, error.response?.data || error.message);
+    // console.error(`PATCH ${endpoint} Error:`, error.response?.data || error.message);
     throw error;
   }
 };
@@ -65,10 +61,10 @@ export const deleteData = async (endpoint, config = {}) => {
       ...config,
       withCredentials: true,
     });
-    console.log(`DELETE ${endpoint} Response:`, response.data);
+    // console.log(`DELETE ${endpoint} Response:`, response.data);
     return response;
   } catch (error) {
-    console.error(`DELETE ${endpoint} Error:`, error.response?.data || error.message);
+    // console.error(`DELETE ${endpoint} Error:`, error.response?.data || error.message);
     throw error;
   }
 };

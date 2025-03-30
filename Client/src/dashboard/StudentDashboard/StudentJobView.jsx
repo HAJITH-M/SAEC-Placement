@@ -4,6 +4,7 @@ import {
 } from "lucide-react";
 import { fetchData, postData } from "../../services/apiService";
 
+
 const StudentJobView = () => {
   const [jobs, setJobs] = useState([]);
   const [filter, setFilter] = useState("all");
@@ -167,6 +168,7 @@ const StudentJobView = () => {
 
   return (
     <div className="p-8 relative">
+      
       <div className="fixed top-4 right-4 z-50 space-y-2">
         {toasts.map((toast) => (
           <div

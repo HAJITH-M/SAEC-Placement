@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate, Outlet, useNavigate } from 'react-router-dom';
-import Cookies from 'js-cookie'; // Install js-cookie: npm install js-cookie
+import Cookies from 'js-cookie';
 import { fetchData } from '../../../services/apiService';
 
 const ProtectedRoute = ({ allowedRole }) => {
@@ -9,40 +9,19 @@ const ProtectedRoute = ({ allowedRole }) => {
 
   useEffect(() => {
     const checkSession = async () => {
-      try {
-        // Check for cookies first
-        const staffSession = Cookies.get('staff_session');
-        const studentSession = Cookies.get('student_session');
-        const superAdminSession = Cookies.get('admin_session');
-
-        if (staffSession && allowedRole === 'staff') {
-          setIsAuthenticated(true);
-          navigate('/dashboard/staff');
-          return;
-        } else if (studentSession && allowedRole === 'student') {
-          setIsAuthenticated(true);
-          navigate('/dashboard/student');
-          return;
-        } else if (superAdminSession && allowedRole === 'super_admin') {
-          setIsAuthenticated(true);
-          navigate('/dashboard/superadmin');
-          return;
-        }
-
-        // If no valid cookie, check the session via API
-        const response = await fetchData('/auth/session', {
-          withCredentials: true,
-        });
-
-        if (response.data.success && response.data.role === allowedRole) {
-          setIsAuthenticated(true);
-          // Set cookie based on role (optional, if API doesn't already set it)
-          Cookies.set(`${allowedRole}_session`, response.data.userId, { expires: 1 }); // Expires in 1 day
-        } else {
-          setIsAuthenticated(false);
-        }
-      } catch (error) {
-        console.error('Session check failed:', error.response ? error.response.data : error.message);
+      const response = await fetchData('/auth/session', { withCredentials: true });
+      if (response.status === 200 && response.data.success && response.data.role === allowedRole) {
+        console.log('Protected Route Session Role:', response.data.role);
+        setIsAuthenticated(true);
+        // Set cookie if not already set by API
+        Cookies.set(`${allowedRole}_session`, response.data.userId, { expires: 1 });
+        // Redirect to dashboard
+        const dashboardPath = `/dashboard/${allowedRole === 'super_admin' ? 'superadmin' : allowedRole}`;
+        navigate(dashboardPath, { replace: true });
+      } else if (response.status === 401) {
+        setIsAuthenticated(false); // No session, redirect to login
+      } else {
+        console.error('Session check failed with status:', response.status, response.data);
         setIsAuthenticated(false);
       }
     };
@@ -54,7 +33,7 @@ const ProtectedRoute = ({ allowedRole }) => {
     return <div>Loading...</div>;
   }
 
-  const redirectPath = allowedRole === "super_admin" ? "/auth/superadmin" : `/auth/${allowedRole}`;
+  const redirectPath = allowedRole === 'super_admin' ? '/auth/superadmin' : `/auth/${allowedRole}`;
   return isAuthenticated ? <Outlet /> : <Navigate to={redirectPath} replace />;
 };
 

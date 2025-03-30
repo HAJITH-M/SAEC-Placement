@@ -1,7 +1,70 @@
-import { Link } from 'react-router-dom';
-import { UserCircle2, Users, ShieldCheck, Home } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { UserCircle2, Users, ShieldCheck, Home, Loader2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { fetchData } from '../../services/apiService'; // Adjust path if needed
 
 const AuthOptionPage = () => {
+  const navigate = useNavigate();
+  const [isChecking, setIsChecking] = useState(true); // Track if session check is in progress
+  const [hasSession, setHasSession] = useState(false); // Track if session exists
+
+  // Initial session check on mount
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const response = await fetchData('/check-session', { withCredentials: true });
+        const { role } = response.data;
+        setHasSession(true);
+        if (role === 'admin') {
+          navigate('/dashboard/superadmin', { replace: true });
+        } else if (role === 'student') {
+          navigate('/dashboard/student', { replace: true });
+        } else if (role === 'staff') {
+          navigate('/dashboard/staff', { replace: true });
+        }
+      } catch (err) {
+        setHasSession(false); // No session, stay on /home
+      } finally {
+        setIsChecking(false);
+      }
+    };
+    checkSession();
+  }, [navigate]);
+
+  // Continuous guard only if no session initially detected
+  useEffect(() => {
+    if (hasSession) return; // Skip if session was found initially
+
+    const interval = setInterval(async () => {
+      try {
+        const response = await fetchData('/check-session', { withCredentials: true });
+        const { role } = response.data;
+        setHasSession(true);
+        if (role === 'admin') {
+          navigate('/dashboard/superadmin', { replace: true });
+        } else if (role === 'student') {
+          navigate('/dashboard/student', { replace: true });
+        } else if (role === 'staff') {
+          navigate('/dashboard/staff', { replace: true });
+        }
+      } catch (err) {
+        // Silent fail, no need to log repeatedly unless debugging
+      }
+    }, 5000); // Check every 5 seconds to reduce noise
+
+    return () => clearInterval(interval);
+  }, [navigate, hasSession]);
+
+
+  // Render loading state while checking session
+  if (isChecking) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+            <Loader2 className="animate-spin" size={48} />
+          </div>
+    );
+  }
+
   return (
     <section className="min-h-screen flex items-center bg-gradient-to-br from-orange-50 to-white py-8">
       <div className="w-full max-w-6xl px-4 mx-auto sm:px-6 lg:px-8">

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Mail, Phone, Book, Code, Languages, Award, Briefcase, Github, Linkedin, Hash, Building, AlertCircle, Edit2, Check, User, Loader } from 'lucide-react';
-import axios from 'axios';
 import { fetchData, patchData } from '../../services/apiService';
+
 
 const StudentProfileView = () => {
   const [studentData, setStudentData] = useState(null);
@@ -185,6 +185,7 @@ const StudentProfileView = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 py-6 lg:p-0 px-4 sm:px-6 lg:px-0">
+      
       <div className=" mx-auto">
         <div className="bg-white shadow-xl rounded-lg overflow-hidden">
           {/* Header */}

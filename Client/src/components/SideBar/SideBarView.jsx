@@ -11,9 +11,9 @@ const SideBar = ({ isSidebarOpen, userEmail, showCompanies = false, showEvents =
         <div className="flex flex-col gap-3 mb-6">
           <h2 className="text-xl lg:text-2xl font-bold text-black">SAEC Placements</h2>
           <div className={`flex items-center gap-2 ${isSidebarOpen ? 'block' : 'hidden lg:flex'}`}>
-            <div className="w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center">
+            {/* <div className="w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center">
               {userEmail ? userEmail[0].toUpperCase() : ''}
-            </div>
+            </div> */}
             <p className="text-sm text-gray-600">{userEmail}</p>
           </div>
         </div>
