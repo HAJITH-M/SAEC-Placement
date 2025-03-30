@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Users, Search, Filter, Trash2 } from "lucide-react";
-import { fetchData } from "../../services/apiService";
+import { deleteData, fetchData } from "../../services/apiService";
 
 const AdminViewStaff = () => {
   const [staff, setStaff] = useState([]);
@@ -47,8 +47,8 @@ const AdminViewStaff = () => {
     setSuccess(null);
 
     try {
-      const response = await axios.delete(
-        `http://localhost:9999/superadmin/staff/${staffToDelete.staffId}`,
+      const response = await deleteData(
+        `/superadmin/staff/${staffToDelete.staffId}`,
         { withCredentials: true }
       );
       setSuccess("Staff removed successfully!");

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Home, User, FileText, HelpCircle, Menu, X, Calendar, Users, LogOut, Loader } from "lucide-react";
+import { Home, User, FileText, HelpCircle, Menu, X, Calendar, Users, LogOut, Loader, GraduationCap } from "lucide-react";
 import axios from 'axios';
 import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
@@ -12,7 +12,8 @@ import AdminAddMailForm from "./AdminAddMailForm";
 import AdminAddEvents from "./AdminAddEvents";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
-import { postData } from "../../services/apiService";
+import { fetchData, postData } from "../../services/apiService";
+import AdminStudentsPlaced from "./AdminStudentsPlaced";
 
 const SuperAdminDashboardView = () => {
   const [activeComponent, setActiveComponent] = useState("home");
@@ -28,7 +29,7 @@ const SuperAdminDashboardView = () => {
 
   const firstLetter = adminEmail ? adminEmail.charAt(0).toUpperCase() : "?";
 
-  const fetchData = async () => {
+  const fetchDataSuperAdmin = async () => {
     try {
       const response = await axios.get('http://localhost:9999/superadmin', {
         withCredentials: true,
@@ -50,7 +51,7 @@ const SuperAdminDashboardView = () => {
 
   const checkSession = async () => {
     try {
-      const response = await axios.get('http://localhost:9999/auth/session', {
+      const response = await fetchData('/auth/session', {
         withCredentials: true,
       });
       console.log('Full /auth/session response:', response.data);
@@ -69,7 +70,7 @@ const SuperAdminDashboardView = () => {
   useEffect(() => {
     const initializeData = async () => {
       try {
-        await Promise.all([checkSession(), fetchData()]);
+        await Promise.all([checkSession(), fetchDataSuperAdmin()]);
       } finally {
         setIsLoading(false);
       }
@@ -87,8 +88,10 @@ const SuperAdminDashboardView = () => {
         return <AdminAddMailForm/>;
       case "students":
         return <StudentManagementView students={studentList} />;
+      case "adminstudentsplaced":
+        return <AdminStudentsPlaced />;
       case "staff":
-        return <StaffManagementView staff={staffList} onStaffCreated={fetchData} onStaffRemoved={fetchData} />;
+        return <StaffManagementView staff={staffList} onStaffCreated={fetchDataSuperAdmin} onStaffRemoved={fetchDataSuperAdmin} />;
       case "events":
         return <AdminAddEvents />;
       case "adminJobPost":
@@ -122,8 +125,9 @@ const SuperAdminDashboardView = () => {
   if (isLoading) {
     // return <div className="flex items-center justify-center h-screen">Loading...</div>;
     return(
-      <Loader />
-
+      <div className="flex justify-center items-center h-screen">
+          <Loader className="animate-spin text-orange-600" size={48} />
+      </div>
     )
   }
 
@@ -165,6 +169,10 @@ const SuperAdminDashboardView = () => {
             <div onClick={() => { setActiveComponent("jobRegistrations"); setIsOpen(false); }} className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${activeComponent === "jobRegistrations" ? "bg-orange-500 text-white" : "text-black"}`}>
               <FileText size={20} className={activeComponent === "jobRegistrations" ? "text-white" : "text-orange-500"} />
               <span>Job Registrations</span>
+            </div>
+            <div onClick={() => { setActiveComponent("adminstudentsplaced"); setIsOpen(false); }} className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${activeComponent === "adminstudentsplaced" ? "bg-orange-500 text-white" : "text-black"}`}>
+              <GraduationCap size={20} className={activeComponent === "adminstudentsplaced" ? "text-white" : "text-orange-500"} />
+              <span>Students Placed</span>
             </div>
             <div onClick={() => { setActiveComponent("addMail"); setIsOpen(false); }} className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${activeComponent === "addMail" ? "bg-orange-500 text-white" : "text-black"}`}>
               <User size={20} className={activeComponent === "addMail" ? "text-white" : "text-orange-500"} />

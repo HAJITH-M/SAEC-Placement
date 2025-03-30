@@ -5,7 +5,6 @@ import { toast } from 'react-toastify';
 import { ToastContainer } from 'react-toastify';
 import { postData } from '../../services/apiService';
 
-// const BASE_URL = 'http://localhost:9999';
 
 const AdminAddMailForm = () => {
   const [emails, setEmails] = useState('');

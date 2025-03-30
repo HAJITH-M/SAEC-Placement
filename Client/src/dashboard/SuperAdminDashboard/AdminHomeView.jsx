@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Users, BookOpen, Briefcase, UserCheck, CheckCircle, Clock, Mail } from "lucide-react";
+import { Users, BookOpen, Briefcase, UserCheck, CheckCircle, Clock, Mail, Loader2 } from "lucide-react";
 import { fetchData } from "../../services/apiService";
+import PlacedStudents from "../../components/PlacedStudents/PlacedStudents";
 
 const AdminHomeViewDashboard = () => {
   const [staffCount, setStaffCount] = useState(0);
@@ -36,7 +37,7 @@ const AdminHomeViewDashboard = () => {
       }
 
       // Fetch job counts and registrations from /jobs-with-students
-      const jobsResponse = await axios.get("http://localhost:9999/superadmin/jobs-with-students", {
+      const jobsResponse = await fetchData("/superadmin/jobs-with-students", {
         withCredentials: true,
       });
       console.log("Jobs Response:", jobsResponse.data);
@@ -59,7 +60,7 @@ const AdminHomeViewDashboard = () => {
       }
 
       // Fetch notification email count from /getfeedgroupmail
-      const emailResponse = await axios.get("http://localhost:9999/superadmin/getfeedgroupmail", {
+      const emailResponse = await fetchData("/superadmin/getfeedgroupmail", {
         withCredentials: true,
       });
       console.log("Email Response:", emailResponse.data);
@@ -78,10 +79,9 @@ const AdminHomeViewDashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen text-gray-600">
-        Loading Dashboard...
-      </div>
-    );
+      <div className="flex justify-center items-center h-screen">
+        <Loader2 className="animate-spin text-orange-600" size={48} />
+      </div>    );
   }
 
   if (error) {

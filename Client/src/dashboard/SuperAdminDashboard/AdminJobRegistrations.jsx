@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Building2, Calendar, Link, CheckCircle2, Trash2, Users, Search, Filter, Download, CheckCircle } from 'lucide-react';
+import { Building2, Calendar, Link, CheckCircle2, Trash2, Users, Search, Filter, Download, CheckCircle, Loader2 } from 'lucide-react';
 import * as XLSX from 'xlsx';
-import { fetchData, postData } from '../../services/apiService';
+import { deleteData, fetchData, postData } from '../../services/apiService';
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 
-const BASE_URL = 'http://localhost:9999';
 
 // Delete Confirmation Modal Component
 const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, jobTitle }) => {
@@ -242,7 +241,7 @@ const AdminJobRegistrations = () => {
 
     try {
       setLoading(true);
-      await axios.delete(`${BASE_URL}/superadmin/job/${jobToDelete.jobId}`, {
+      await deleteData(`/superadmin/job/${jobToDelete.jobId}`, {
         withCredentials: true,
       });
       fetchJobs();
@@ -355,7 +354,7 @@ const AdminJobRegistrations = () => {
   return (
     <div className="p-2 sm:p-4">
       {error && <div className="p-4 mb-4 bg-red-100 text-red-700 rounded">{error}</div>}
-      {loading && <div className="p-4 mb-4 bg-gray-100 text-gray-700 rounded">Loading...</div>}
+      {/* {loading && <div className="p-4 mb-4 bg-gray-100 text-gray-700 rounded">Loading...</div>} */}
 
       <div className="bg-white rounded-lg shadow-md p-3 sm:p-6 mb-6">
         <h2 className="text-lg sm:text-xl font-semibold mb-4 flex items-center gap-2">
@@ -391,6 +390,14 @@ const AdminJobRegistrations = () => {
           </div>
         </div>
       </div>
+
+      {loading && (
+        <div className="flex justify-center items-center">
+          <Loader2 className="animate-spin text-orange-600" size={48} />
+        </div>
+      )}
+
+
       <div className="grid grid-cols-1 gap-4 sm:gap-6">
         {filterJobs(jobs).map((job) => (
           <div key={job.jobId} className="bg-white rounded-lg shadow-md p-3 sm:p-6 hover:shadow-lg transition-shadow overflow-hidden">
