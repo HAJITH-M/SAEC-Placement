@@ -1,11 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ToastContainer, toast } from "react-toastify";
-import axios from "axios";
-
-const BASE_URL = "http://localhost:9999";
-const GEMINI_API_KEY = "AIzaSyAdqUZ6j42IST9GA2jCdPn-zao4NSH4l3Q";
-const GEMINI_API_URL =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+import { fetchData, postData } from "../../services/apiService";
+import { generateContent, parseGeminiResponse } from "../../config/api";
 
 const StaffJobAddView = () => {
   const [formData, setFormData] = useState({
@@ -23,14 +19,14 @@ const StaffJobAddView = () => {
   const [error, setError] = useState(null);
   const [retryCount, setRetryCount] = useState(0);
   const [groupEmails, setGroupEmails] = useState([]);
-  const [searchQuery, setSearchQuery] = useState(""); // New state for search input
+  const [searchQuery, setSearchQuery] = useState("");
   const MAX_RETRIES = 3;
 
   // Fetch group emails on component mount
   useEffect(() => {
     const fetchGroupEmails = async () => {
       try {
-        const response = await axios.get(`${BASE_URL}/staff/getfeedgroupmail`, {
+        const response = await fetchData(`/staff/getfeedgroupmail`, {
           withCredentials: true,
         });
         console.log("Received group emails:", response.data.groupMailList);
@@ -116,33 +112,14 @@ const StaffJobAddView = () => {
 
   const makeApiRequest = async (prompt, currentRetry = 0) => {
     try {
-      const response = await axios.post(
-        `${GEMINI_API_URL}?key=${GEMINI_API_KEY}`,
-        {
-          contents: [
-            {
-              parts: [{ text: prompt }],
-            },
-          ],
-        },
-        {
-          headers: { "Content-Type": "application/json" },
-          timeout: 10000,
-        }
-      );
+      const response = await generateContent(prompt, MAX_RETRIES, 1000); // Use generateContent from geminiApiService
       return response.data;
     } catch (err) {
       console.error(
         `API Request failed (attempt ${currentRetry + 1}):`,
         err.message
       );
-      if (currentRetry < MAX_RETRIES - 1) {
-        const waitTime = Math.pow(2, currentRetry) * 1000;
-        console.log(`Retrying in ${waitTime}ms...`);
-        await delay(waitTime);
-        return makeApiRequest(prompt, currentRetry + 1);
-      }
-      throw err;
+      throw err; // Let generateContent handle retries internally
     }
   };
 
@@ -186,28 +163,7 @@ const StaffJobAddView = () => {
 
       let aiData;
       try {
-        const rawText = responseData.candidates[0].content.parts[0].text;
-        console.log("Raw Text Before Parsing:", rawText);
-
-        let cleanedText = rawText.trim();
-        if (cleanedText.startsWith("```json")) {
-          cleanedText = cleanedText
-            .replace("```json", "")
-            .replace(/```$/g, "")
-            .trim();
-        } else if (cleanedText.startsWith("```")) {
-          cleanedText = cleanedText
-            .replace(/^```/, "")
-            .replace(/```$/g, "")
-            .trim();
-        }
-
-        const jsonMatch = cleanedText.match(/({[\s\S]*})/);
-        if (jsonMatch) {
-          cleanedText = jsonMatch[1];
-        }
-
-        aiData = JSON.parse(cleanedText);
+        aiData = parseGeminiResponse({ data: responseData }); // Use parseGeminiResponse from geminiApiService
         console.log("Parsed AI Data:", aiData);
       } catch (parseErr) {
         console.error("Parsing Error:", parseErr);
@@ -327,7 +283,7 @@ const StaffJobAddView = () => {
         notificationEmail: formData.notificationEmail,
       };
       console.log("Data being sent to /staff/createjobs:", [formattedData]);
-      await axios.post(`${BASE_URL}/staff/createjobs`, [formattedData], {
+      await postData(`/staff/createjobs`, [formattedData], {
         withCredentials: true,
       });
       setFormData({
@@ -367,6 +323,7 @@ const StaffJobAddView = () => {
         </h2>
         {error && (
           <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md text-sm">
+            {error} {/* Display error message */}
             {retryCount > 0 && retryCount < MAX_RETRIES && (
               <div className="mt-2">
                 <button

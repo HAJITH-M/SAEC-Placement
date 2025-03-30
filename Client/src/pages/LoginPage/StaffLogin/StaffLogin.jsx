@@ -1,6 +1,5 @@
 import React from 'react';
 import SuperAdminAuthFormView from '../../../components/SuperAdminAuthForm/SuperAdminAuthFormView';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { fetchData, postData } from '../../../services/apiService';
 import { getApiUrl } from '../../../config/apiConfig';
@@ -11,20 +10,45 @@ const StaffLogin = () => {
   const handleSubmit = async (authData) => {
     console.log('Login request data:', authData);
     try {
-      // await axios.post('http://localhost:9999/staff/login', authData, { withCredentials: true });
-      await postData('/staff/login', authData, { withCredentials: true });
-      console.log('Staff logged in successfully');
+      // Send login request
+      const loginResponse = await postData('/staff/login', authData, { 
+        withCredentials: true,
+        maxRedirects: 0,
+      });
+      console.log('Login Response:', loginResponse.status, loginResponse.headers);
+
+      // Fetch session to verify cookie and get staff data
+      console.log('Fetching session from /staff');
+      const sessionResponse = await fetchData('/staff', {
+        withCredentials: true,
+      });
+      console.log('Session Response:', sessionResponse.data);
+
+      // Assuming sessionResponse.data contains staffId and role
+      const { staffId, role } = sessionResponse.data;
+
+      if (role !== 'staff') {
+        throw new Error('Invalid session: Role mismatch');
+      }
+
+      if (!staffId) {
+        throw new Error('Invalid session: Staff ID not found');
+      }
+
+      console.log('Staff login successful, staffId:', staffId);
       navigate('/dashboard/staff', { replace: true });
     } catch (error) {
-      console.error('Error in staff login:', error.response ? error.response.data : error.message);
-      throw new Error(error.response?.data?.error || 'Login failed');
+      console.error('Error in staff login:', error.response?.data || error.message);
+      if (error.response?.status === 401) {
+        throw new Error('Invalid email or password. Please try again.');
+      }
+      throw new Error(
+        error.response?.data?.error || 
+        error.response?.data?.details || 
+        'Login failed. Please try again later.'
+      );
     }
   };
-
-  // const handleOAuthLogin = () => {
-  //   window.location.href = 'http://localhost:9999/auth/oauth/staff';
-  // };
-
 
   const handleOAuthLogin = async () => {
     try {
@@ -38,7 +62,6 @@ const StaffLogin = () => {
       window.location.href = 'https://your-production-api.com/auth/oauth/staff';
     }
   };
-
 
   return (
     <div>

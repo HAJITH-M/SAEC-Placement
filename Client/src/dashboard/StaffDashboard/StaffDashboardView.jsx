@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Home, User, FileText, HelpCircle, Menu, X, Plus, LogOut, Users, Briefcase, ClipboardList, UserCircle, PlusCircle } from "lucide-react";
+import { Home, User, FileText, HelpCircle, Menu, X, Plus, LogOut, Users, Briefcase, ClipboardList, UserCircle, PlusCircle, Loader, Loader2, Loader2Icon } from "lucide-react";
 import { CSVLink } from "react-csv";
 import axios from "axios";
 import { useNavigate } from "react-router-dom"; // Import useNavigate
@@ -12,6 +12,9 @@ import StaffStudentManagementView from "./StaffStudentManagementView";
 import StaffEventAdd from "./StaffEventAdd";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
+import PlacementCoordinatorContact from "../../components/Coordinators/Coordinators";
+import { fetchData, postData } from "../../services/apiService";
+import StaffHomeView from "./StaffHomeView";
 
 const ExportCSV = ({ job, interestedStudents }) => {
   const prepareCsvData = () => {
@@ -49,7 +52,7 @@ const StaffDashboardView = () => {
   useEffect(() => {
     const fetchStaffDetails = async () => {
       try {
-        const response = await axios.get("http://localhost:9999/staff", { withCredentials: true });
+        const response = await fetchData("/staff", { withCredentials: true });
         const { staff } = response.data;
         setStaffDetails({
           email: staff.email || "",
@@ -76,7 +79,7 @@ const StaffDashboardView = () => {
   const renderComponent = () => {
     switch (activeComponent) {
       case "home":
-        return <HomeComponent />;
+        return <StaffHomeView />;
       case "addStudent":
         return <StaffStudentAddView />;
       case "addJob":
@@ -92,7 +95,7 @@ const StaffDashboardView = () => {
       case "staffeventadd":
         return <StaffEventAdd />;
       default:
-        return <HomeComponent />;
+        return <StaffHomeView />;
     }
   };
 
@@ -102,7 +105,7 @@ const StaffDashboardView = () => {
 
   const handleLogout = async () => {
     try {
-      const response = await axios.post("http://localhost:9999/staff/logout", {}, { withCredentials: true });
+      const response = await postData("/staff/logout", {}, { withCredentials: true });
       if (response.data.message === "Logged out successfully" || response.status === 200) {
         toast.success("Logged out successfully")
         navigate("/auth/staff");
@@ -113,7 +116,12 @@ const StaffDashboardView = () => {
   };
   
   if (loading) {
-    return <div>Loading...</div>;
+    return(
+
+          <div className="flex justify-center items-center h-screen">
+            <Loader className="animate-spin" size={48} />
+          </div>
+    )
   }
 
   return (
@@ -262,7 +270,15 @@ const HomeComponent = () => (
   <div className="bg-white p-6 rounded-lg shadow">
     <h2 className="text-2xl font-bold mb-4">Home</h2>
     <p>Welcome to the staff dashboard. Use the menu to manage students and job opportunities.</p>
+  
+  <PlacementCoordinatorContact/>
   </div>
 );
 
+
+
+
 export default StaffDashboardView;
+
+
+

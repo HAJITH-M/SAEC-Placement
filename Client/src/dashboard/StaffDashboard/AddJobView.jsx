@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { deleteData, fetchData, postData } from "../../services/apiService";
 
 const AddJobView = () => {
   const [jobForm, setJobForm] = useState({
@@ -20,8 +21,6 @@ const AddJobView = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [loading, setLoading] = useState(false);
-
-  const API_BASE_URL = "http://localhost:9999";
 
   useEffect(() => {
     fetchJobs();
@@ -70,11 +69,9 @@ const AddJobView = () => {
         expiration: formatDateForBackend(jobForm.expiration, true),
       };
       console.log("Formatted data:", formattedData);
-      const response = await axios.post(
-        `${API_BASE_URL}/staff/createjobs`,
-        [formattedData],
-        { withCredentials: true }
-      );
+      const response = await postData(`/staff/createjobs`, [formattedData], {
+        withCredentials: true,
+      });
       console.log("Create Job Response:", response.data);
       setSuccess("Job created successfully!");
       toast.success("Job created successfully");
@@ -106,14 +103,14 @@ const AddJobView = () => {
   const fetchJobs = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/staff/displaydrives`, {
+      const response = await fetchData(`/staff/displaydrives`, {
         withCredentials: true,
       });
       const drives = response.data.drives_list || [];
       const jobsWithCounts = await Promise.all(
         drives.map(async (job) => {
-          const studentsResponse = await axios.get(
-            `${API_BASE_URL}/staff/registeredstudents/${job.id}`,
+          const studentsResponse = await fetchData(
+            `/staff/registeredstudents/${job.id}`,
             { withCredentials: true }
           );
           const students = studentsResponse.data.registered_students || [];
@@ -148,7 +145,7 @@ const AddJobView = () => {
   const handleRemoveJob = async (jobId) => {
     try {
       setLoading(true);
-      await axios.delete(`${API_BASE_URL}/staff/job/${jobId}`, {
+      await deleteData(`/staff/job/${jobId}`, {
         withCredentials: true,
       });
       setSuccess(`Job with ID ${jobId} removed successfully!`);
@@ -171,12 +168,9 @@ const AddJobView = () => {
   const fetchRegisteredStudents = async (driveId) => {
     try {
       setLoading(true);
-      const response = await axios.get(
-        `${API_BASE_URL}/staff/registeredstudents/${driveId}`,
-        {
-          withCredentials: true,
-        }
-      );
+      const response = await fetchData(`/staff/registeredstudents/${driveId}`, {
+        withCredentials: true,
+      });
       const students = response.data.registered_students || [];
       const byDepartment = students.reduce((acc, student) => {
         const dept = student.department || "Unknown";
@@ -197,7 +191,7 @@ const AddJobView = () => {
           ? "No students registered for this job"
           : err.response?.data?.error || "Failed to fetch registered students"
       );
-      toast.error("Failed to fetch registered students")
+      toast.error("Failed to fetch registered students");
       setFilteredStudents({});
     } finally {
       setLoading(false);

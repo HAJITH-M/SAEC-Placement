@@ -3,6 +3,7 @@ import axios from "axios";
 import * as XLSX from "xlsx";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
+import { fetchData, postData } from "../../services/apiService";
 
 const StaffStudentAddView = () => {
   const [name, setName] = useState("");
@@ -20,7 +21,7 @@ const StaffStudentAddView = () => {
 
   const fetchStaffData = async () => {
     try {
-      const response = await axios.get("http://localhost:9999/staff", { withCredentials: true });
+      const response = await fetchData("/staff", { withCredentials: true });
       const { staffEmail, staffDepartment } = response.data;
       setCurrentStaffEmail(staffEmail);
       setCurrentStaffDepartment(staffDepartment);
@@ -43,8 +44,8 @@ const StaffStudentAddView = () => {
 
     try {
       setLoading(true);
-      const response = await axios.post(
-        "http://localhost:9999/staff/createstudents",
+      const response = await postData(
+        "/staff/createstudents",
         studentData,
         { withCredentials: true }
       );
@@ -138,8 +139,8 @@ const StaffStudentAddView = () => {
 
         console.log("Formatted Data:", parsedData);
 
-        const response = await axios.post(
-          "http://localhost:9999/staff/bulkuploadstudents",
+        const response = await postData(
+          "/staff/bulkuploadstudents",
           parsedData,
           { withCredentials: true }
         );
@@ -175,10 +176,10 @@ const StaffStudentAddView = () => {
   };
 
   return (
-    <div className="w-full px-2 sm:px-4 lg:px-6 py-0">
-      <h2 className="text-2xl font-bold mb-4">Add New Student</h2>
+    <div className="w-full px-6 sm:px-4 lg:px-6 py-0 mx-auto ">
+      <h2 className="text-xl font-bold mb-4 text-center">Add New Student</h2>
 
-      <div className="flex flex-col sm:flex-row justify-center gap-2 sm:gap-4 mb-6">
+      <div className="flex flex-row sm:flex-row justify-center gap-2 sm:gap-4 mb-6">
         <button
           className={`w-full sm:w-auto px-4 py-2 rounded-md text-sm ${activeTab === 'single' ? 'bg-orange-500 text-white' : 'bg-gray-200 text-gray-700'} hover:bg-orange-400 hover:text-white transition-colors`}
           onClick={() => setActiveTab('single')}

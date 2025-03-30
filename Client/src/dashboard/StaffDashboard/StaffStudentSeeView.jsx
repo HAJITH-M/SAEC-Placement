@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Users, Search, Filter, Trash2 } from "lucide-react";
 import { toast } from "react-toastify";
+import { deleteData, fetchData } from "../../services/apiService";
 
 const StaffStudentSeeView = () => {
   const [allStudents, setAllStudents] = useState({});
@@ -18,13 +19,14 @@ const StaffStudentSeeView = () => {
   const [selectedStudentId, setSelectedStudentId] = useState(null); // New state for selected row
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchDataStudent = async () => {
       try {
-        const studentsResponse = await axios.get("http://localhost:9999/staff", {
+        const studentsResponse = await fetchData("/staff", {
           withCredentials: true,
         });
         const { staffEmail, allStudents: all, yourStudents: yours } = studentsResponse.data;
         setCurrentStaffEmail(staffEmail);
+        console.log("Current ssssss", studentsResponse);
 
         const filteredStudents = {};
         Object.entries(all || {}).forEach(([dept, batches]) => {
@@ -54,13 +56,13 @@ const StaffStudentSeeView = () => {
         setLoading(false);
       }
     };
-    fetchData();
+    fetchDataStudent();
   }, []);
 
   const handleRemoveStudent = async (studentId) => {
     try {
       setLoading(true);
-      await axios.delete(`http://localhost:9999/staff/student/${studentId}`, {
+      await deleteData(`/staff/student/${studentId}`, {
         withCredentials: true,
       });
 
@@ -168,7 +170,7 @@ const StaffStudentSeeView = () => {
           Search Students
         </h2>
 
-        <div className="flex flex-col sm:flex-row gap-2 mb-4">
+        <div className="lg:flex lg:flex-row sm:flex-row gap-2 mb-4 grid grid-cols-2 ">
           <button
             onClick={() => setViewMode("your")}
             className={`w-full sm:w-auto px-4 py-2 rounded ${
@@ -187,8 +189,8 @@ const StaffStudentSeeView = () => {
           </button>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-2">
-          <div className="flex items-center border rounded p-1.5 w-full sm:w-1/4">
+        <div className="flex flex-row gap-2">
+          <div className="flex items-center border rounded p-1.5 w-1/2">
             <Filter size={16} className="text-orange-500 mr-1.5" />
             <select
               value={filterBy}
@@ -205,17 +207,11 @@ const StaffStudentSeeView = () => {
               <option value="tenthMark">10th Mark</option>
               <option value="twelfthMark">12th Mark</option>
               <option value="noOfArrears">No. of Arrears</option>
-              <option value="phoneNumber">Phone Number</option>
-              <option value="skillSet">Skill Set</option>
-              <option value="languagesKnown">Languages Known</option>
-              <option value="linkedinUrl">LinkedIn URL</option>
-              <option value="githubUrl">GitHub URL</option>
-              <option value="companyPlacedIn">Company Placed In</option>
-              <option value="placed">Placement Status</option>
+              
             </select>
           </div>
 
-          <div className="flex items-center w-full sm:flex-1 border rounded p-1.5">
+          <div className="flex items-center w-4/2 border rounded p-1.5">
             <Search size={16} className="text-orange-500 mr-1.5" />
             <input
               type="text"

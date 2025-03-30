@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Users, BookOpen, Briefcase, UserCheck } from "lucide-react";
+import { Users, BookOpen, Briefcase, UserCheck, CheckCircle, Clock, Mail } from "lucide-react";
 import { fetchData } from "../../services/apiService";
 
 const AdminHomeViewDashboard = () => {
@@ -8,6 +8,10 @@ const AdminHomeViewDashboard = () => {
   const [studentCount, setStudentCount] = useState(0);
   const [jobCount, setJobCount] = useState(0);
   const [totalStudentRegistrations, setTotalStudentRegistrations] = useState(0);
+  const [placedStudentCount, setPlacedStudentCount] = useState(0);
+  const [activeJobCount, setActiveJobCount] = useState(0);
+  const [expiredJobCount, setExpiredJobCount] = useState(0);
+  const [notificationEmailCount, setNotificationEmailCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -15,23 +19,27 @@ const AdminHomeViewDashboard = () => {
     try {
       setLoading(true);
 
-      // Fetch staff and student counts from /superadmin
+      // Fetch staff, student counts, and placed students from /superadmin
       const superAdminResponse = await fetchData("/superadmin", {
         withCredentials: true,
       });
-      console.log("SuperAdmin Response:", superAdminResponse.data); // Debug log
+      console.log("SuperAdmin Response:", superAdminResponse.data);
       if (superAdminResponse.data.success) {
         setStaffCount(superAdminResponse.data.staff?.length || 0);
         setStudentCount(superAdminResponse.data.students?.length || 0);
+        const placedCount = superAdminResponse.data.students?.filter(
+          (student) => student.placedStatus === "yes"
+        ).length || 0;
+        setPlacedStudentCount(placedCount);
       } else {
         throw new Error("Failed to fetch superadmin data");
       }
 
-      // Fetch job and registration counts from /jobs-with-students
+      // Fetch job counts and registrations from /jobs-with-students
       const jobsResponse = await axios.get("http://localhost:9999/superadmin/jobs-with-students", {
         withCredentials: true,
       });
-      console.log("Jobs Response:", jobsResponse.data); // Debug log
+      console.log("Jobs Response:", jobsResponse.data);
       if (jobsResponse.data.success) {
         const jobs = Array.isArray(jobsResponse.data.jobs) ? jobsResponse.data.jobs : [];
         setJobCount(jobs.length);
@@ -40,9 +48,22 @@ const AdminHomeViewDashboard = () => {
           0
         );
         setTotalStudentRegistrations(totalRegistrations);
+
+        const currentDate = new Date();
+        const activeJobs = jobs.filter((job) => new Date(job.expiration) > currentDate).length;
+        const expiredJobs = jobs.filter((job) => new Date(job.expiration) <= currentDate).length;
+        setActiveJobCount(activeJobs);
+        setExpiredJobCount(expiredJobs);
       } else {
         throw new Error("Failed to fetch jobs data");
       }
+
+      // Fetch notification email count from /getfeedgroupmail
+      const emailResponse = await axios.get("http://localhost:9999/superadmin/getfeedgroupmail", {
+        withCredentials: true,
+      });
+      console.log("Email Response:", emailResponse.data);
+      setNotificationEmailCount(emailResponse.data.groupMailList?.length || 0);
     } catch (err) {
       console.error("Dashboard Fetch Error:", err);
       setError("Failed to load dashboard data: " + (err.response?.data?.error || err.message));
@@ -72,8 +93,8 @@ const AdminHomeViewDashboard = () => {
   }
 
   return (
-    <div className="p-4 sm:p-6">
-      <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-gray-800">
+    <div className="p-4 sm:p-6 bg-slate-50 h-screen">
+      <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-gray-800 ">
         Admin Dashboard
       </h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
@@ -119,6 +140,50 @@ const AdminHomeViewDashboard = () => {
             </p>
           </div>
           <UserCheck size={32} className="text-purple-500" />
+        </div>
+
+        {/* Small Box: Placed Students */}
+        <div className="bg-white rounded-lg shadow-md p-6 flex items-center justify-between hover:shadow-lg transition-shadow">
+          <div>
+            <h2 className="text-md font-semibold text-gray-700">Placed Students</h2>
+            <p className="text-xl sm:text-2xl font-bold text-teal-500 mt-2">
+              {placedStudentCount}
+            </p>
+          </div>
+          <CheckCircle size={32} className="text-teal-500" />
+        </div>
+
+        {/* Small Box: Active Jobs */}
+        <div className="bg-white rounded-lg shadow-md p-6 flex items-center justify-between hover:shadow-lg transition-shadow">
+          <div>
+            <h2 className="text-md font-semibold text-gray-700">Active Jobs</h2>
+            <p className="text-xl sm:text-2xl font-bold text-indigo-500 mt-2">
+              {activeJobCount}
+            </p>
+          </div>
+          <Clock size={32} className="text-indigo-500" />
+        </div>
+
+        {/* Small Box: Expired Jobs */}
+        <div className="bg-white rounded-lg shadow-md p-6 flex items-center justify-between hover:shadow-lg transition-shadow">
+          <div>
+            <h2 className="text-md font-semibold text-gray-700">Expired Jobs</h2>
+            <p className="text-xl sm:text-2xl font-bold text-red-500 mt-2">
+              {expiredJobCount}
+            </p>
+          </div>
+          <Clock size={32} className="text-red-500" />
+        </div>
+
+        {/* Small Box: Notification Emails */}
+        <div className="bg-white rounded-lg shadow-md p-6 flex items-center justify-between hover:shadow-lg transition-shadow">
+          <div>
+            <h2 className="text-md font-semibold text-gray-700">Notification Emails</h2>
+            <p className="text-xl sm:text-2xl font-bold text-yellow-500 mt-2">
+              {notificationEmailCount}
+            </p>
+          </div>
+          <Mail size={32} className="text-yellow-500" />
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify"; // Added toast import
+import { postData } from "../../services/apiService";
 
 const StaffEventAdd = () => {
   const [eventData, setEventData] = useState({
@@ -70,8 +71,8 @@ const StaffEventAdd = () => {
       }
 
       console.log("Final upload data:", JSON.stringify(uploadData, null, 2));
-      const response = await axios.post(
-        "http://localhost:9999/staff/add-events",
+      const response = await postData(
+        "/staff/add-events",
         uploadData,
         {
           withCredentials: true,
@@ -111,7 +112,7 @@ const StaffEventAdd = () => {
   };
 
   return (
-    <div className="w-full p-2 md:p-6 bg-gray-50 min-h-screen">
+    <div className="w-full p-2 md:p-6 bg-slate-50 min-h-screen">
       <div className="bg-white rounded-lg shadow-md p-3 md:p-6 pb-10">
         <h2 className="text-2xl font-semibold text-gray-800 mb-6">Add Event</h2>
         {error && (

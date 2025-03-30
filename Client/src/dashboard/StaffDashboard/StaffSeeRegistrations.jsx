@@ -10,12 +10,12 @@ import {
   Download,
   Trash2,
   CheckCircle,
+  Loader2,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
-
-const BASE_URL = "http://localhost:9999";
+import { deleteData, fetchData, postData } from "../../services/apiService";
 
 const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, jobTitle }) => {
   if (!isOpen) return null;
@@ -76,17 +76,18 @@ const AddPlacedStudentsModal = ({
         companyName: companyName,
       };
 
-      const response = await axios.post(
-        `${BASE_URL}/staff/updateplacedstudentslist`,
+      const response = await postData(
+        `/staff/updateplacedstudentslist`,
         data,
         { withCredentials: true }
       );
       console.log("Response from server:", response.data);
 
-      onConfirm(selectedEmails);
+      onConfirm(selectedEmails); // Pass selected emails back to parent
 
       setSelectedEmails([]);
       setSearchTerm("");
+      toast.success("Students marked as placed successfully!");
     } catch (err) {
       console.error("Error posting to /staff/updateplacedstudentslist:", err);
       toast.error("Failed to add placed students. Please try again.");
@@ -242,22 +243,22 @@ const StaffSeeRegistrations = () => {
   const fetchJobs = async () => {
     try {
       setLoading(true);
-      const staffResponse = await axios.get(`${BASE_URL}/staff`, {
+      const staffResponse = await fetchData(`/staff`, {
         withCredentials: true,
       });
       const staffEmail = staffResponse.data.staffEmail;
       setCurrentStaffEmail(staffEmail);
       console.log("Current Staff Email:", staffEmail);
 
-      const response = await axios.get(`${BASE_URL}/staff/displaydrives`, {
+      const response = await fetchData(`/staff/displaydrives`, {
         withCredentials: true,
       });
       console.log("Display Drives Response:", response.data);
       const drives = response.data.drives_list || [];
       const jobsWithStudents = await Promise.all(
         drives.map(async (job) => {
-          const studentsResponse = await axios.get(
-            `${BASE_URL}/staff/registeredstudents/${job.id}`,
+          const studentsResponse = await fetchData(
+            `/staff/registeredstudents/${job.id}`,
             { withCredentials: true }
           );
           console.log(
@@ -289,10 +290,10 @@ const StaffSeeRegistrations = () => {
     if (!jobToDelete) return;
     try {
       setLoading(true);
-      await axios.delete(`${BASE_URL}/staff/job/${jobToDelete.jobId}`, {
+      await deleteData(`/staff/job/${jobToDelete.jobId}`, {
         withCredentials: true,
       });
-      fetchJobs();
+      fetchJobs(); // Refresh jobs after deletion
     } catch (err) {
       setError(err.response?.data?.error || "Failed to delete job");
       toast.error("Failed to delete job");
@@ -313,21 +314,28 @@ const StaffSeeRegistrations = () => {
     setShowPlacedModal(true);
   };
 
-  const handleAddPlacedConfirm = async (emails) => {
+  const handleAddPlacedConfirm = (emails) => {
     if (!selectedJobId || !emails.length) return;
-    try {
-      setLoading(true);
-      await fetchJobs();
-    } catch (err) {
-      setError(
-        err.response?.data?.error || "Failed to mark students as placed"
-      );
-      toast.error("Failed to mark students as placed");
-    } finally {
-      setLoading(false);
-      setShowPlacedModal(false);
-      setSelectedJobId(null);
-    }
+
+    // Update the jobs state locally instead of re-fetching
+    setJobs((prevJobs) =>
+      prevJobs.map((job) =>
+        job.id === selectedJobId
+          ? {
+              ...job,
+              students: job.students.map((student) =>
+                emails.includes(student.email)
+                  ? { ...student, placedStatus: "yes" }
+                  : student
+              ),
+            }
+          : job
+      )
+    );
+
+    // Close the modal and reset state
+    setShowPlacedModal(false);
+    setSelectedJobId(null);
   };
 
   const toggleStudentList = (jobId) => {
@@ -423,12 +431,6 @@ const StaffSeeRegistrations = () => {
 
   return (
     <div className="p-2 sm:p-4">
-      {loading && (
-        <div className="p-4 mb-4 bg-gray-100 text-gray-700 rounded">
-          Loading...
-        </div>
-      )}
-
       <div className="bg-white rounded-lg shadow-md p-3 sm:p-6 mb-6">
         <h2 className="text-lg sm:text-xl font-semibold mb-4 flex items-center gap-2">
           <Search size={24} className="text-orange-500" />
@@ -480,6 +482,12 @@ const StaffSeeRegistrations = () => {
         </div>
       </div>
 
+      {loading && (
+        <div className="flex justify-center items-center">
+          <Loader2 className="animate-spin text-orange-600" size={48} />
+        </div>
+      )}
+
       <div className="grid grid-cols-1 gap-4 sm:gap-6">
         {filterJobs(jobs).map((job) => (
           <div
@@ -491,7 +499,7 @@ const StaffSeeRegistrations = () => {
                 <h3 className="text-lg sm:text-xl font-semibold text-gray-800 break-words">
                   {job.companyName}
                 </h3>
-                <p className="text-gray-600 mt-2">{job.jobDescription}</p>
+                <p className="max-w-[700px] text-justify text-gray-600 mt-2">{job.jobDescription}</p>
               </div>
               <div className="flex gap-2 w-full sm:w-auto flex-wrap">
                 <button
@@ -499,21 +507,23 @@ const StaffSeeRegistrations = () => {
                   className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-orange-500 text-white py-1.5 px-3 rounded hover:bg-orange-600 transition-colors text-sm"
                 >
                   <Users size={16} />
-                  {expandedJobId === job.id ? "Hide Students" : "View Students"}
+                  <span className="hidden lg:inline">
+                    {expandedJobId === job.id ? "Hide Students" : "View Students"}
+                  </span>
                 </button>
                 <button
                   onClick={() => handleAddPlacedClick(job.id)}
                   className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-green-500 text-white py-1.5 px-3 rounded hover:bg-green-600 transition-colors text-sm"
                 >
                   <CheckCircle size={16} />
-                  Add Placed Students
+                  <span className="hidden lg:inline">Add Placed Students</span>
                 </button>
                 <button
                   onClick={() => handleDeleteClick(job.id, job.companyName)}
                   className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-red-500 text-white py-1.5 px-3 rounded hover:bg-red-600 transition-colors text-sm"
                 >
                   <Trash2 size={16} />
-                  Delete
+                  <span className="hidden lg:inline">Delete</span>
                 </button>
               </div>
             </div>
@@ -573,10 +583,10 @@ const StaffSeeRegistrations = () => {
                           onClick={() =>
                             exportToExcel(job.students, job.companyName, "all")
                           }
-                          className="flex items-center gap-1.5 bg-green-500 text-white py-1.5 px-3 rounded hover:bg-green-600 transition-colors text-sm"
+                          className="flex items-center justify-center gap-1.5 bg-green-500 text-white py-1.5 px-3 rounded hover:bg-green-600 transition-colors text-sm"
                         >
                           <Download size={16} />
-                          Export All to Excel
+                          <span className="hidden lg:inline">Export All to Excel</span>
                         </button>
                         {viewMode === "your" && (
                           <button
@@ -587,10 +597,10 @@ const StaffSeeRegistrations = () => {
                                 "your"
                               )
                             }
-                            className="flex items-center gap-1.5 bg-blue-500 text-white py-1.5 px-3 rounded hover:bg-blue-600 transition-colors text-sm"
+                            className="flex items-center justify-center gap-1.5 bg-blue-500 text-white py-1.5 px-3 rounded hover:bg-blue-600 transition-colors text-sm"
                           >
                             <Download size={16} />
-                            Export Your Students
+                            <span className="hidden lg:inline">Export Your Students</span>
                           </button>
                         )}
                       </>

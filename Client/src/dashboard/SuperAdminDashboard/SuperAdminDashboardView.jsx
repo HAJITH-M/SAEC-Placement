@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Home, User, FileText, HelpCircle, Menu, X, Calendar, Users, LogOut } from "lucide-react";
+import { Home, User, FileText, HelpCircle, Menu, X, Calendar, Users, LogOut, Loader } from "lucide-react";
 import axios from 'axios';
 import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
@@ -120,14 +120,18 @@ const SuperAdminDashboardView = () => {
   };
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+    // return <div className="flex items-center justify-center h-screen">Loading...</div>;
+    return(
+      <Loader />
+
+    )
   }
 
 
   return (
     <div className="flex relative">
       <div className={`
-        fixed lg:static lg:translate-x-0 z-40 w-64 h-screen bg-white shadow-xl text-orange-500 transform transition-transform duration-300 ease-in-out
+        fixed lg:static lg:translate-x-0 z-40 w-72 lg:w-64 h-screen bg-white shadow-xl text-orange-500 transform transition-transform duration-300 ease-in-out
         ${isOpen ? "translate-x-0" : "-translate-x-full"}
       `}>
         <div className="p-4 h-full overflow-y-auto">

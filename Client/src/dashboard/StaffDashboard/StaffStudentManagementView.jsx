@@ -12,7 +12,7 @@ const StaffStudentManagementView = () => {
   };
 
   return (
-    <div className="container mx-auto p-6 mt-3 lg:p-6  min-h-screen">
+    <div className="container mx-auto p- mt-3 lg:p-6  min-h-screen">
       {/* Header Section */}
       <div className="relative flex items-center justify-between mb-3 lg:mb-8">
         {viewMode && (
@@ -24,7 +24,7 @@ const StaffStudentManagementView = () => {
             <span className="hidden sm:inline">Back</span>
           </button>
         )}
-        <h2 className="text-2xl  lg:text-3xl font-extrabold text-gray-800 text-center flex-grow tracking-tight">
+        <h2 className="text-xl justify-center flex lg:text-3xl font-bold text-gray-800 text-center flex-grow tracking-tight">
           Student Management
         </h2>
         {viewMode && <div className="w-16"></div>} {/* Spacer for symmetry */}
@@ -32,7 +32,7 @@ const StaffStudentManagementView = () => {
 
       {/* Main Content */}
       {!viewMode ? (
-        <div className="flex flex-col items-center justify-center space-y-6">
+        <div className="flex flex-col  items-center justify-center space-y-6 p-6">
           <div className="text-center">
             <p className="text-gray-600 text-lg">Manage your students efficiently</p>
             <p className="text-gray-500 text-sm">Choose an action below to get started</p>
