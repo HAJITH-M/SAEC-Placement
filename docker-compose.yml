@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  frontend:
+    image: codervasen/placement-portal:latest
+    ports:
+      - "4173:4173"  # Exposes frontend on port 4173
+    # Backend URL for internal communication
+    depends_on:
+      - backend
+
+  backend:
+    image: codervasen/placement-backend:latest
+    ports:
+      - "9999:9999"

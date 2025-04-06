@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Mail, Phone, Book, Code, Languages, Award, Briefcase, Github, Linkedin, Hash, Building, AlertCircle, Edit2, Check, User, Loader } from 'lucide-react';
 import { fetchData, patchData } from '../../services/apiService';
 
-
 const StudentProfileView = () => {
   const [studentData, setStudentData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -185,13 +184,12 @@ const StudentProfileView = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 py-6 lg:p-0 px-4 sm:px-6 lg:px-0">
-      
-      <div className=" mx-auto">
+      <div className="mx-auto">
         <div className="bg-white shadow-xl rounded-lg overflow-hidden">
           {/* Header */}
           <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-4 sm:p-6">
             <h1 className="text-xl sm:text-2xl font-bold">
-              {renderField('name', studentData.name, 'Name')}
+              <p className="font-medium text-white break-words">{studentData.name}</p>
             </h1>
           </div>
 
@@ -228,7 +226,7 @@ const StudentProfileView = () => {
                     <Mail className="w-5 h-5 sm:w-6 sm:h-6 text-orange-500 flex-shrink-0" />
                     <div className="w-full">
                       <p className="text-xs sm:text-sm text-gray-500">Email</p>
-                      {renderField('emailId', studentData.emailId, 'Email')}
+                      <p className="font-medium text-gray-800 break-words">{studentData.emailId}</p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-3">
@@ -249,14 +247,14 @@ const StudentProfileView = () => {
                     <Building className="w-5 h-5 sm:w-6 sm:h-6 text-orange-500 flex-shrink-0" />
                     <div className="w-full">
                       <p className="text-xs sm:text-sm text-gray-500">Department</p>
-                      {renderField('department', studentData.department, 'Department')}
+                      <p className="font-medium text-gray-800 break-words">{studentData.department}</p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-3">
                     <Briefcase className="w-5 h-5 sm:w-6 sm:h-6 text-orange-500 flex-shrink-0" />
                     <div className="w-full">
                       <p className="text-xs sm:text-sm text-gray-500">Batch</p>
-                      {renderField('batch', studentData.batch, 'Batch')}
+                      <p className="font-medium text-gray-800 break-words">{studentData.batch}</p>
                     </div>
                   </div>
                 </div>

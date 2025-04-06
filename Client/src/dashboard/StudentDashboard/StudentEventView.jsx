@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Calendar, Loader2, MapPin } from "lucide-react"; // Removed unused Clock icon
+import { Calendar, Loader2, MapPin } from "lucide-react";
 import { fetchData } from "../../services/apiService";
-
 
 const StudentEventView = () => {
   const [selectedImage, setSelectedImage] = useState(null);
@@ -30,14 +29,14 @@ const StudentEventView = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
-            <Loader2 className="animate-spin text-orange-500" size={48} />
-          </div>
+        <Loader2 className="animate-spin text-orange-500" size={48} />
+      </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="flex items-center justify-center h-screen bg-slate-50">
         <div className="text-red-500 text-lg">{error}</div>
       </div>
     );
@@ -45,18 +44,17 @@ const StudentEventView = () => {
 
   return (
     <>
-    
-      <div className="min-h-screen bg-slate-50 py-0 px-4 sm:px-6 lg:px-0">
-        <div className=" mx-auto">
-          <div className="bg-white shadow-xl rounded-lg overflow-hidden">
+      <div className="bg-slate-50  px-2 sm:px-4 lg:px-0">
+        <div className="mx-auto ">
+          <div className="bg-white py-4 shadow-xl rounded-lg overflow-hidden">
             {/* Header */}
-            <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-4 sm:p-6">
-              <h2 className="text-xl sm:text-2xl font-bold">Events</h2>
+            <div className="bg-gradient-to-r from-orange-500  to-orange-600 rounded-t-xl text-white p-3 sm:p-4">
+              <h2 className="text-lg sm:text-xl font-bold">Events</h2>
             </div>
 
             {/* Content */}
-            <div className="p-4 sm:p-6 md:p-8 bg-slate-100">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="p-3 sm:p-4 md:p-6 bg-slate-100">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {events.length > 0 ? (
                   events.map((event, index) => (
                     <div
@@ -66,32 +64,32 @@ const StudentEventView = () => {
                       <img
                         src={event.url || "https://via.placeholder.com/300"}
                         alt={event.name || "Event Image"}
-                        className="w-full h-48 object-cover cursor-pointer"
+                        className="w-full h-40 sm:h-48 object-cover cursor-pointer"
                         onClick={() => setSelectedImage(event.url)}
                       />
 
-                      <div className="p-4 space-y-4">
-                        <h3 className="text-lg sm:text-xl font-semibold text-gray-800">
+                      <div className="p-4 space-y-3">
+                        <h3 className="ml-1 text-base sm:text-lg font-semibold text-gray-800">
                           {event.name || "No Event Name"}
                         </h3>
 
-                        <div className="space-y-2">
+                        <div className="flex flex-row justify-between px-1 gap-2">
                           {event.date && (
-                            <div className="flex items-center space-x-3">
-                              <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-orange-500 flex-shrink-0" />
+                            <div className="flex items-center space-x-2">
+                              <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500 flex-shrink-0" />
                               <div>
-                                <p className="text-xs sm:text-sm text-gray-500">Date</p>
-                                <p className="text-gray-800">{event.date}</p>
+                                <p className="text-xs text-gray-500">Date</p>
+                                <p className="text-gray-800 text-sm">{event.date}</p>
                               </div>
                             </div>
                           )}
 
                           {event.link && (
-                            <div className="flex items-center space-x-3">
-                              <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-orange-500 flex-shrink-0" />
+                            <div className="flex items-center space-x-2">
+                              <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500 flex-shrink-0" />
                               <div>
-                                <p className="text-xs sm:text-sm text-gray-500">Event Link</p>
-                                <p className="text-gray-800">Available</p>
+                                <p className="text-xs text-gray-500">Event Link</p>
+                                <p className="text-gray-800 text-sm">Available</p>
                               </div>
                             </div>
                           )}
@@ -103,12 +101,12 @@ const StudentEventView = () => {
                             href={event.link}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="block w-full bg-orange-500 text-white py-2 px-4 rounded-lg hover:bg-orange-600 transition-colors duration-300 text-center text-sm sm:text-base"
+                            className="block w-full bg-orange-500 text-white py-1.5 px-3 rounded-lg hover:bg-orange-600 transition-colors duration-300 text-center text-sm"
                           >
                             Register Now
                           </a>
                         ) : (
-                          <div className="w-full bg-gray-400 text-white py-2 px-4 rounded-lg text-center text-sm sm:text-base">
+                          <div className="w-full bg-gray-400 text-white py-1.5 px-3 rounded-lg text-center text-sm">
                             No Link Available
                           </div>
                         )}
@@ -116,7 +114,7 @@ const StudentEventView = () => {
                     </div>
                   ))
                 ) : (
-                  <div className="col-span-3 text-center text-gray-600 text-lg">
+                  <div className="col-span-3 text-center text-gray-600 text-base sm:text-lg">
                     No events found
                   </div>
                 )}

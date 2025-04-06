@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Home, User, FileText, HelpCircle, Menu, X, Calendar, Users, LogOut, Loader, GraduationCap } from "lucide-react";
+import { Home, User, FileText, Menu, X, Calendar, Users, LogOut, Loader, GraduationCap } from "lucide-react";
 import axios from 'axios';
 import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
@@ -10,8 +10,7 @@ import AdminJobRegistrations from "./AdminJobRegistrations";
 import AdminHomeViewDashboard from "./AdminHomeView";
 import AdminAddMailForm from "./AdminAddMailForm";
 import AdminAddEvents from "./AdminAddEvents";
-import { toast } from "react-toastify";
-import { ToastContainer } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import { fetchData, postData } from "../../services/apiService";
 import AdminStudentsPlaced from "./AdminStudentsPlaced";
 
@@ -21,117 +20,104 @@ const SuperAdminDashboardView = () => {
   const [staffList, setStaffList] = useState([]);
   const [studentList, setStudentList] = useState([]);
   const [adminEmail, setAdminEmail] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false); // Start with false
   const navigate = useNavigate();
+
   const IdUUIDParamsSchema = z.object({
     staffId: z.string().uuid({ message: "Invalid UUID format" }),
   });
 
   const firstLetter = adminEmail ? adminEmail.charAt(0).toUpperCase() : "?";
 
+  const checkSession = async () => {
+    try {
+      const response = await fetchData('/auth/session', { withCredentials: true });
+      if (response.data.success && response.data.role === "super_admin") {
+        setAdminEmail(response.data.email || "");
+        return true; // Session is valid
+      }
+      return false; // Session is invalid
+    } catch (error) {
+      console.error('Session check failed:', error.response?.data || error.message);
+      return false; // Session check failed
+    }
+  };
+
   const fetchDataSuperAdmin = async () => {
+    setIsLoading(true); // Start loading only when fetching data
     try {
       const response = await axios.get('http://localhost:9999/superadmin', {
         withCredentials: true,
       });
-      console.log('Full /superadmin response:', response.data);
       if (response.data.success) {
         setStaffList(response.data.staff || []);
         setStudentList(response.data.students || []);
         setAdminEmail(response.data.email || "");
-        console.log('Email set from /superadmin:', response.data.email);
       } else {
         throw new Error('Failed to fetch superadmin data');
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error.response?.data || error.message);
       navigate('/auth/superadmin', { replace: true });
-    }
-  };
-
-  const checkSession = async () => {
-    try {
-      const response = await fetchData('/auth/session', {
-        withCredentials: true,
-      });
-      console.log('Full /auth/session response:', response.data);
-      if (response.data.success && response.data.role === "super_admin") {
-        setAdminEmail(response.data.email || "");
-        console.log('Email set from /auth/session:', response.data.email);
-      } else {
-        throw new Error(`Invalid session or role: ${response.data.role || 'none'}`);
-      }
-    } catch (error) {
-      console.error('Session check failed:', error.response?.data || error.message);
-      navigate('/auth/superadmin', { replace: true });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    const initializeData = async () => {
-      try {
-        await Promise.all([checkSession(), fetchDataSuperAdmin()]);
-      } finally {
-        setIsLoading(false);
+    const initializeDashboard = async () => {
+      const isSessionValid = await checkSession();
+      if (!isSessionValid) {
+        navigate('/auth/superadmin', { replace: true });
+        return; // Exit immediately if no session
       }
+      await fetchDataSuperAdmin(); // Fetch data only if session is valid
     };
-    initializeData();
+
+    initializeDashboard();
   }, [navigate]);
 
   const toggleSidebar = () => setIsOpen(!isOpen);
 
   const renderComponent = () => {
     switch (activeComponent) {
-      case "home":
-        return <AdminHomeViewDashboard/>
-      case "addMail":
-        return <AdminAddMailForm/>;
-      case "students":
-        return <StudentManagementView students={studentList} />;
-      case "adminstudentsplaced":
-        return <AdminStudentsPlaced />;
-      case "staff":
-        return <StaffManagementView staff={staffList} onStaffCreated={fetchDataSuperAdmin} onStaffRemoved={fetchDataSuperAdmin} />;
-      case "events":
-        return <AdminAddEvents />;
-      case "adminJobPost":
-        return <AdminJobPost />;
-      case "jobRegistrations":
-        return <AdminJobRegistrations />;
-      default:
-        return <HomeComponent staffCount={staffList.length} studentCount={studentList.length} />;
+      case "home": return <AdminHomeViewDashboard />;
+      case "addMail": return <AdminAddMailForm />;
+      case "students": return <StudentManagementView students={studentList} />;
+      case "adminstudentsplaced": return <AdminStudentsPlaced />;
+      case "staff": return <StaffManagementView staff={staffList} onStaffCreated={fetchDataSuperAdmin} onStaffRemoved={fetchDataSuperAdmin} />;
+      case "events": return <AdminAddEvents />;
+      case "adminJobPost": return <AdminJobPost />;
+      case "jobRegistrations": return <AdminJobRegistrations />;
+      default: return <HomeComponent staffCount={staffList.length} studentCount={studentList.length} />;
     }
   };
 
   const handleLogout = async () => {
     try {
-      const response = await postData(
-        '/superadmin/logout',
-        {},
-        { withCredentials: true }
-      );
+      const response = await postData('/superadmin/logout', {}, { withCredentials: true });
       if (response.data.message === "Logged out successfully") {
-        toast.success("Logged out successfully")
+        toast.success("Logged out successfully");
         navigate('/auth/superadmin', { replace: true });
       } else {
         throw new Error('Logout failed: ' + (response.data.message || 'Unknown error'));
       }
     } catch (error) {
       console.error('Logout failed:', error.response?.data || error.message);
-      toast.error("Log Out Failed")
+      toast.error("Log Out Failed");
     }
   };
 
+  // Show loading only when fetching data, not during session check
   if (isLoading) {
-    // return <div className="flex items-center justify-center h-screen">Loading...</div>;
-    return(
+    return (
       <div className="flex justify-center items-center h-screen">
-          <Loader className="animate-spin text-orange-600" size={48} />
+        <Loader className="animate-spin text-orange-600" size={48} />
       </div>
-    )
+    );
   }
 
-
+  // If session check fails, navigation happens in useEffect, so this won't render
   return (
     <div className="flex relative">
       <div className={`

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Home, User, FileText, HelpCircle, Menu, X, Calendar, LogOut } from "lucide-react";
+import { Home, User, FileText, HelpCircle, Menu, X, Calendar, LogOut, Users } from "lucide-react";
 import { Helmet } from "react-helmet";
 import StudentProfileView from "./StudentProfileView";
 import StudentJobView from "./StudentJobView";
@@ -10,6 +10,8 @@ import PlacementStats from "../../components/PlacementStats/PlacementStatsView";
 import RecentPlacements from "../../components/RecentPlacements/RecentPlacementsView";
 import HomeVM from "../../pages/HomePage/HomeVM";
 import { fetchData, postData } from "../../services/apiService";
+import StudentHelpView from "./StudentHelpView";
+import OurDevelopers from "../../components/OurDevelopers/OurDevelopers";
 
 const StudentDashboardView = () => {
   const [activeComponent, setActiveComponent] = useState("home");
@@ -67,6 +69,8 @@ const StudentDashboardView = () => {
         return <StudentJobView />;
       case "events":
         return <StudentEventView />;
+      case "ourDevelopers":
+        return <OurDevelopers />;
       case "help":
         return <HelpComponent />;
       default:
@@ -171,6 +175,19 @@ const StudentDashboardView = () => {
               </div>
               <div
                 className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${
+                  activeComponent === "ourDevelopers" ? "bg-orange-500 text-white" : "text-black"
+                }`}
+                onClick={() => {
+                  setActiveComponent("ourDevelopers");
+                  setIsOpen(false);
+                }}
+              >
+
+                <Users size={20} className={activeComponent === "ourDevelopers" ? "text-white" : "text-orange-500"} />
+                <span>Our Developers</span>
+              </div>
+              <div
+                className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${
                   activeComponent === "help" ? "bg-orange-500 text-white" : "text-black"
                 }`}
                 onClick={() => {
@@ -250,10 +267,12 @@ const HelpComponent = () => (
       <meta name="description" content="Get help and support for using the SAEC Placement Portal. Find resources and guidance for your placement journey." />
       <meta name="keywords" content="SAEC placements help, student support, placement guidance" />
     </Helmet>
-    <div className="bg-white p-6 rounded-lg shadow">
+    {/* <div className="bg-white p-6 rounded-lg shadow">
       <h2 className="text-2xl font-bold mb-4">Help & Support</h2>
       <p>Need help? Find resources and support here.</p>
-    </div>
+    </div> */}
+
+    <StudentHelpView/>
   </>
 );
 

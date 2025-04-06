@@ -7,8 +7,8 @@ const StaffJobAddView = () => {
   const [formData, setFormData] = useState({
     companyName: "",
     jobDescription: "",
-    role:"",
-    lpa:"",
+    role: "",
+    lpa: "",
     driveDate: "",
     expiration: "",
     batch: "",
@@ -22,9 +22,9 @@ const StaffJobAddView = () => {
   const [retryCount, setRetryCount] = useState(0);
   const [groupEmails, setGroupEmails] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const MAX_RETRIES = 3;
 
-  // Fetch group emails on component mount
   useEffect(() => {
     const fetchGroupEmails = async () => {
       try {
@@ -71,6 +71,11 @@ const StaffJobAddView = () => {
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
+    setIsDropdownOpen(true); // Open dropdown when typing starts
+  };
+
+  const toggleDropdown = () => {
+    setIsDropdownOpen(!isDropdownOpen);
   };
 
   const formatDateForBackend = (dateStr, includeTime = false) => {
@@ -114,14 +119,14 @@ const StaffJobAddView = () => {
 
   const makeApiRequest = async (prompt, currentRetry = 0) => {
     try {
-      const response = await generateContent(prompt, MAX_RETRIES, 1000); // Use generateContent from geminiApiService
+      const response = await generateContent(prompt, MAX_RETRIES, 1000);
       return response.data;
     } catch (err) {
       console.error(
         `API Request failed (attempt ${currentRetry + 1}):`,
         err.message
       );
-      throw err; // Let generateContent handle retries internally
+      throw err;
     }
   };
 
@@ -134,8 +139,8 @@ const StaffJobAddView = () => {
         driveDate: "",
         expiration: "",
         batch: "",
-        role:"",
-        lpa:"",
+        role: "",
+        lpa: "",
         department: [],
         driveLink: "",
         notificationEmail: [],
@@ -169,7 +174,7 @@ const StaffJobAddView = () => {
 
       let aiData;
       try {
-        aiData = parseGeminiResponse({ data: responseData }); // Use parseGeminiResponse from geminiApiService
+        aiData = parseGeminiResponse({ data: responseData });
         console.log("Parsed AI Data:", aiData);
       } catch (parseErr) {
         console.error("Parsing Error:", parseErr);
@@ -299,14 +304,13 @@ const StaffJobAddView = () => {
         jobDescription: "",
         driveDate: "",
         expiration: "",
-        role:"",
-        lpa:"",
+        role: "",
+        lpa: "",
         batch: "",
         department: [],
         driveLink: "",
         notificationEmail: [],
       });
-      console.log("Hello ", formattedData.notificationEmail);
       setRawDescription("");
       setError(null);
       toast.success("Job created successfully!");
@@ -320,7 +324,6 @@ const StaffJobAddView = () => {
     }
   };
 
-  // Filter emails based on search query
   const filteredEmails = groupEmails.filter((email) =>
     email.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -333,7 +336,7 @@ const StaffJobAddView = () => {
         </h2>
         {error && (
           <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md text-sm">
-            {error} {/* Display error message */}
+            {error}
             {retryCount > 0 && retryCount < MAX_RETRIES && (
               <div className="mt-2">
                 <button
@@ -420,6 +423,29 @@ const StaffJobAddView = () => {
                 placeholder="e.g., 2025"
               />
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Job CTC
+              </label>
+              <input
+                type="text"
+                name="lpa"
+                value={formData.lpa}
+                onChange={handleInputChange}
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                required
+                placeholder="e.g., 50 LPA"
+              />
+            </div>
+            <div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="px-6 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
+              >
+                {loading ? "Posting..." : "Post Job"}
+              </button>
+            </div>
           </div>
 
           <div className="space-y-4">
@@ -439,34 +465,6 @@ const StaffJobAddView = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Job CTC
-              </label>
-              <textarea
-                name="jobLpa"
-                value={formData.lpa}
-                onChange={handleInputChange}
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
-                required
-                rows={3}
-                placeholder="50 "
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Job Role
-              </label>
-              <textarea
-                name="jobRole"
-                value={formData.role}
-                onChange={handleInputChange}
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
-                required
-                rows={3}
-                placeholder="Software Engineer"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Expiration
               </label>
               <input
@@ -476,6 +474,34 @@ const StaffJobAddView = () => {
                 onChange={handleInputChange}
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
                 required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Job Role
+              </label>
+              <input
+                type="text"
+                name="role"
+                value={formData.role}
+                onChange={handleInputChange}
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                required
+                placeholder="e.g., Software Engineer"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Drive Link
+              </label>
+              <input
+                type="text"
+                name="driveLink"
+                value={formData.driveLink}
+                onChange={handleInputChange}
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                required
+                placeholder="e.g., https://example.com/drive"
               />
             </div>
           </div>
@@ -497,20 +523,6 @@ const StaffJobAddView = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Drive Link
-              </label>
-              <input
-                type="text"
-                name="driveLink"
-                value={formData.driveLink}
-                onChange={handleInputChange}
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
-                required
-                placeholder="e.g., https://example.com/drive"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Notification Emails
               </label>
               <input
@@ -520,45 +532,71 @@ const StaffJobAddView = () => {
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all mb-2"
                 placeholder="Search emails..."
               />
-              <div className="max-h-48 overflow-y-auto border border-gray-300 rounded-md p-2">
-                {filteredEmails.map((email, index) => (
-                  <div key={index} className="flex items-center mb-2">
-                    <input
-                      type="checkbox"
-                      id={`email-${index}`}
-                      name="notificationEmail"
-                      value={email}
-                      checked={formData.notificationEmail.includes(email)}
-                      onChange={handleInputChange}
-                      className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300 rounded"
+              <div className="relative">
+                <div
+                  onClick={toggleDropdown}
+                  className="w-full p-3 border border-gray-300 rounded-md bg-white text-gray-700 text-sm cursor-pointer flex justify-between items-center hover:bg-gray-50 transition-all"
+                >
+                  <span>
+                    {formData.notificationEmail.length > 0
+                      ? `${formData.notificationEmail.length} selected`
+                      : "Select emails"}
+                  </span>
+                  <svg
+                    className={`w-5 h-5 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M19 9l-7 7-7-7"
                     />
-                    <label
-                      htmlFor={`email-${index}`}
-                      className="ml-2 text-sm text-gray-700"
-                    >
-                      {email}
-                    </label>
+                  </svg>
+                </div>
+                {isDropdownOpen && (
+                  <div className="absolute left-0 right-0 mt-2 bg-white border border-gray-300 rounded-md shadow-lg z-10 h-40 overflow-y-auto">
+                    <div className="p-2">
+                      {filteredEmails.length > 0 ? (
+                        filteredEmails.map((email, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center py-1 px-2 hover:bg-gray-100 rounded"
+                          >
+                            <input
+                              type="checkbox"
+                              id={`email-${index}`}
+                              name="notificationEmail"
+                              value={email}
+                              checked={formData.notificationEmail.includes(
+                                email
+                              )}
+                              onChange={handleInputChange}
+                              className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300 rounded"
+                            />
+                            <label
+                              htmlFor={`email-${index}`}
+                              className="ml-2 text-sm text-gray-700 truncate"
+                            >
+                              {email}
+                            </label>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-sm text-gray-500 py-2 px-3">
+                          {searchQuery
+                            ? "No emails match your search"
+                            : "No email groups available"}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                ))}
-                {filteredEmails.length === 0 && (
-                  <p className="text-sm text-gray-500 p-2">
-                    {searchQuery
-                      ? "No emails match your search"
-                      : "No email groups available"}
-                  </p>
                 )}
               </div>
             </div>
-          </div>
-
-          <div className="col-span-full flex justify-start">
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-6 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
-            >
-              {loading ? "Posting..." : "Post Job"}
-            </button>
           </div>
         </form>
       </div>

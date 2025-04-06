@@ -15,5 +15,12 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',  // Ensures the server listens on all network interfaces
     port: 5173,        // Explicitly sets the port
+    proxy: {
+      '/api': {
+        target: 'http://localhost:9999',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+    },
   },
 })

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import SuperAdminAuthFormView from '../../../components/SuperAdminAuthForm/SuperAdminAuthFormView';
 import { useNavigate } from 'react-router-dom';
 import { fetchData, postData } from '../../../services/apiService';
@@ -6,6 +6,25 @@ import { getApiUrl } from '../../../config/apiConfig';
 
 const StaffLogin = () => {
   const navigate = useNavigate();
+
+  // Check if already authenticated
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const sessionResponse = await fetchData('/staff', {
+          withCredentials: true,
+        });
+        const { staffId, role } = sessionResponse.data;
+        if (role === 'staff' && staffId) {
+          console.log('Already authenticated, redirecting to dashboard');
+          navigate('/dashboard/staff', { replace: true });
+        }
+      } catch (error) {
+        console.log('No valid session found, staying on login:', error.message);
+      }
+    };
+    checkSession();
+  }, [navigate]);
 
   const handleSubmit = async (authData) => {
     console.log('Login request data:', authData);
@@ -24,7 +43,6 @@ const StaffLogin = () => {
       });
       console.log('Session Response:', sessionResponse.data);
 
-      // Assuming sessionResponse.data contains staffId and role
       const { staffId, role } = sessionResponse.data;
 
       if (role !== 'staff') {
@@ -52,13 +70,12 @@ const StaffLogin = () => {
 
   const handleOAuthLogin = async () => {
     try {
-      const baseUrl = await getApiUrl(); // Get the dynamic base URL
+      const baseUrl = await getApiUrl();
       const oauthUrl = `${baseUrl}/auth/oauth/staff`;
-      console.log('Redirecting to OAuth URL:', oauthUrl); // Debug
+      console.log('Redirecting to OAuth URL:', oauthUrl);
       window.location.href = oauthUrl;
     } catch (error) {
       console.error('Error determining OAuth URL:', error);
-      // Fallback to production URL if determination fails
       window.location.href = 'https://your-production-api.com/auth/oauth/staff';
     }
   };
@@ -69,7 +86,6 @@ const StaffLogin = () => {
         onSubmit={handleSubmit} 
         onOAuth={handleOAuthLogin} 
         userType="staff" 
-        // Do not pass toggleAuthMode here
       />
     </div>
   );

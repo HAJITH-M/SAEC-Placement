@@ -11,6 +11,7 @@ import {
   Trash2,
   CheckCircle,
   Loader2,
+  X,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { toast } from "react-toastify";
@@ -83,7 +84,7 @@ const AddPlacedStudentsModal = ({
       );
       console.log("Response from server:", response.data);
 
-      onConfirm(selectedEmails); // Pass selected emails back to parent
+      onConfirm(selectedEmails);
 
       setSelectedEmails([]);
       setSearchTerm("");
@@ -220,6 +221,75 @@ const AddPlacedStudentsModal = ({
   );
 };
 
+const JobDetailsModal = ({ isOpen, onClose, job }) => {
+  if (!isOpen || !job) return null;
+
+  return (
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-[90vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
+            Job Details
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-600 cursor-pointer hover:text-gray-800"
+          >
+            <X size={24} />
+          </button>
+        </div>
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800">Company</h3>
+            <p className="text-gray-600 text-sm sm:text-base">
+              {job.companyName}
+            </p>
+          </div>
+          <div className="flex items-center text-gray-600">
+            <Building2 size={18} className="mr-2 text-orange-500 flex-shrink-0" />
+            <span className="text-sm sm:text-base">{job.jobDescription}</span>
+          </div>
+          <div className="flex items-center text-gray-600">
+            <Calendar size={18} className="mr-2 text-orange-500 flex-shrink-0" />
+            <span className="text-sm sm:text-base">
+              Drive Date: {job.driveDate || "N/A"}
+            </span>
+          </div>
+          <div className="flex items-center text-gray-600">
+            <Building2 size={18} className="mr-2 text-orange-500 flex-shrink-0" />
+            <span className="text-sm sm:text-base">
+              Departments: {job.department?.join(", ") || "N/A"}
+            </span>
+          </div>
+          <div className="flex items-center text-gray-600">
+            <Link size={18} className="mr-2 text-orange-500 flex-shrink-0" />
+            <a
+              href={job.driveLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-500 hover:underline text-sm sm:text-base truncate"
+            >
+              {job.driveLink || "N/A"}
+            </a>
+          </div>
+          <div className="flex items-center text-gray-600">
+            <Users size={18} className="mr-2 text-orange-500 flex-shrink-0" />
+            <span className="text-sm sm:text-base">
+              Registered Students: {job.students ? job.students.length : 0}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const StaffSeeRegistrations = () => {
   const [jobs, setJobs] = useState([]);
   const [expandedJobId, setExpandedJobId] = useState(null);
@@ -235,6 +305,8 @@ const StaffSeeRegistrations = () => {
   const [viewMode, setViewMode] = useState("all");
   const [showPlacedModal, setShowPlacedModal] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState(null);
+  const [showJobDetailsModal, setShowJobDetailsModal] = useState(false);
+  const [selectedJob, setSelectedJob] = useState(null);
 
   useEffect(() => {
     fetchJobs();
@@ -293,7 +365,7 @@ const StaffSeeRegistrations = () => {
       await deleteData(`/staff/job/${jobToDelete.jobId}`, {
         withCredentials: true,
       });
-      fetchJobs(); // Refresh jobs after deletion
+      fetchJobs();
     } catch (err) {
       setError(err.response?.data?.error || "Failed to delete job");
       toast.error("Failed to delete job");
@@ -317,7 +389,6 @@ const StaffSeeRegistrations = () => {
   const handleAddPlacedConfirm = (emails) => {
     if (!selectedJobId || !emails.length) return;
 
-    // Update the jobs state locally instead of re-fetching
     setJobs((prevJobs) =>
       prevJobs.map((job) =>
         job.id === selectedJobId
@@ -333,13 +404,17 @@ const StaffSeeRegistrations = () => {
       )
     );
 
-    // Close the modal and reset state
     setShowPlacedModal(false);
     setSelectedJobId(null);
   };
 
   const toggleStudentList = (jobId) => {
     setExpandedJobId(expandedJobId === jobId ? null : jobId);
+  };
+
+  const handleReadMore = (job) => {
+    setSelectedJob(job);
+    setShowJobDetailsModal(true);
   };
 
   const filterStudents = (students) => {
@@ -499,7 +574,17 @@ const StaffSeeRegistrations = () => {
                 <h3 className="text-lg sm:text-xl font-semibold text-gray-800 break-words">
                   {job.companyName}
                 </h3>
-                <p className="max-w-[700px] text-justify text-gray-600 mt-2">{job.jobDescription}</p>
+                <div className="mt-2 text-gray-600 max-w-[700px] text-justify line-clamp-2">
+                  {job.jobDescription}
+                </div>
+                {job.jobDescription.length > 100 && (
+                  <button
+                    onClick={() => handleReadMore(job)}
+                    className="text-orange-500 cursor-pointer hover:text-orange-600 text-sm mt-1"
+                  >
+                    Read More
+                  </button>
+                )}
               </div>
               <div className="flex gap-2 w-full sm:w-auto flex-wrap">
                 <button
@@ -761,6 +846,12 @@ const StaffSeeRegistrations = () => {
         }
         currentStaffEmail={currentStaffEmail}
         viewMode={viewMode}
+      />
+
+      <JobDetailsModal
+        isOpen={showJobDetailsModal}
+        onClose={() => setShowJobDetailsModal(false)}
+        job={selectedJob}
       />
       <ToastContainer />
     </div>

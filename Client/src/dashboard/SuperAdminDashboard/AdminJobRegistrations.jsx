@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Building2, Calendar, Link, CheckCircle2, Trash2, Users, Search, Filter, Download, CheckCircle, Loader2 } from 'lucide-react';
+import { Building2, Calendar, Link, CheckCircle2, Trash2, Users, Search, Filter, Download, CheckCircle, Loader2, X } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { deleteData, fetchData, postData } from '../../services/apiService';
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
-
 
 // Delete Confirmation Modal Component
 const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, jobTitle }) => {
@@ -196,6 +195,82 @@ const AddPlacedStudentsModal = ({ isOpen, onClose, onConfirm, jobId, students, c
   );
 };
 
+// Job Details Modal Component
+const JobDetailsModal = ({ isOpen, onClose, job }) => {
+  if (!isOpen || !job) return null;
+
+  return (
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-[90vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
+            Job Details
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-600 cursor-pointer hover:text-gray-800"
+          >
+            <X size={24} />
+          </button>
+        </div>
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800">Company</h3>
+            <p className="text-gray-600 text-sm sm:text-base">
+              {job.companyName}
+            </p>
+          </div>
+          <div className="flex items-center text-gray-600">
+            <Building2 size={18} className="mr-2 text-orange-500 flex-shrink-0" />
+            <span className="text-sm sm:text-base">{job.jobDescription}</span>
+          </div>
+          <div className="flex items-center text-gray-600">
+            <Calendar size={18} className="mr-2 text-orange-500 flex-shrink-0" />
+            <span className="text-sm sm:text-base">
+              Drive Date: {job.driveDate || "N/A"}
+            </span>
+          </div>
+          <div className="flex items-center text-gray-600">
+            <CheckCircle2 size={18} className="mr-2 text-orange-500 flex-shrink-0" />
+            <span className="text-sm sm:text-base">
+              Batch: {job.batch || "N/A"}
+            </span>
+          </div>
+          <div className="flex items-center text-gray-600">
+            <Building2 size={18} className="mr-2 text-orange-500 flex-shrink-0" />
+            <span className="text-sm sm:text-base">
+              Departments: {job.department?.join(", ") || "N/A"}
+            </span>
+          </div>
+          <div className="flex items-center text-gray-600">
+            <Link size={18} className="mr-2 text-orange-500 flex-shrink-0" />
+            <a
+              href={job.driveLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-500 hover:underline text-sm sm:text-base truncate"
+            >
+              {job.driveLink || "N/A"}
+            </a>
+          </div>
+          <div className="flex items-center text-gray-600">
+            <Users size={18} className="mr-2 text-orange-500 flex-shrink-0" />
+            <span className="text-sm sm:text-base">
+              Registered Students: {job.students ? job.students.length : 0}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const AdminJobRegistrations = () => {
   const [jobs, setJobs] = useState([]);
   const [expandedJobId, setExpandedJobId] = useState(null);
@@ -209,6 +284,8 @@ const AdminJobRegistrations = () => {
   const [jobToDelete, setJobToDelete] = useState(null);
   const [showPlacedModal, setShowPlacedModal] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState(null);
+  const [showJobDetailsModal, setShowJobDetailsModal] = useState(false);
+  const [selectedJob, setSelectedJob] = useState(null);
 
   useEffect(() => {
     fetchJobs();
@@ -286,6 +363,11 @@ const AdminJobRegistrations = () => {
     setExpandedJobId(expandedJobId === jobId ? null : jobId);
   };
 
+  const handleReadMore = (job) => {
+    setSelectedJob(job);
+    setShowJobDetailsModal(true);
+  };
+
   const filterStudents = (students) => {
     if (!searchTerm || filterBy === 'all') return students;
     return students.filter(student => {
@@ -354,7 +436,6 @@ const AdminJobRegistrations = () => {
   return (
     <div className="p-2 sm:p-4">
       {error && <div className="p-4 mb-4 bg-red-100 text-red-700 rounded">{error}</div>}
-      {/* {loading && <div className="p-4 mb-4 bg-gray-100 text-gray-700 rounded">Loading...</div>} */}
 
       <div className="bg-white rounded-lg shadow-md p-3 sm:p-6 mb-6">
         <h2 className="text-lg sm:text-xl font-semibold mb-4 flex items-center gap-2">
@@ -397,14 +478,23 @@ const AdminJobRegistrations = () => {
         </div>
       )}
 
-
       <div className="grid grid-cols-1 gap-4 sm:gap-6">
         {filterJobs(jobs).map((job) => (
           <div key={job.jobId} className="bg-white rounded-lg shadow-md p-3 sm:p-6 hover:shadow-lg transition-shadow overflow-hidden">
             <div className="flex flex-col sm:flex-row justify-between items-start mb-4">
               <div className="w-full sm:w-auto mb-4 sm:mb-0">
                 <h3 className="text-lg sm:text-xl font-semibold text-gray-800 break-words">{job.companyName}</h3>
-                <p className="text-gray-600 mt-2  max-w-[700px] text-justify overflow-hidden text-ellipsis">{job.jobDescription}</p>
+                <div className="mt-2 text-gray-600 max-w-[700px] text-justify line-clamp-2">
+                  {job.jobDescription}
+                </div>
+                {job.jobDescription.length > 100 && (
+                  <button
+                    onClick={() => handleReadMore(job)}
+                    className="text-orange-500 cursor-pointer hover:text-orange-600 text-sm mt-1"
+                  >
+                    Read More
+                  </button>
+                )}
               </div>
               <div className="flex gap-2 w-full sm:w-auto flex-wrap">
                 <button
@@ -573,6 +663,12 @@ const AdminJobRegistrations = () => {
         companyName={
           jobs.find((job) => job.jobId === selectedJobId)?.companyName || "Unknown Company"
         }
+      />
+
+      <JobDetailsModal
+        isOpen={showJobDetailsModal}
+        onClose={() => setShowJobDetailsModal(false)}
+        job={selectedJob}
       />
       <ToastContainer />
     </div>

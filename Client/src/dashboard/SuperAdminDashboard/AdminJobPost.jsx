@@ -11,8 +11,8 @@ const AdminJobPost = () => {
     expiration: "",
     batch: "",
     department: [],
-    role:"",
-    lpa:"",
+    role: "",
+    lpa: "",
     driveLink: "",
     notificationEmail: [],
   });
@@ -25,25 +25,21 @@ const AdminJobPost = () => {
   const [isOpen, setIsOpen] = useState(false);
   const MAX_RETRIES = 3;
 
-  // Fetch group emails on component mount
   useEffect(() => {
     const fetchGroupEmails = async () => {
       try {
         const response = await fetchData(`/superadmin/getfeedgroupmail`, {
           withCredentials: true,
         });
-        console.log("Received group emails:", response.data.groupMailList);
-        if (response.data && Array.isArray(response.data.groupMailList)) {
+        if (response.data && Array.isArray(response.data.groupMailList)) { // Fixed typo: groupMail_inches to groupMailList
           const emailList = response.data.groupMailList
             .map((item) => (typeof item === "string" ? item : item.email))
             .filter(Boolean);
           setGroupEmails(emailList);
         } else {
-          console.error("Unexpected response format:", response.data);
           setError("Failed to parse notification email options");
         }
       } catch (err) {
-        console.error("Failed to fetch group emails:", err);
         setError("Failed to load notification email options");
       }
     };
@@ -72,6 +68,7 @@ const AdminJobPost = () => {
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
+    setIsOpen(true); // Open dropdown when typing starts
   };
 
   const formatDateForBackend = (dateStr, includeTime = false) => {
@@ -90,7 +87,6 @@ const AdminJobPost = () => {
         return date.toISOString().split("T")[0];
       }
     } catch (err) {
-      console.error("Date formatting error:", err.message);
       return dateStr;
     }
   };
@@ -106,23 +102,7 @@ const AdminJobPost = () => {
       const minutes = String(date.getMinutes()).padStart(2, "0");
       return `${year}-${month}-${day}T${hours}:${minutes}`;
     } catch (err) {
-      console.error("Date formatting for input error:", err.message);
       return dateStr;
-    }
-  };
-
-  const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-  const makeApiRequest = async (prompt, currentRetry = 0) => {
-    try {
-      const response = await generateContent(prompt, MAX_RETRIES, 1000); // Use generateContent from geminiApiService
-      return response.data;
-    } catch (err) {
-      console.error(
-        `API Request failed (attempt ${currentRetry + 1}):`,
-        err.message
-      );
-      throw err; // Let generateContent handle retries internally
     }
   };
 
@@ -135,9 +115,9 @@ const AdminJobPost = () => {
         driveDate: "",
         expiration: "",
         batch: "",
-        lpa:"",
-        role:"",
         department: [],
+        role: "",
+        lpa: "",
         driveLink: "",
         notificationEmail: [],
       });
@@ -157,7 +137,7 @@ const AdminJobPost = () => {
         - batch (string)
         - department (array of strings)
         - role (string)
-        - lpa (string)
+        - lpa (string, e.g., "10 LPA" or "500000")
         - driveLink (string, URL)
         
         Return only valid JSON without any markdown formatting or explanations.
@@ -165,68 +145,45 @@ const AdminJobPost = () => {
         Job Description: ${description}
       `;
 
-      const responseData = await makeApiRequest(prompt);
-      console.log("Raw API Response:", responseData);
-
-      let aiData;
-      try {
-        aiData = parseGeminiResponse({ data: responseData }); // Use parseGeminiResponse from geminiApiService
-        console.log("Parsed AI Data:", aiData);
-      } catch (parseErr) {
-        console.error("Parsing Error:", parseErr);
-        throw new Error(
-          "Failed to parse AI response as JSON. Raw response: " +
-            responseData.candidates[0].content.parts[0].text.substring(0, 100) +
-            "..."
-        );
-      }
+      const responseData = await generateContent(prompt, MAX_RETRIES, 1000);
+      let aiData = parseGeminiResponse({ data: responseData });
 
       const jobData = Array.isArray(aiData) ? aiData[0] : aiData;
 
       let driveDateFormatted = "";
       if (jobData.driveDate) {
-        try {
-          const parts = jobData.driveDate.split("/");
-          if (parts.length === 3) {
-            const [month, day, year] = parts.map(Number);
-            const date = new Date(year, month - 1, day);
-            driveDateFormatted = isNaN(date.getTime())
-              ? ""
-              : date.toISOString().split("T")[0];
-          }
-        } catch (err) {
-          console.error("Error parsing drive date:", err);
+        const parts = jobData.driveDate.split("/");
+        if (parts.length === 3) {
+          const [month, day, year] = parts.map(Number);
+          const date = new Date(year, month - 1, day);
+          driveDateFormatted = isNaN(date.getTime())
+            ? ""
+            : date.toISOString().split("T")[0];
         }
       }
 
       let expirationFormatted = "";
       if (jobData.expiration) {
-        try {
-          const dateParts = jobData.expiration.split(/\s+/);
-          if (dateParts.length >= 3) {
-            const [datePart, timePart, period] = dateParts;
-            const [month, day, year] = datePart.split("/").map(Number);
+        const dateParts = jobData.expiration.split(/\s+/);
+        if (dateParts.length >= 3) {
+          const [datePart, timePart, period] = dateParts;
+          const [month, day, year] = datePart.split("/").map(Number);
 
-            let hours = 0,
-              minutes = 0;
-            if (timePart) {
-              const [h, m] = timePart.split(":").map(Number);
-              hours = h;
-              minutes = m || 0;
-
-              if (period) {
-                if (period.toUpperCase() === "PM" && hours !== 12) hours += 12;
-                if (period.toUpperCase() === "AM" && hours === 12) hours = 0;
-              }
-            }
-
-            const date = new Date(year, month - 1, day, hours, minutes);
-            if (!isNaN(date.getTime())) {
-              expirationFormatted = formatDateForInput(date);
+          let hours = 0,
+            minutes = 0;
+          if (timePart) {
+            const [h, m] = timePart.split(":").map(Number);
+            hours = h;
+            minutes = m || 0;
+            if (period) {
+              if (period.toUpperCase() === "PM" && hours !== 12) hours += 12;
+              if (period.toUpperCase() === "AM" && hours === 12) hours = 0;
             }
           }
-        } catch (err) {
-          console.error("Error parsing expiration date:", err);
+          const date = new Date(year, month - 1, day, hours, minutes);
+          if (!isNaN(date.getTime())) {
+            expirationFormatted = formatDateForInput(date);
+          }
         }
       }
 
@@ -242,31 +199,23 @@ const AdminJobPost = () => {
         driveDate: driveDateFormatted || "",
         expiration: expirationFormatted || "",
         batch: jobData.batch || "",
-        lpa:jobData.jobLpa||"",
-        role:jobData.jobRole||"",
         department: department.length > 0 ? department : [],
+        role: jobData.role || "",
+        lpa: jobData.lpa || "",
         driveLink: jobData.driveLink || "",
         notificationEmail: formData.notificationEmail,
       };
 
-      console.log("Updated Form Data:", updatedFormData);
       setFormData(updatedFormData);
       setError(null);
     } catch (err) {
-      console.error(
-        "Analysis Error Details:",
-        err.response?.data || err.message
-      );
-      const errorMsg = `Failed to analyze job description: ${err.message}`;
-      setError(errorMsg);
-
+      setError(`Failed to analyze job description: ${err.message}`);
       setFormData((prev) => ({
         ...prev,
         companyName: prev.companyName || "Error Parsing",
         jobDescription: description,
         notificationEmail: prev.notificationEmail,
       }));
-
       setRetryCount(retryCount + 1);
     } finally {
       setLoading(false);
@@ -291,7 +240,6 @@ const AdminJobPost = () => {
         expiration: formatDateForBackend(formData.expiration, true),
         notificationEmail: formData.notificationEmail,
       };
-      console.log("Data being sent to /superadmin/createjobs:", [formattedData]);
       await postData(`/superadmin/createjobs`, [formattedData], {
         withCredentials: true,
       });
@@ -301,13 +249,12 @@ const AdminJobPost = () => {
         driveDate: "",
         expiration: "",
         batch: "",
-        lpa:"",
-        role:"",
         department: [],
+        role: "",
+        lpa: "",
         driveLink: "",
         notificationEmail: [],
       });
-      console.log("Hello ", formattedData.notificationEmail);
       setRawDescription("");
       setError(null);
       toast.success("Job created successfully!");
@@ -321,10 +268,13 @@ const AdminJobPost = () => {
     }
   };
 
-  // Filter emails based on search query
   const filteredEmails = groupEmails.filter((email) =>
     email.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const toggleDropdown = () => {
+    setIsOpen(!isOpen);
+  };
 
   return (
     <div className="w-full p-2 md:p-6 bg-slate-50 min-h-screen">
@@ -421,6 +371,29 @@ const AdminJobPost = () => {
                 placeholder="e.g., 2025"
               />
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Job CTC
+              </label>
+              <input
+                type="text"
+                name="lpa"
+                value={formData.lpa}
+                onChange={handleInputChange}
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                required
+                placeholder="e.g., 10 LPA"
+              />
+            </div>
+            <div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="px-10 py-2 bg-orange-500 cursor-pointer text-white rounded-md hover:bg-orange-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
+              >
+                {loading ? "Posting..." : "Post Job"}
+              </button>
+            </div>
           </div>
 
           <div className="space-y-4">
@@ -451,6 +424,34 @@ const AdminJobPost = () => {
                 required
               />
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Job Role
+              </label>
+              <input
+                type="text"
+                name="role"
+                value={formData.role}
+                onChange={handleInputChange}
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                required
+                placeholder="Software Engineer"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Drive Link
+              </label>
+              <input
+                type="text"
+                name="driveLink"
+                value={formData.driveLink}
+                onChange={handleInputChange}
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                required
+                placeholder="e.g., https://example.com/drive"
+              />
+            </div>
           </div>
 
           <div className="space-y-4">
@@ -470,48 +471,6 @@ const AdminJobPost = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Drive Link
-              </label>
-              <input
-                type="text"
-                name="driveLink"
-                value={formData.driveLink}
-                onChange={handleInputChange}
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
-                required
-                placeholder="e.g., https://example.com/drive"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Job Role
-              </label>
-              <input
-                type="text"
-                name="role"
-                value={formData.driveRole}
-                onChange={handleInputChange}
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
-                required
-                placeholder="Software Engineer"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Job CTC
-              </label>
-              <input
-                type="text"
-                name="lpa"
-                value={formData.driveLpa}
-                onChange={handleInputChange}
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
-                required
-                placeholder="50 LPA"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Notification Emails
               </label>
               <input
@@ -523,8 +482,8 @@ const AdminJobPost = () => {
               />
               <div className="relative">
                 <div
-                  onClick={() => setIsOpen(true)}
-                  className="w-full p-3 border border-gray-300 rounded-md cursor-pointer flex justify-between items-center"
+                  onClick={toggleDropdown}
+                  className="w-full p-3 border border-gray-300 rounded-md cursor-pointer flex justify-between items-center bg-white text-gray-700 text-sm hover:bg-gray-50 transition-all"
                 >
                   <span>
                     {formData.notificationEmail.length
@@ -532,10 +491,11 @@ const AdminJobPost = () => {
                       : "Select emails"}
                   </span>
                   <svg
-                    className={`w-4 h-4 transition-transform ${isOpen ? "transform rotate-180" : ""}`}
+                    className={`w-5 h-5 transition-transform ${isOpen ? "rotate-180" : ""}`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
                   >
                     <path
                       strokeLinecap="round"
@@ -545,31 +505,36 @@ const AdminJobPost = () => {
                     />
                   </svg>
                 </div>
-
-                {(isOpen || searchQuery) && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
-                    <div className="max-h-48 overflow-y-auto p-2">
-                      {filteredEmails.map((email, index) => (
-                        <div key={index} className="flex items-center mb-2">
-                          <input
-                            type="checkbox"
-                            id={`email-${index}`}
-                            name="notificationEmail"
-                            value={email}
-                            checked={formData.notificationEmail.includes(email)}
-                            onChange={handleInputChange}
-                            className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300 rounded"
-                          />
-                          <label
-                            htmlFor={`email-${index}`}
-                            className="ml-2 text-sm text-gray-700"
+                {isOpen && (
+                  <div className="absolute left-0 right-0 mt-2 bg-white border border-gray-300 rounded-md shadow-lg z-10 h-40 overflow-y-auto">
+                    <div className="p-2">
+                      {filteredEmails.length > 0 ? (
+                        filteredEmails.map((email, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center py-1 px-2 hover:bg-gray-100 rounded"
                           >
-                            {email}
-                          </label>
-                        </div>
-                      ))}
-                      {filteredEmails.length === 0 && (
-                        <p className="text-sm text-gray-500 p-2">
+                            <input
+                              type="checkbox"
+                              id={`email-${index}`}
+                              name="notificationEmail"
+                              value={email}
+                              checked={formData.notificationEmail.includes(
+                                email
+                              )}
+                              onChange={handleInputChange}
+                              className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300 rounded"
+                            />
+                            <label
+                              htmlFor={`email-${index}`}
+                              className="ml-2 text-sm text-gray-700 truncate"
+                            >
+                              {email}
+                            </label>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-sm text-gray-500 py-2 px-3">
                           {searchQuery
                             ? "No emails match your search"
                             : "No email groups available"}
@@ -580,16 +545,6 @@ const AdminJobPost = () => {
                 )}
               </div>
             </div>
-          </div>
-
-          <div className="col-span-full flex justify-end">
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-10 py-2 bg-orange-500 cursor-pointer text-white rounded-md hover:bg-orange-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
-            >
-              {loading ? "Posting..." : "Post Job"}
-            </button>
           </div>
         </form>
       </div>
