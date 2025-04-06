@@ -11,6 +11,8 @@ const AdminJobPost = () => {
     expiration: "",
     batch: "",
     department: [],
+    role:"",
+    lpa:"",
     driveLink: "",
     notificationEmail: [],
   });
@@ -133,6 +135,8 @@ const AdminJobPost = () => {
         driveDate: "",
         expiration: "",
         batch: "",
+        lpa:"",
+        role:"",
         department: [],
         driveLink: "",
         notificationEmail: [],
@@ -152,6 +156,8 @@ const AdminJobPost = () => {
         - expiration (string, MM/DD/YYYY hh:mm AM/PM)
         - batch (string)
         - department (array of strings)
+        - role (string)
+        - lpa (string)
         - driveLink (string, URL)
         
         Return only valid JSON without any markdown formatting or explanations.
@@ -236,6 +242,8 @@ const AdminJobPost = () => {
         driveDate: driveDateFormatted || "",
         expiration: expirationFormatted || "",
         batch: jobData.batch || "",
+        lpa:jobData.jobLpa||"",
+        role:jobData.jobRole||"",
         department: department.length > 0 ? department : [],
         driveLink: jobData.driveLink || "",
         notificationEmail: formData.notificationEmail,
@@ -293,6 +301,8 @@ const AdminJobPost = () => {
         driveDate: "",
         expiration: "",
         batch: "",
+        lpa:"",
+        role:"",
         department: [],
         driveLink: "",
         notificationEmail: [],
@@ -470,6 +480,34 @@ const AdminJobPost = () => {
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
                 required
                 placeholder="e.g., https://example.com/drive"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Job Role
+              </label>
+              <input
+                type="text"
+                name="role"
+                value={formData.driveRole}
+                onChange={handleInputChange}
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                required
+                placeholder="Software Engineer"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Job CTC
+              </label>
+              <input
+                type="text"
+                name="lpa"
+                value={formData.driveLpa}
+                onChange={handleInputChange}
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                required
+                placeholder="50 LPA"
               />
             </div>
             <div>

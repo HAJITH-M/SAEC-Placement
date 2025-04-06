@@ -29,7 +29,7 @@ const AdminHomeViewDashboard = () => {
         setStaffCount(superAdminResponse.data.staff?.length || 0);
         setStudentCount(superAdminResponse.data.students?.length || 0);
         const placedCount = superAdminResponse.data.students?.filter(
-          (student) => student.placedStatus === "yes"
+          (student) => student.placedStatus === 'yes'
         ).length || 0;
         setPlacedStudentCount(placedCount);
       } else {

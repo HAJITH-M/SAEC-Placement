@@ -7,6 +7,8 @@ const StaffJobAddView = () => {
   const [formData, setFormData] = useState({
     companyName: "",
     jobDescription: "",
+    role:"",
+    lpa:"",
     driveDate: "",
     expiration: "",
     batch: "",
@@ -132,6 +134,8 @@ const StaffJobAddView = () => {
         driveDate: "",
         expiration: "",
         batch: "",
+        role:"",
+        lpa:"",
         department: [],
         driveLink: "",
         notificationEmail: [],
@@ -151,6 +155,8 @@ const StaffJobAddView = () => {
         - expiration (string, MM/DD/YYYY hh:mm AM/PM)
         - batch (string)
         - department (array of strings)
+        - lpa (string)
+        - role (string)
         - driveLink (string, URL)
         
         Return only valid JSON without any markdown formatting or explanations.
@@ -237,6 +243,8 @@ const StaffJobAddView = () => {
         batch: jobData.batch || "",
         department: department.length > 0 ? department : [],
         driveLink: jobData.driveLink || "",
+        lpa: jobData.lpa || "",
+        role: jobData.role || "",
         notificationEmail: formData.notificationEmail,
       };
 
@@ -291,6 +299,8 @@ const StaffJobAddView = () => {
         jobDescription: "",
         driveDate: "",
         expiration: "",
+        role:"",
+        lpa:"",
         batch: "",
         department: [],
         driveLink: "",
@@ -425,6 +435,34 @@ const StaffJobAddView = () => {
                 required
                 rows={3}
                 placeholder="e.g., Software Engineer role..."
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Job CTC
+              </label>
+              <textarea
+                name="jobLpa"
+                value={formData.lpa}
+                onChange={handleInputChange}
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                required
+                rows={3}
+                placeholder="50 "
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Job Role
+              </label>
+              <textarea
+                name="jobRole"
+                value={formData.role}
+                onChange={handleInputChange}
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                required
+                rows={3}
+                placeholder="Software Engineer"
               />
             </div>
             <div>
