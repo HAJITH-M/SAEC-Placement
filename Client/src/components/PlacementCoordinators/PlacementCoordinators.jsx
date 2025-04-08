@@ -1,7 +1,7 @@
 import React from "react";
 import { Phone, Mail, MapPin, User } from "lucide-react";
 
-const PlacementCoordinatorContact = () => {
+const PlacementCoordinators = () => {
   const coordinator = {
     name: "Dr. Yuvaraman Pandurangan, Ph.D",
     title: "Head – Corporate Relations, Placements & Training",
@@ -76,4 +76,4 @@ const PlacementCoordinatorContact = () => {
   );
 };
 
-export default PlacementCoordinatorContact;
+export default PlacementCoordinators;

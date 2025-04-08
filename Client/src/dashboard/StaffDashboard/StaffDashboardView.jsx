@@ -12,7 +12,6 @@ import StaffStudentManagementView from "./StaffStudentManagementView";
 import StaffEventAdd from "./StaffEventAdd";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
-import PlacementCoordinatorContact from "../../components/Coordinators/Coordinators";
 import { fetchData, postData } from "../../services/apiService";
 import StaffHomeView from "./StaffHomeView";
 

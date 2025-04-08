@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Home, User, FileText, HelpCircle, Menu, X, Calendar, LogOut, Users } from "lucide-react";
+import { Home, User, FileText, HelpCircle, Menu, X, Calendar, LogOut, Users, UserPlus, Contact } from "lucide-react";
 import { Helmet } from "react-helmet";
 import StudentProfileView from "./StudentProfileView";
 import StudentJobView from "./StudentJobView";
@@ -12,6 +12,7 @@ import HomeVM from "../../pages/HomePage/HomeVM";
 import { fetchData, postData } from "../../services/apiService";
 import StudentHelpView from "./StudentHelpView";
 import OurDevelopers from "../../components/OurDevelopers/OurDevelopers";
+import PlacementCoordinators from "../../components/PlacementCoordinators/PlacementCoordinators";
 
 const StudentDashboardView = () => {
   const [activeComponent, setActiveComponent] = useState("home");
@@ -69,6 +70,8 @@ const StudentDashboardView = () => {
         return <StudentJobView />;
       case "events":
         return <StudentEventView />;
+      case "coordinators":
+        return <PlacementCoordinators />;
       case "ourDevelopers":
         return <OurDevelopers />;
       case "help":
@@ -173,6 +176,17 @@ const StudentDashboardView = () => {
                 <Calendar size={20} className={activeComponent === "events" ? "text-white" : "text-orange-500"} />
                 <span>Events</span>
               </div>
+              <div
+                className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${
+                  activeComponent === "coordinators" ? "bg-orange-500 text-white" : "text-black"
+                }`}
+                onClick={() => {
+                  setActiveComponent("coordinators");
+                  setIsOpen(false);
+                }}
+              >
+                <Contact size={20} className={activeComponent === "coordinators" ? "text-white" : "text-orange-500"} />
+                <span>Co-ordinators</span>              </div>
               <div
                 className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${
                   activeComponent === "ourDevelopers" ? "bg-orange-500 text-white" : "text-black"

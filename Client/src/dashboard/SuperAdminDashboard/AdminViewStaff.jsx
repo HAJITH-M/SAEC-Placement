@@ -1,18 +1,16 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { Users, Search, Filter, Trash2 } from "lucide-react";
 import { deleteData, fetchData } from "../../services/apiService";
+import { toast, ToastContainer } from "react-toastify";
 
 const AdminViewStaff = () => {
   const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterBy, setFilterBy] = useState("name");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [staffToDelete, setStaffToDelete] = useState(null);
-  const [selectedRow, setSelectedRow] = useState(null); // Added state for selected row
+  const [selectedRow, setSelectedRow] = useState(null);
 
   const fetchStaff = async () => {
     setLoading(true);
@@ -21,10 +19,8 @@ const AdminViewStaff = () => {
         withCredentials: true,
       });
       setStaff(response.data.staff || []);
-      setError(null);
     } catch (err) {
-      console.error("Fetch Staff Error:", err);
-      setError("Failed to fetch staff: " + (err.response?.data?.error || err.message));
+      toast.error("Failed to fetch staff: " + (err.response?.data?.error || err.message));
       setStaff([]);
     } finally {
       setLoading(false);
@@ -43,25 +39,21 @@ const AdminViewStaff = () => {
   const handleDeleteConfirm = async () => {
     if (!staffToDelete) return;
 
-    setError(null);
-    setSuccess(null);
-
     try {
       const response = await deleteData(
         `/superadmin/staff/${staffToDelete.staffId}`,
         { withCredentials: true }
       );
-      setSuccess("Staff removed successfully!");
+      toast.success("Staff removed successfully!");
       fetchStaff();
     } catch (error) {
-      console.error("Error removing staff:", error);
       if (error.response?.status === 404) {
-        setSuccess("Staff already removed or not found");
+        toast.success("Staff already removed or not found");
         fetchStaff();
       } else if (error.response?.status === 422) {
-        setError("Invalid staff ID format");
+        toast.error("Invalid staff ID format");
       } else {
-        setError(error.response?.data?.error || "Failed to remove staff");
+        toast.error(error.response?.data?.error || "Failed to remove staff");
       }
     } finally {
       setShowDeleteModal(false);
@@ -89,7 +81,7 @@ const AdminViewStaff = () => {
   };
 
   const handleRowClick = (staffId) => {
-    setSelectedRow(staffId === selectedRow ? null : staffId); // Toggle selection
+    setSelectedRow(staffId === selectedRow ? null : staffId);
   };
 
   const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, staffName }) => {
@@ -163,16 +155,6 @@ const AdminViewStaff = () => {
           Loading...
         </div>
       )}
-      {error && (
-        <div className="w-full p-4 mb-4 bg-red-100 text-red-700 rounded">
-          {error}
-        </div>
-      )}
-      {success && (
-        <div className="w-full p-4 mb-4 bg-green-100 text-green-700 rounded">
-          {success}
-        </div>
-      )}
 
       <div className="w-full bg-white rounded-lg shadow-md p-3 sm:p-6">
         {filterStaff(staff).length > 0 ? (
@@ -217,7 +199,7 @@ const AdminViewStaff = () => {
                     <td className="px-2 sm:px-4 py-2">
                       <button
                         onClick={(e) => {
-                          e.stopPropagation(); // Prevent row click when clicking button
+                          e.stopPropagation();
                           handleDeleteClick(staffMember.staffId, staffMember.name);
                         }}
                         className="flex items-center gap-1.5 bg-red-500 text-white py-1 px-2 sm:py-1.5 sm:px-3 rounded hover:bg-red-600 transition-colors text-xs sm:text-sm"
@@ -246,6 +228,7 @@ const AdminViewStaff = () => {
         onConfirm={handleDeleteConfirm}
         staffName={staffToDelete?.name}
       />
+      <ToastContainer />
     </div>
   );
 };

@@ -1,11 +1,17 @@
-import { Workflow, Loader, GraduationCap, Briefcase, ArrowLeft } from "lucide-react";
+import {
+  Workflow,
+  Loader,
+  GraduationCap,
+  Briefcase,
+  ArrowLeft,
+} from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { fetchData } from "../../services/apiService";
+import { toast, ToastContainer } from "react-toastify";
 
 const AdminStudentsPlaced = () => {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [batchSearchTerm, setBatchSearchTerm] = useState("");
   const [studentSearchTerm, setStudentSearchTerm] = useState("");
   const [selectedBatch, setSelectedBatch] = useState(null);
@@ -17,8 +23,7 @@ const AdminStudentsPlaced = () => {
         const response = await fetchData("get-placed-students");
         setStudents(response?.data || []);
       } catch (err) {
-        console.error("Error fetching placed students:", err);
-        setError(err.message);
+        toast.error("Error fetching placed students: " + err.message);
       } finally {
         setLoading(false);
       }
@@ -45,7 +50,9 @@ const AdminStudentsPlaced = () => {
         />
       </div>
       <div className="text-sm">
-        <h3 className="font-semibold text-gray-900 mb-2 text-center text-[0.8em]">{student.name || "Unknown"}</h3>
+        <h3 className="font-semibold text-gray-900 mb-2 text-center text-[0.8em]">
+          {student.name || "Unknown"}
+        </h3>
         <div className="space-y-2 text-gray-600">
           <div className="flex items-center justify-center">
             <GraduationCap className="mr-1 text-blue-500 w-4 h-4" />
@@ -63,6 +70,7 @@ const AdminStudentsPlaced = () => {
       </div>
     </div>
   );
+
   const filteredBatches = getBatches().filter((batch) =>
     batchSearchTerm
       ? batch.toLowerCase().includes(batchSearchTerm.toLowerCase())
@@ -73,8 +81,12 @@ const AdminStudentsPlaced = () => {
     (student) =>
       (!studentSearchTerm ||
         student.name?.toLowerCase().includes(studentSearchTerm.toLowerCase()) ||
-        student.department?.toLowerCase().includes(studentSearchTerm.toLowerCase()) ||
-        student.companyPlacedIn?.toLowerCase().includes(studentSearchTerm.toLowerCase())) &&
+        student.department
+          ?.toLowerCase()
+          .includes(studentSearchTerm.toLowerCase()) ||
+        student.companyPlacedIn
+          ?.toLowerCase()
+          .includes(studentSearchTerm.toLowerCase())) &&
       student.batch === selectedBatch
   );
 
@@ -87,10 +99,6 @@ const AdminStudentsPlaced = () => {
         </div>
       </div>
     );
-  }
-
-  if (error) {
-    return <div className="text-center py-10 text-red-500">Error: {error}</div>;
   }
 
   return (
@@ -108,7 +116,9 @@ const AdminStudentsPlaced = () => {
             <span className="hidden md:inline">Back to Batches</span>
           </button>
         )}
-        <h2 className="text-xl font-bold text-gray-800 flex-1 text-center">Placed Students</h2>
+        <h2 className="text-xl font-bold text-gray-800 flex-1 text-center">
+          Placed Students
+        </h2>
       </div>
       {!selectedBatch ? (
         <>
@@ -129,14 +139,22 @@ const AdminStudentsPlaced = () => {
                   onClick={() => setSelectedBatch(batch)}
                   className="cursor-pointer bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 hover:bg-orange-50"
                 >
-                  <h3 className="text-xl font-semibold text-center text-gray-800">Batch {batch}</h3>
+                  <h3 className="text-xl font-semibold text-center text-gray-800">
+                    Batch {batch}
+                  </h3>
                   <p className="text-center text-gray-600 mt-2 text-base">
-                    {students.filter((student) => student.batch === batch).length} Students
+                    {
+                      students.filter((student) => student.batch === batch)
+                        .length
+                    }{" "}
+                    Students
                   </p>
                 </div>
               ))
             ) : (
-              <p className="col-span-full text-center text-gray-500">No batches found</p>
+              <p className="col-span-full text-center text-gray-500">
+                No batches found
+              </p>
             )}
           </div>
         </>
@@ -153,13 +171,18 @@ const AdminStudentsPlaced = () => {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {filteredStudents.length > 0 ? (
-              filteredStudents.map((student, index) => renderStudentCard(student, index))
+              filteredStudents.map((student, index) =>
+                renderStudentCard(student, index)
+              )
             ) : (
-              <p className="col-span-full text-center text-gray-500">No students found</p>
+              <p className="col-span-full text-center text-gray-500">
+                No students found
+              </p>
             )}
           </div>
         </div>
       )}
+      <ToastContainer />
     </div>
   );
 };

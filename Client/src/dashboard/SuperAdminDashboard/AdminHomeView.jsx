@@ -1,8 +1,16 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
-import { Users, BookOpen, Briefcase, UserCheck, CheckCircle, Clock, Mail, Loader2 } from "lucide-react";
+import {
+  Users,
+  BookOpen,
+  Briefcase,
+  UserCheck,
+  CheckCircle,
+  Clock,
+  Mail,
+  Loader2,
+} from "lucide-react";
 import { fetchData } from "../../services/apiService";
-import PlacedStudents from "../../components/PlacedStudents/PlacedStudents";
+import { toast, ToastContainer } from "react-toastify";
 
 const AdminHomeViewDashboard = () => {
   const [staffCount, setStaffCount] = useState(0);
@@ -14,7 +22,6 @@ const AdminHomeViewDashboard = () => {
   const [expiredJobCount, setExpiredJobCount] = useState(0);
   const [notificationEmailCount, setNotificationEmailCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   const fetchDashboardData = async () => {
     try {
@@ -24,13 +31,13 @@ const AdminHomeViewDashboard = () => {
       const superAdminResponse = await fetchData("/superadmin", {
         withCredentials: true,
       });
-      console.log("SuperAdmin Response:", superAdminResponse.data);
       if (superAdminResponse.data.success) {
         setStaffCount(superAdminResponse.data.staff?.length || 0);
         setStudentCount(superAdminResponse.data.students?.length || 0);
-        const placedCount = superAdminResponse.data.students?.filter(
-          (student) => student.placedStatus === 'yes'
-        ).length || 0;
+        const placedCount =
+          superAdminResponse.data.students?.filter(
+            (student) => student.placedStatus === "yes"
+          ).length || 0;
         setPlacedStudentCount(placedCount);
       } else {
         throw new Error("Failed to fetch superadmin data");
@@ -40,9 +47,10 @@ const AdminHomeViewDashboard = () => {
       const jobsResponse = await fetchData("/superadmin/jobs-with-students", {
         withCredentials: true,
       });
-      console.log("Jobs Response:", jobsResponse.data);
       if (jobsResponse.data.success) {
-        const jobs = Array.isArray(jobsResponse.data.jobs) ? jobsResponse.data.jobs : [];
+        const jobs = Array.isArray(jobsResponse.data.jobs)
+          ? jobsResponse.data.jobs
+          : [];
         setJobCount(jobs.length);
         const totalRegistrations = jobs.reduce(
           (acc, job) => acc + (job.students?.length || 0),
@@ -51,8 +59,12 @@ const AdminHomeViewDashboard = () => {
         setTotalStudentRegistrations(totalRegistrations);
 
         const currentDate = new Date();
-        const activeJobs = jobs.filter((job) => new Date(job.expiration) > currentDate).length;
-        const expiredJobs = jobs.filter((job) => new Date(job.expiration) <= currentDate).length;
+        const activeJobs = jobs.filter(
+          (job) => new Date(job.expiration) > currentDate
+        ).length;
+        const expiredJobs = jobs.filter(
+          (job) => new Date(job.expiration) <= currentDate
+        ).length;
         setActiveJobCount(activeJobs);
         setExpiredJobCount(expiredJobs);
       } else {
@@ -63,11 +75,12 @@ const AdminHomeViewDashboard = () => {
       const emailResponse = await fetchData("/superadmin/getfeedgroupmail", {
         withCredentials: true,
       });
-      console.log("Email Response:", emailResponse.data);
       setNotificationEmailCount(emailResponse.data.groupMailList?.length || 0);
     } catch (err) {
-      console.error("Dashboard Fetch Error:", err);
-      setError("Failed to load dashboard data: " + (err.response?.data?.error || err.message));
+      toast.error(
+        "Failed to load dashboard data: " +
+          (err.response?.data?.error || err.message)
+      );
     } finally {
       setLoading(false);
     }
@@ -81,20 +94,13 @@ const AdminHomeViewDashboard = () => {
     return (
       <div className="flex justify-center items-center h-screen">
         <Loader2 className="animate-spin text-orange-600" size={48} />
-      </div>    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center h-screen text-red-500">
-        {error}
       </div>
     );
   }
 
   return (
     <div className="p-4 sm:p-6 bg-slate-50 h-screen">
-      <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-gray-800 ">
+      <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-gray-800">
         Admin Dashboard
       </h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
@@ -112,7 +118,9 @@ const AdminHomeViewDashboard = () => {
         {/* Medium Box: Total Students */}
         <div className="bg-white rounded-lg shadow-md p-6 flex items-center justify-between hover:shadow-lg transition-shadow">
           <div>
-            <h2 className="text-lg font-semibold text-gray-700">Total Students</h2>
+            <h2 className="text-lg font-semibold text-gray-700">
+              Total Students
+            </h2>
             <p className="text-2xl sm:text-3xl font-bold text-blue-500 mt-2">
               {studentCount}
             </p>
@@ -134,7 +142,9 @@ const AdminHomeViewDashboard = () => {
         {/* Small Box: Total Student Registrations */}
         <div className="bg-white rounded-lg shadow-md p-6 flex items-center justify-between hover:shadow-lg transition-shadow">
           <div>
-            <h2 className="text-md font-semibold text-gray-700">Registrations</h2>
+            <h2 className="text-md font-semibold text-gray-700">
+              Registrations
+            </h2>
             <p className="text-xl sm:text-2xl font-bold text-purple-500 mt-2">
               {totalStudentRegistrations}
             </p>
@@ -145,7 +155,9 @@ const AdminHomeViewDashboard = () => {
         {/* Small Box: Placed Students */}
         <div className="bg-white rounded-lg shadow-md p-6 flex items-center justify-between hover:shadow-lg transition-shadow">
           <div>
-            <h2 className="text-md font-semibold text-gray-700">Placed Students</h2>
+            <h2 className="text-md font-semibold text-gray-700">
+              Placed Students
+            </h2>
             <p className="text-xl sm:text-2xl font-bold text-teal-500 mt-2">
               {placedStudentCount}
             </p>
@@ -167,7 +179,9 @@ const AdminHomeViewDashboard = () => {
         {/* Small Box: Expired Jobs */}
         <div className="bg-white rounded-lg shadow-md p-6 flex items-center justify-between hover:shadow-lg transition-shadow">
           <div>
-            <h2 className="text-md font-semibold text-gray-700">Expired Jobs</h2>
+            <h2 className="text-md font-semibold text-gray-700">
+              Expired Jobs
+            </h2>
             <p className="text-xl sm:text-2xl font-bold text-red-500 mt-2">
               {expiredJobCount}
             </p>
@@ -178,7 +192,9 @@ const AdminHomeViewDashboard = () => {
         {/* Small Box: Notification Emails */}
         <div className="bg-white rounded-lg shadow-md p-6 flex items-center justify-between hover:shadow-lg transition-shadow">
           <div>
-            <h2 className="text-md font-semibold text-gray-700">Notification Emails</h2>
+            <h2 className="text-md font-semibold text-gray-700">
+              Notification Emails
+            </h2>
             <p className="text-xl sm:text-2xl font-bold text-yellow-500 mt-2">
               {notificationEmailCount}
             </p>
@@ -186,6 +202,7 @@ const AdminHomeViewDashboard = () => {
           <Mail size={32} className="text-yellow-500" />
         </div>
       </div>
+      <ToastContainer />
     </div>
   );
 };

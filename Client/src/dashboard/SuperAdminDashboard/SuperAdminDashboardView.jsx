@@ -13,6 +13,7 @@ import AdminAddEvents from "./AdminAddEvents";
 import { toast, ToastContainer } from "react-toastify";
 import { fetchData, postData } from "../../services/apiService";
 import AdminStudentsPlaced from "./AdminStudentsPlaced";
+import AddPlacementCoordinatorsView from "./AddPlacementCoordinatorsView";
 
 const SuperAdminDashboardView = () => {
   const [activeComponent, setActiveComponent] = useState("home");
@@ -83,6 +84,7 @@ const SuperAdminDashboardView = () => {
     switch (activeComponent) {
       case "home": return <AdminHomeViewDashboard />;
       case "addMail": return <AdminAddMailForm />;
+      case "addplacementcoordinators": return <AddPlacementCoordinatorsView />;
       case "students": return <StudentManagementView students={studentList} />;
       case "adminstudentsplaced": return <AdminStudentsPlaced />;
       case "staff": return <StaffManagementView staff={staffList} onStaffCreated={fetchDataSuperAdmin} onStaffRemoved={fetchDataSuperAdmin} />;
@@ -163,6 +165,10 @@ const SuperAdminDashboardView = () => {
             <div onClick={() => { setActiveComponent("addMail"); setIsOpen(false); }} className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${activeComponent === "addMail" ? "bg-orange-500 text-white" : "text-black"}`}>
               <User size={20} className={activeComponent === "addMail" ? "text-white" : "text-orange-500"} />
               <span>Add Mail</span>
+            </div>
+            <div onClick={() => { setActiveComponent("addplacementcoordinators"); setIsOpen(false); }} className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${activeComponent === "addplacementcoordinators" ? "bg-orange-500 text-white" : "text-black"}`}>
+              <User size={20} className={activeComponent === "addplacementcoordinators" ? "text-white" : "text-orange-500"} />
+              <span>Add Co-ordinators</span>
             </div>
             <div onClick={() => { setActiveComponent("staff"); setIsOpen(false); }} className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${activeComponent === "staff" ? "bg-orange-500 text-white" : "text-black"}`}>
               <Users size={20} className={activeComponent === "staff" ? "text-white" : "text-orange-500"} />
