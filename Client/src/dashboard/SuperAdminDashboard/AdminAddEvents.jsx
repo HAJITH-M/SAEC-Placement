@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import { postData } from "../../services/apiService";
 import { useForm } from "react-hook-form";

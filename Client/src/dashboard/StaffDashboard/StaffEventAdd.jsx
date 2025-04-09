@@ -1,12 +1,11 @@
 import React, { useState } from "react";
-import axios from "axios";
-import { ToastContainer, toast } from "react-toastify"; // Added toast import
+import { ToastContainer, toast } from "react-toastify";
 import { postData } from "../../services/apiService";
 
 const StaffEventAdd = () => {
   const [eventData, setEventData] = useState({
-    event_name: "",
-    event_link: "",
+    eventName: "",
+    eventLink: "",
     date: "",
     file: null,
   });
@@ -25,7 +24,6 @@ const StaffEventAdd = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    console.log(`Updated field: ${name}, Value: ${value}`);
     setEventData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -51,12 +49,17 @@ const StaffEventAdd = () => {
     setSuccess("");
 
     try {
-      console.log("Preparing upload data...");
+      console.log("🧪 Current eventData state before upload:", eventData);
+
       let uploadData = {
-        event_name: eventData.event_name,
-        event_link: eventData.event_link,
+        event_name: eventData.eventName,
+        event_link: eventData.eventLink,
         date: eventData.date,
       };
+
+      if (!eventData.eventName || !eventData.eventLink || !eventData.date) {
+        throw new Error("⚠️ Event name, link, or date is missing!");
+      }
 
       if (eventData.file) {
         console.log("Converting file to Base64...");
@@ -67,25 +70,24 @@ const StaffEventAdd = () => {
           fileName: eventData.file.name,
           fileType: eventData.file.type,
         };
-        console.log("File added to upload data:", uploadData);
       }
 
-      console.log("Final upload data:", JSON.stringify(uploadData, null, 2));
-      const response = await postData(
-        "/staff/add-events",
-        uploadData,
-        {
-          withCredentials: true,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+      const response = await postData("/staff/add-events", uploadData, {
+        withCredentials: true,
+        headers: { "Content-Type": "application/json" },
+      });
 
       console.log("Server response:", response);
-      setSuccess("Event added successfully!");
-      toast.success("Event added successfully!");
+      if (response.ok) {
+        setSuccess("Event added successfully!");
+        toast.success("Event added successfully!");
+      } else {
+        setSuccess("False");
+        toast.error("Cannot add event try again later..");
+      }
       setEventData({
-        event_name: "",
-        event_link: "",
+        eventName: "",
+        eventLink: "",
         date: "",
         file: null,
       });
@@ -97,14 +99,16 @@ const StaffEventAdd = () => {
         console.log("Error response data:", err.response.data);
         console.log("Error status:", err.response.status);
         setError(
-          `Failed to upload event: ${err.response?.data?.error || "Unknown error"}`
+          `Failed to upload event: ${
+            err.response?.data?.error || "Unknown error"
+          }`
         );
       } else if (err.request) {
         console.log("No response received:", err.request);
         setError("No response from server. Please try again.");
       } else {
         console.log("Unexpected error:", err.message);
-        setError("Unexpected error occurred.");
+        setError(err.message || "Unexpected error occurred.");
       }
     } finally {
       setUploading(false);
@@ -120,13 +124,18 @@ const StaffEventAdd = () => {
             {error}
           </div>
         )}
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <form
+          onSubmit={handleSubmit}
+          className="grid grid-cols-1 md:grid-cols-2 gap-6"
+        >
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Event Name</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Event Name
+            </label>
             <input
               type="text"
-              name="event_name"
-              value={eventData.event_name}
+              name="eventName"
+              value={eventData.eventName}
               onChange={handleChange}
               required
               className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
@@ -134,11 +143,13 @@ const StaffEventAdd = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Event Link</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Event Link
+            </label>
             <input
               type="text"
-              name="event_link"
-              value={eventData.event_link}
+              name="eventLink"
+              value={eventData.eventLink}
               onChange={handleChange}
               required
               className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
@@ -146,7 +157,9 @@ const StaffEventAdd = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Date
+            </label>
             <input
               type="date"
               name="date"
@@ -158,7 +171,9 @@ const StaffEventAdd = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Poster Upload</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Poster Upload
+            </label>
             <input
               type="file"
               onChange={handleFileChange}
