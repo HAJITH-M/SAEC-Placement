@@ -299,6 +299,7 @@ const StaffJobAddView = () => {
       await postData(`/staff/createjobs`, [formattedData], {
         withCredentials: true,
       });
+      // Reset all form-related state
       setFormData({
         companyName: "",
         jobDescription: "",
@@ -313,7 +314,10 @@ const StaffJobAddView = () => {
       });
       setRawDescription("");
       setError(null);
+      setSearchQuery(""); // Clear email search input
+      setIsDropdownOpen(false); // Close email dropdown
       toast.success("Job created successfully!");
+      console.log("Form reset triggered after successful submission");
     } catch (err) {
       setError(
         `Failed to create job: ${err.response?.data?.error || err.message}`

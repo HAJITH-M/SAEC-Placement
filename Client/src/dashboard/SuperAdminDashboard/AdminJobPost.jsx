@@ -5,7 +5,14 @@ import { generateContent, parseGeminiResponse } from "../../config/api";
 import { useForm } from "react-hook-form";
 
 const AdminJobPost = () => {
-  const { register, handleSubmit, setValue, formState: { errors }, reset } = useForm({
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+    reset,
+  } = useForm({
     defaultValues: {
       companyName: "",
       jobDescription: "",
@@ -16,12 +23,14 @@ const AdminJobPost = () => {
       role: "",
       lpa: "",
       driveLink: "",
-      notificationEmail: []
-    }
+      notificationEmail: [],
+    },
   });
 
+  const formData = watch();
   const [rawDescription, setRawDescription] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [retryCount, setRetryCount] = useState(0);
   const [groupEmails, setGroupEmails] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -34,16 +43,19 @@ const AdminJobPost = () => {
         const response = await fetchData(`/superadmin/getfeedgroupmail`, {
           withCredentials: true,
         });
-        if (response.data && Array.isArray(response.data.groupMailList)) {
+        console.log("Received group emails:", response.data.groupMailList);
+        if (response?.data?.groupMailList) {
           const emailList = response.data.groupMailList
-            .map((item) => (typeof item === "string" ? item : item.email))
+            .map((item) => (typeof item === "string" ? item : item?.email))
             .filter(Boolean);
           setGroupEmails(emailList);
         } else {
-          toast.error("Failed to parse notification email options");
+          console.error("Unexpected response format:", response.data);
+          setError("Failed to parse notification email options");
         }
       } catch (err) {
-        toast.error("Failed to load notification email options");
+        console.error("Failed to fetch group emails:", err);
+        setError("Failed to load notification email options");
       }
     };
     fetchGroupEmails();
@@ -51,14 +63,14 @@ const AdminJobPost = () => {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    if (name === "department") {
-      setValue(name, value.split(",").map((d) => d.trim()).filter((d) => d));
-    } else if (name === "notificationEmail") {
+    if (type === "checkbox" && name === "notificationEmail") {
       const currentEmails = formData.notificationEmail || [];
       const updatedEmails = checked
         ? [...currentEmails, value]
         : currentEmails.filter((em) => em !== value);
       setValue(name, updatedEmails);
+    } else if (name === "department") {
+      setValue(name, value.split(",").map((d) => d.trim()).filter(Boolean));
     } else {
       setValue(name, value);
     }
@@ -73,57 +85,42 @@ const AdminJobPost = () => {
     try {
       if (!dateStr) return "";
       const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return "";
       if (includeTime) {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, "0");
-        const day = String(date.getDate()).padStart(2, "0");
-        const hours = String(date.getHours()).padStart(2, "0");
-        const minutes = String(date.getMinutes()).padStart(2, "0");
-        const seconds = "00";
-        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-      } else {
-        return date.toISOString().split("T")[0];
+        return date.toISOString().replace("T", " ").split(".")[0];
       }
+      return date.toISOString().split("T")[0];
     } catch (err) {
-      return dateStr;
+      console.error("Date formatting error:", err.message);
+      return "";
     }
   };
 
-  const formatDateForInput = (dateStr) => {
+  const formatDateForInput = (dateStr, isDateOnly = false) => {
     try {
       if (!dateStr) return "";
       const date = new Date(dateStr);
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
-      const hours = String(date.getHours()).padStart(2, "0");
-      const minutes = String(date.getMinutes()).padStart(2, "0");
-      return `${year}-${month}-${day}T${hours}:${minutes}`;
+      if (isNaN(date.getTime())) return "";
+      if (isDateOnly) {
+        return date.toISOString().split("T")[0]; // YYYY-MM-DD for date input
+      }
+      return date.toISOString().slice(0, 16); // YYYY-MM-DDTHH:MM for datetime-local
     } catch (err) {
-      return dateStr;
+      console.error("Date formatting for input error:", err.message);
+      return "";
     }
   };
 
   const analyzeJobDescription = async (description) => {
-    if (!description) {
-      reset({
-        companyName: "",
-        jobDescription: "",
-        driveDate: "",
-        expiration: "",
-        batch: "",
-        department: "",
-        role: "",
-        lpa: "",
-        driveLink: "",
-        notificationEmail: []
-      });
+    if (!description?.trim()) {
+      reset();
+      setError(null);
       return;
     }
 
     try {
       setLoading(true);
-      setRetryCount(0);
+      setRetryCount((prev) => prev + 1);
 
       const prompt = `
         Extract the following fields from the job description below and return them in JSON format:
@@ -142,70 +139,100 @@ const AdminJobPost = () => {
         Job Description: ${description}
       `;
 
-      const responseData = await generateContent(prompt, MAX_RETRIES, 1000);
-      let aiData = parseGeminiResponse({ data: responseData });
+      const response = await generateContent(prompt, MAX_RETRIES, 1000);
+      const responseData = response.data;
+      console.log("Raw API Response:", JSON.stringify(responseData, null, 2));
 
-      const jobData = Array.isArray(aiData) ? aiData[0] : aiData;
+      const rawText = responseData?.candidates?.[0]?.content?.parts?.[0]?.text || "No content available";
+      console.log("Full Raw Text from Gemini:", rawText);
+
+      let aiData;
+      try {
+        aiData = parseGeminiResponse({ data: responseData });
+        console.log("Parsed AI Data:", JSON.stringify(aiData, null, 2));
+      } catch (parseErr) {
+        console.error("Parsing Error:", parseErr);
+        const rawSnippet = rawText.substring(0, 100);
+        throw new Error(`Failed to parse AI response as JSON. Raw response snippet: ${rawSnippet}...`);
+      }
+
+      if (!aiData || (Array.isArray(aiData) && aiData.length === 0)) {
+        throw new Error("Parsed AI data is empty or invalid");
+      }
+
+      const jobData = Array.isArray(aiData) ? aiData[0] || {} : aiData;
 
       let driveDateFormatted = "";
       if (jobData.driveDate) {
-        const parts = jobData.driveDate.split("/");
-        if (parts.length === 3) {
-          const [month, day, year] = parts.map(Number);
+        try {
+          const [month, day, year] = (jobData.driveDate || "").split("/").map(Number);
           const date = new Date(year, month - 1, day);
-          driveDateFormatted = isNaN(date.getTime())
-            ? ""
-            : date.toISOString().split("T")[0];
+          driveDateFormatted = isNaN(date.getTime()) ? "" : formatDateForInput(date, true);
+        } catch (err) {
+          console.error("Error parsing drive date:", err);
         }
       }
 
       let expirationFormatted = "";
       if (jobData.expiration) {
-        const dateParts = jobData.expiration.split(/\s+/);
-        if (dateParts.length >= 3) {
-          const [datePart, timePart, period] = dateParts;
-          const [month, day, year] = datePart.split("/").map(Number);
-
-          let hours = 0,
-            minutes = 0;
-          if (timePart) {
-            const [h, m] = timePart.split(":").map(Number);
-            hours = h;
-            minutes = m || 0;
-            if (period) {
-              if (period.toUpperCase() === "PM" && hours !== 12) hours += 12;
-              if (period.toUpperCase() === "AM" && hours === 12) hours = 0;
-            }
+        try {
+          const parts = (jobData.expiration || "").split(" ");
+          if (parts.length >= 3) {
+            const [datePart, timePart, period] = parts;
+            const [month, day, year] = (datePart || "").split("/").map(Number);
+            const [hours, minutes] = (timePart || "0:0").split(":").map(Number);
+            const adjustedHours =
+              period?.toUpperCase() === "PM" && hours !== 12
+                ? hours + 12
+                : period?.toUpperCase() === "AM" && hours === 12
+                ? 0
+                : hours;
+            const date = new Date(year, month - 1, day, adjustedHours, minutes || 0);
+            expirationFormatted = isNaN(date.getTime()) ? "" : formatDateForInput(date);
           }
-          const date = new Date(year, month - 1, day, hours, minutes);
-          if (!isNaN(date.getTime())) {
-            expirationFormatted = formatDateForInput(date);
-          }
+        } catch (err) {
+          console.error("Error parsing expiration date:", err);
         }
       }
 
       const department = Array.isArray(jobData.department)
         ? jobData.department
         : typeof jobData.department === "string"
-        ? [jobData.department]
+        ? jobData.department.split(",").map((d) => d.trim()).filter(Boolean)
         : [];
 
       reset({
-        companyName: jobData.companyName || "Unknown Company",
+        companyName: jobData.companyName || "",
         jobDescription: jobData.jobDescription || description,
-        driveDate: driveDateFormatted || "",
-        expiration: expirationFormatted || "",
+        driveDate: driveDateFormatted,
+        expiration: expirationFormatted,
         batch: jobData.batch || "",
-        department: department.length > 0 ? department.join(", ") : "",
+        department: department.join(", "),
         role: jobData.role || "",
         lpa: jobData.lpa || "",
         driveLink: jobData.driveLink || "",
-        notificationEmail: formData.notificationEmail || []
+        notificationEmail: formData.notificationEmail || [],
       });
+      setError(null);
     } catch (err) {
-      toast.error(`Failed to analyze job description: ${err.message}`);
-      setValue("jobDescription", description);
-      setRetryCount(retryCount + 1);
+      console.error("Analysis Error Details:", err.message, err.stack);
+      const errorMsg = `Failed to analyze job description: ${err.message}`;
+      setError(errorMsg);
+      reset({
+        companyName: "",
+        jobDescription: description,
+        driveDate: "",
+        expiration: "",
+        batch: "",
+        department: "",
+        role: "",
+        lpa: "",
+        driveLink: "",
+        notificationEmail: formData.notificationEmail || [],
+      });
+      if (retryCount >= MAX_RETRIES) {
+        setRetryCount(0);
+      }
     } finally {
       setLoading(false);
     }
@@ -226,17 +253,36 @@ const AdminJobPost = () => {
         ...data,
         driveDate: formatDateForBackend(data.driveDate),
         expiration: formatDateForBackend(data.expiration, true),
-        department: data.department.split(",").map((d) => d.trim()).filter((d) => d),
-        notificationEmail: data.notificationEmail
+        department: data.department.split(",").map((d) => d.trim()).filter(Boolean),
+        notificationEmail: data.notificationEmail || [],
       };
+      console.log("Data being sent to /superadmin/createjobs:", [formattedData]);
       await postData(`/superadmin/createjobs`, [formattedData], {
         withCredentials: true,
       });
-      reset();
+      
+      reset({
+        companyName: "",
+        jobDescription: "",
+        driveDate: "",
+        expiration: "",
+        batch: "",
+        department: "",
+        role: "",
+        lpa: "",
+        driveLink: "",
+        notificationEmail: [],
+      });
       setRawDescription("");
+      setError(null);
+      setSearchQuery("");
+      setIsOpen(false);
       toast.success("Job created successfully!");
+      console.log("Form reset triggered after successful submission");
     } catch (err) {
-      toast.error(`Failed to create job: ${err.response?.data?.error || err.message}`);
+      const errorMsg = `Failed to create job: ${err.response?.data?.error || err.message}`;
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -246,16 +292,31 @@ const AdminJobPost = () => {
     email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const toggleDropdown = () => {
-    setIsOpen(!isOpen);
-  };
-
+  const toggleDropdown = () => setIsOpen((prev) => !prev);
   return (
     <div className="w-full p-2 md:p-6 bg-slate-50 min-h-screen">
       <div className="bg-slate-50 rounded-lg shadow-md p-3 md:p-6 pb-10">
         <h2 className="text-2xl font-semibold text-gray-800 mb-6">
           Create New Job Posting
         </h2>
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md text-sm">
+            {error}
+            {retryCount > 0 && retryCount <= MAX_RETRIES && (
+              <div className="mt-2">
+                <button
+                  onClick={handleManualRetry}
+                  className="text-blue-600 underline hover:text-blue-800"
+                >
+                  Retry Analysis
+                </button>
+                <span className="ml-2 text-xs text-gray-500">
+                  (Attempt {retryCount}/{MAX_RETRIES})
+                </span>
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -275,19 +336,6 @@ const AdminJobPost = () => {
           >
             {loading ? "Analyzing..." : "Auto Fill"}
           </button>
-          {retryCount > 0 && retryCount < MAX_RETRIES && (
-            <div className="mt-2">
-              <button
-                onClick={handleManualRetry}
-                className="text-blue-600 underline hover:text-blue-800"
-              >
-                Retry Analysis
-              </button>
-              <span className="ml-2 text-xs text-gray-500">
-                (Attempt {retryCount + 1}/{MAX_RETRIES})
-              </span>
-            </div>
-          )}
           <div className="mt-1 text-xs text-gray-500">
             Note: If analysis fails, try shortening the job description or manually fill in the form.
           </div>
