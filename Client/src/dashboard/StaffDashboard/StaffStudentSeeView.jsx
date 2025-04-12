@@ -1,8 +1,92 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Users, Search, Filter, Trash2 } from "lucide-react";
+import { Users, Search, Filter, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "react-toastify";
 import { deleteData, fetchData } from "../../services/apiService";
+
+const Pagination = ({ currentPage, totalPages, onPageChange }) => {
+  const pages = [];
+  const maxPagesToShow = 5;
+  
+  let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
+  let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+  
+  if (endPage - startPage + 1 < maxPagesToShow) {
+    startPage = Math.max(1, endPage - maxPagesToShow + 1);
+  }
+  
+  for (let i = startPage; i <= endPage; i++) {
+    pages.push(i);
+  }
+  
+  return (
+    <div className="flex justify-center mt-4">
+      <nav className="flex items-center">
+        <button
+          onClick={() => onPageChange(1)}
+          disabled={currentPage === 1}
+          className={`px-3 py-1 rounded-l-md ${
+            currentPage === 1 
+              ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
+              : 'bg-orange-500 text-white hover:bg-orange-600'
+          }`}
+        >
+          First
+        </button>
+        
+        <button
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className={`px-3 py-1 ${
+            currentPage === 1 
+              ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
+              : 'bg-orange-500 text-white hover:bg-orange-600'
+          }`}
+        >
+          <ChevronLeft size={16} />
+        </button>
+        
+        {pages.map(page => (
+          <button
+            key={page}
+            onClick={() => onPageChange(page)}
+            className={`px-3 py-1 ${
+              currentPage === page 
+                ? 'bg-orange-600 text-white' 
+                : 'bg-orange-500 text-white hover:bg-orange-600'
+            }`}
+          >
+            {page}
+          </button>
+        ))}
+        
+        <button
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className={`px-3 py-1 ${
+            currentPage === totalPages 
+              ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
+              : 'bg-orange-500 text-white hover:bg-orange-600'
+          }`}
+        >
+          <ChevronRight size={16} />
+        </button>
+        
+        <button
+          onClick={() => onPageChange(totalPages)}
+          disabled={currentPage === totalPages}
+          className={`px-3 py-1 rounded-r-md ${
+            currentPage === totalPages 
+              ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
+              : 'bg-orange-500 text-white hover:bg-orange-600'
+          }`}
+        >
+          Last
+        </button>
+      </nav>
+    </div>
+  );
+};
 
 const StaffStudentSeeView = () => {
   const [allStudents, setAllStudents] = useState({});
@@ -16,48 +100,54 @@ const StaffStudentSeeView = () => {
   const [currentStaffEmail, setCurrentStaffEmail] = useState(null);
   const [selectedBatch, setSelectedBatch] = useState("");
   const [viewMode, setViewMode] = useState("your");
-  const [selectedStudentId, setSelectedStudentId] = useState(null); // New state for selected row
+  const [selectedStudentId, setSelectedStudentId] = useState(null);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [allStudentsPagination, setAllStudentsPagination] = useState(null);
+  const [yourStudentsPagination, setYourStudentsPagination] = useState(null);
+  const [selectedDepartment, setSelectedDepartment] = useState("");
 
   useEffect(() => {
-    const fetchDataStudent = async () => {
-      try {
-        const studentsResponse = await fetchData("/staff", {
-          withCredentials: true,
-        });
-        const { staffEmail, allStudents: all, yourStudents: yours } = studentsResponse.data;
-        setCurrentStaffEmail(staffEmail);
-        console.log("Current ssssss", studentsResponse);
+    fetchStudents();
+  }, [currentPage, pageSize, viewMode]);
 
-        const filteredStudents = {};
-        Object.entries(all || {}).forEach(([dept, batches]) => {
-          const filteredBatches = {};
-          Object.entries(batches).forEach(([batch, students]) => {
-            const filteredBatchStudents = students.filter(
-              (student) => student.staffEmail === staffEmail
-            );
-            if (filteredBatchStudents.length > 0) {
-              filteredBatches[batch] = filteredBatchStudents;
-            }
-          });
-          if (Object.keys(filteredBatches).length > 0) {
-            filteredStudents[dept] = filteredBatches;
-          }
-        });
+  const fetchStudents = async () => {
+    try {
+      setLoading(true);
+      const studentsResponse = await fetchData(`/staff?page=${currentPage}&limit=${pageSize}`, {
+        withCredentials: true,
+      });
+      
+      const { 
+        staffEmail, 
+        allStudents: all, 
+        yourStudents: yours,
+        allStudentsPagination,
+        yourStudentsPagination
+      } = studentsResponse.data;
+      
+      setCurrentStaffEmail(staffEmail);
+      setAllStudents(all || {});
+      setYourStudents(yours || {});
+      setAllStudentsPagination(allStudentsPagination);
+      setYourStudentsPagination(yourStudentsPagination);
+      setError(null);
 
-        setAllStudents(all || {});
-        setYourStudents(filteredStudents);
-        setError(null);
+      console.log("All Students:", studentsResponse.data);
+    } catch (err) {
+      console.error("Error fetching data:", err.response?.data || err.message);
+      setError("Failed to load data");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        console.log("All Students:", studentsResponse.data);
-      } catch (err) {
-        console.error("Error fetching data:", err.response?.data || err.message);
-        setError("Failed to load data");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchDataStudent();
-  }, []);
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+    // fetchStudents will be called by the useEffect
+  };
 
   const handleRemoveStudent = async (studentId) => {
     try {
@@ -66,6 +156,7 @@ const StaffStudentSeeView = () => {
         withCredentials: true,
       });
 
+      // Update the local state to remove the student
       setAllStudents((prev) => {
         const updated = { ...prev };
         Object.keys(updated).forEach((dept) => {
@@ -99,6 +190,9 @@ const StaffStudentSeeView = () => {
       toast.success("Student removed successfully");
       setError(null);
       setSelectedStudentId(null); // Reset selection when student is removed
+      
+      // Refresh data after deletion
+      fetchStudents();
     } catch (err) {
       console.error("Error removing student:", err);
       setError(err.response?.data?.error || "Failed to remove student");
@@ -161,6 +255,22 @@ const StaffStudentSeeView = () => {
     setSelectedStudentId(studentId === selectedStudentId ? null : studentId); // Toggle selection
   };
 
+  const handleDepartmentChange = (dept) => {
+    setSelectedDepartment(dept);
+    setSelectedBatch(""); // Reset batch when department changes
+  };
+
+  const handleViewModeChange = (mode) => {
+    setViewMode(mode);
+    setCurrentPage(1); // Reset to first page when changing view mode
+    setSelectedDepartment(""); // Reset department
+    setSelectedBatch(""); // Reset batch
+  };
+
+  const getPaginationInfo = () => {
+    return viewMode === "your" ? yourStudentsPagination : allStudentsPagination;
+  };
+
   return (
     <div className="w-full min-h-screen p-2 sm:p-4">
       {/* Search Section */}
@@ -172,7 +282,7 @@ const StaffStudentSeeView = () => {
 
         <div className="lg:flex lg:flex-row sm:flex-row gap-2 mb-4 grid grid-cols-2 ">
           <button
-            onClick={() => setViewMode("your")}
+            onClick={() => handleViewModeChange("your")}
             className={`w-full sm:w-auto px-4 py-2 rounded ${
               viewMode === "your" ? "bg-orange-500 text-white" : "bg-gray-200"
             }`}
@@ -180,7 +290,7 @@ const StaffStudentSeeView = () => {
             Your Students
           </button>
           <button
-            onClick={() => setViewMode("all")}
+            onClick={() => handleViewModeChange("all")}
             className={`w-full sm:w-auto px-4 py-2 rounded ${
               viewMode === "all" ? "bg-orange-500 text-white" : "bg-gray-200"
             }`}
@@ -207,7 +317,6 @@ const StaffStudentSeeView = () => {
               <option value="tenthMark">10th Mark</option>
               <option value="twelfthMark">12th Mark</option>
               <option value="noOfArrears">No. of Arrears</option>
-              
             </select>
           </div>
 
@@ -236,213 +345,274 @@ const StaffStudentSeeView = () => {
         <h3 className="text-lg sm:text-xl font-semibold mb-4">
           {viewMode === "your" ? "Your Students" : "All Students"} by Department and Batch
         </h3>
-        {Object.keys(filterStudents(viewMode === "your" ? yourStudents : allStudents)).length ===
+        
+        {/* Page Size Selector */}
+        <div className="flex justify-end mb-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">Items per page:</span>
+            <select
+              value={pageSize}
+              onChange={(e) => {
+                setPageSize(Number(e.target.value));
+                setCurrentPage(1); // Reset to first page when changing page size
+              }}
+              className="border rounded p-1 text-sm"
+            >
+              <option value="10">10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+          </div>
+        </div>
+        
+                {/* Department Selection */}
+                {Object.keys(filterStudents(viewMode === "your" ? yourStudents : allStudents)).length ===
         0 ? (
           <div className="text-center py-8 text-gray-500">
             <Users size={48} className="mx-auto mb-4 text-gray-400" />
             <p>No students found.</p>
           </div>
         ) : (
-          Object.entries(filterStudents(viewMode === "your" ? yourStudents : allStudents)).map(
-            ([dept, batches]) => (
-              <div key={dept} className="mb-6">
-                <h4 className="text-base sm:text-lg font-semibold text-gray-800 mb-2">
-                  Department: {dept}
-                </h4>
-                <div className="mb-4">
-                  <select
-                    value={selectedBatch}
-                    onChange={(e) => setSelectedBatch(e.target.value)}
-                    className="border rounded p-2 w-full sm:w-48 text-sm"
-                  >
-                    <option value="">Select Batch</option>
-                    {Object.keys(batches).map((batch) => (
-                      <option key={batch} value={batch}>
-                        Batch {batch}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                {selectedBatch && batches[selectedBatch] && (
-                  <div className="w-full overflow-x-auto rounded-lg border mb-4">
-                    <h5 className="text-sm sm:text-md font-medium text-gray-700 p-2 bg-gray-50">
-                      Batch {selectedBatch} [{batches[selectedBatch].length}]
-                    </h5>
-                    <table className="w-full min-w-max">
-                      <thead>
-                        <tr className="bg-gray-50">
-                          <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
-                            Name
-                          </th>
-                          <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
-                            Email
-                          </th>
-                          <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
-                            Reg. No
-                          </th>
-                          <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
-                            Roll No
-                          </th>
-                          <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
-                            Batch
-                          </th>
-                          <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
-                            Dept
-                          </th>
-                          <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
-                            CGPA
-                          </th>
-                          <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
-                            10th
-                          </th>
-                          <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
-                            12th
-                          </th>
-                          <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
-                            Arrears
-                          </th>
-                          <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
-                            Phone
-                          </th>
-                          <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
-                            Skills
-                          </th>
-                          <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
-                            Languages
-                          </th>
-                          <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
-                            LinkedIn
-                          </th>
-                          <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
-                            GitHub
-                          </th>
-                          <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
-                            Company
-                          </th>
-                          <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
-                            Status
-                          </th>
-                          <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
-                            Staff
-                          </th>
-                          <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
-                            Actions
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-200">
-                        {batches[selectedBatch].map((student) => (
-                          <tr
-                            key={student.studentId}
-                            onClick={() => handleRowClick(student.studentId)}
-                            className={`cursor-pointer hover:bg-gray-50 ${
-                              selectedStudentId === student.studentId ? "bg-yellow-100" : ""
-                            }`}
-                          >
-                            <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
-                              {student.name || "N/A"}
-                            </td>
-                            <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
-                              {student.email}
-                            </td>
-                            <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
-                              {student.regNo || "N/A"}
-                            </td>
-                            <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
-                              {student.rollNo || "N/A"}
-                            </td>
-                            <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
-                              {student.batch || "N/A"}
-                            </td>
-                            <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
-                              {student.department || "N/A"}
-                            </td>
-                            <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
-                              {student.cgpa ?? "N/A"}
-                            </td>
-                            <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
-                              {student.tenthMark ?? "N/A"}
-                            </td>
-                            <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
-                              {student.twelfthMark ?? "N/A"}
-                            </td>
-                            <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
-                              {student.noOfArrears ?? "N/A"}
-                            </td>
-                            <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
-                              {student.phoneNumber ?? "N/A"}
-                            </td>
-                            <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
-                              {student.skillSet || "N/A"}
-                            </td>
-                            <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
-                              {student.languagesKnown || "N/A"}
-                            </td>
-                            <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
-                              {student.linkedinUrl ? (
-                                <a
-                                  href={student.linkedinUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-blue-500 hover:underline"
-                                  onClick={(e) => e.stopPropagation()} // Prevent row click when clicking link
-                                >
-                                  Link
-                                </a>
-                              ) : (
-                                "N/A"
-                              )}
-                            </td>
-                            <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
-                              {student.githubUrl ? (
-                                <a
-                                  href={student.githubUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-blue-500 hover:underline"
-                                  onClick={(e) => e.stopPropagation()} // Prevent row click when clicking link
-                                >
-                                  Link
-                                </a>
-                              ) : (
-                                "N/A"
-                              )}
-                            </td>
-                            <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
-                              {student.companyPlacedIn || "N/A"}
-                            </td>
-                            <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
-                              {student.placedStatus === "yes" ? (
-                                <span className="text-green-600">Placed</span>
-                              ) : (
-                                <span className="text-red-600">Not Placed</span>
-                              )}
-                            </td>
-                            <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
-                              {student.staffEmail || "Unassigned"}
-                            </td>
-                            <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation(); // Prevent row click when clicking button
-                                  setStudentToRemove(student);
-                                }}
-                                className="flex items-center gap-1.5 bg-red-500 text-white py-1 px-2 sm:py-1.5 sm:px-3 rounded hover:bg-red-600 transition-colors text-xs sm:text-sm"
-                                disabled={loading}
-                              >
-                                <Trash2 size={16} />
-                                Remove
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+          <>
+            {/* Department Selector */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Select Department</label>
+              <select
+                value={selectedDepartment}
+                onChange={(e) => handleDepartmentChange(e.target.value)}
+                className="border rounded p-2 w-full sm:w-48 text-sm"
+              >
+                <option value="">All Departments</option>
+                {Object.keys(filterStudents(viewMode === "your" ? yourStudents : allStudents)).map((dept) => (
+                  <option key={dept} value={dept}>
+                    {dept}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* If department is selected, show batches for that department */}
+            {selectedDepartment && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Select Batch</label>
+                <select
+                  value={selectedBatch}
+                  onChange={(e) => setSelectedBatch(e.target.value)}
+                  className="border rounded p-2 w-full sm:w-48 text-sm"
+                >
+                  <option value="">All Batches</option>
+                  {Object.keys(filterStudents(viewMode === "your" ? yourStudents : allStudents)[selectedDepartment] || {}).map((batch) => (
+                    <option key={batch} value={batch}>
+                      Batch {batch}
+                    </option>
+                  ))}
+                </select>
               </div>
-            )
-          )
+            )}
+
+            {/* Display students based on selections */}
+            {selectedDepartment && (
+              <div className="w-full overflow-x-auto rounded-lg border mb-4">
+                <h5 className="text-sm sm:text-md font-medium text-gray-700 p-2 bg-gray-50">
+                  Department: {selectedDepartment}
+                  {selectedBatch ? ` - Batch ${selectedBatch}` : ' - All Batches'}
+                </h5>
+                <table className="w-full min-w-max">
+                  <thead>
+                    <tr className="bg-gray-50">
+                      <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
+                        Name
+                      </th>
+                      <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
+                        Email
+                      </th>
+                      <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
+                        Reg. No
+                      </th>
+                      <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
+                        Roll No
+                      </th>
+                      <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
+                        Batch
+                      </th>
+                      <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
+                        Dept
+                      </th>
+                      <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
+                        CGPA
+                      </th>
+                      <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
+                        10th
+                      </th>
+                      <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
+                        12th
+                      </th>
+                      <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
+                        Arrears
+                      </th>
+                      <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
+                        Phone
+                      </th>
+                      <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
+                        Skills
+                      </th>
+                      <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
+                        Languages
+                      </th>
+                      <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
+                        LinkedIn
+                      </th>
+                      <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
+                        GitHub
+                      </th>
+                      <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
+                        Company
+                      </th>
+                      <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
+                        Status
+                      </th>
+                      <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
+                        Staff
+                      </th>
+                      <th className="px-2 sm:px-4 py-2 text-left text-xs font-semibold text-gray-600">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {Object.entries(filterStudents(viewMode === "your" ? yourStudents : allStudents)[selectedDepartment] || {})
+                      .filter(([batch, _]) => !selectedBatch || batch === selectedBatch)
+                      .flatMap(([batch, students]) => students)
+                      .map((student) => (
+                        <tr
+                          key={student.studentId}
+                          onClick={() => handleRowClick(student.studentId)}
+                          className={`cursor-pointer hover:bg-gray-50 ${
+                            selectedStudentId === student.studentId ? "bg-yellow-100" : ""
+                          }`}
+                        >
+                          <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
+                            {student.name || "N/A"}
+                          </td>
+                          <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
+                            {student.email}
+                          </td>
+                          <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
+                            {student.regNo || "N/A"}
+                          </td>
+                          <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
+                            {student.rollNo || "N/A"}
+                          </td>
+                          <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
+                            {student.batch || "N/A"}
+                          </td>
+                          <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
+                            {student.department || "N/A"}
+                          </td>
+                          <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
+                            {student.cgpa ?? "N/A"}
+                          </td>
+                          <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
+                            {student.tenthMark ?? "N/A"}
+                          </td>
+                          <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
+                            {student.twelfthMark ?? "N/A"}
+                          </td>
+                          <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
+                            {student.noOfArrears ?? "N/A"}
+                          </td>
+                          <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
+                            {student.phoneNumber ?? "N/A"}
+                          </td>
+                          <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
+                            {student.skillSet || "N/A"}
+                          </td>
+                          <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
+                            {student.languagesKnown || "N/A"}
+                          </td>
+                          <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
+                            {student.linkedinUrl ? (
+                              <a
+                                href={student.linkedinUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-500 hover:underline"
+                                onClick={(e) => e.stopPropagation()} // Prevent row click when clicking link
+                              >
+                                Link
+                              </a>
+                            ) : (
+                              "N/A"
+                            )}
+                          </td>
+                          <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
+                            {student.githubUrl ? (
+                              <a
+                                href={student.githubUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-500 hover:underline"
+                                onClick={(e) => e.stopPropagation()} // Prevent row click when clicking link
+                              >
+                                Link
+                              </a>
+                            ) : (
+                              "N/A"
+                            )}
+                          </td>
+                          <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
+                            {student.companyPlacedIn || "N/A"}
+                          </td>
+                          <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
+                            {student.placedStatus === "yes" ? (
+                              <span className="text-green-600">Placed</span>
+                            ) : (
+                              <span className="text-red-600">Not Placed</span>
+                            )}
+                          </td>
+                          <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
+                            {student.staffEmail || "Unassigned"}
+                          </td>
+                          <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation(); // Prevent row click when clicking button
+                                setStudentToRemove(student);
+                              }}
+                              className="flex items-center gap-1.5 bg-red-500 text-white py-1 px-2 sm:py-1.5 sm:px-3 rounded hover:bg-red-600 transition-colors text-xs sm:text-sm"
+                              disabled={loading}
+                            >
+                              <Trash2 size={16} />
+                              Remove
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Pagination */}
+            {getPaginationInfo() && (
+              <div className="mt-6">
+                <div className="flex justify-between items-center mb-2">
+                  <div className="text-sm text-gray-600">
+                    {viewMode === "your" 
+                      ? `Showing your students (${getPaginationInfo().total} total)`
+                      : `Showing all students (${getPaginationInfo().total} total)`}
+                  </div>
+                </div>
+                
+                <Pagination 
+                  currentPage={getPaginationInfo().page} 
+                  totalPages={getPaginationInfo().totalPages} 
+                  onPageChange={handlePageChange}
+                />
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -480,3 +650,4 @@ const StaffStudentSeeView = () => {
 };
 
 export default StaffStudentSeeView;
+
