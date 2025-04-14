@@ -17,7 +17,7 @@ const StaffManagementView = () => {
         {viewMode && (
           <button
             onClick={handleBack}
-            className="group flex items-center gap-5 px-4 py-2 text-white rounded-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-orange-300"
+            className="group flex cursor-pointer items-center gap-5 px-4 py-2 text-white rounded-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-orange-300"
           >
             <ArrowLeft
               size={20}
@@ -42,7 +42,7 @@ const StaffManagementView = () => {
           <div className="flex flex-col sm:flex-row justify-center gap-6 w-full max-w-md">
             <button
               onClick={() => setViewMode("add")}
-              className="group relative flex-1 px-6 py-4 bg-gradient-to-r from-orange-400 to-orange-500 text-white rounded-xl shadow-md hover:from-orange-500 hover:to-orange-600 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-orange-200"
+              className="group relative cursor-pointer flex-1 px-6 py-4 bg-gradient-to-r from-orange-400 to-orange-500 text-white rounded-xl shadow-md hover:from-orange-500 hover:to-orange-600 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-orange-200"
             >
               <div className="flex items-center justify-center gap-2">
                 <Plus
@@ -55,7 +55,7 @@ const StaffManagementView = () => {
             </button>
             <button
               onClick={() => setViewMode("view")}
-              className="group relative flex-1 px-6 py-4 bg-gradient-to-r from-orange-400 to-orange-500 text-white rounded-xl shadow-md hover:from-orange-500 hover:to-orange-600 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-orange-200"
+              className="group relative cursor-pointer flex-1 px-6 py-4 bg-gradient-to-r from-orange-400 to-orange-500 text-white rounded-xl shadow-md hover:from-orange-500 hover:to-orange-600 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-orange-200"
             >
               <div className="flex items-center justify-center gap-2">
                 <Users

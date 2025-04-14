@@ -116,7 +116,7 @@ const SuperAdminAuthFormView = ({ onSubmit, onOAuth, userType, toggleAuthMode })
                   <div>
                     <button
                       type="submit"
-                      className="inline-flex items-center justify-center w-full px-4 py-3 text-base font-semibold text-white transition-all duration-200 bg-orange-500 border border-transparent rounded-md focus:outline-none hover:bg-orange-600 focus:bg-orange-600"
+                      className="inline-flex items-center cursor-pointer justify-center w-full px-4 py-3 text-base font-semibold text-white transition-all duration-200 bg-orange-500 border border-transparent rounded-md focus:outline-none hover:bg-orange-600 focus:bg-orange-600"
                     >
                       {isRegistration ? 'Register' : 'Sign in'}
                     </button>
@@ -135,7 +135,7 @@ const SuperAdminAuthFormView = ({ onSubmit, onOAuth, userType, toggleAuthMode })
                     </div>
                     <button
                       onClick={onOAuth}
-                      className="mt-4 w-full inline-flex items-center justify-center px-4 py-3 text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                      className="mt-4 w-full cursor-pointer inline-flex items-center justify-center px-4 py-3 text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
                     >
                       <FaGoogle className="mr-2" />
                       Sign in with Google

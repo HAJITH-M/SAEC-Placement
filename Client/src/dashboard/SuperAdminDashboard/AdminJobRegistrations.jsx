@@ -20,13 +20,13 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, jobTitle }) => {
         <div className="flex justify-end gap-4">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors"
+            className="px-4 py-2 cursor-pointer bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
-            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+            className="px-4 py-2 cursor-pointer bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
           >
             Delete
           </button>
@@ -177,13 +177,13 @@ const AddPlacedStudentsModal = ({ isOpen, onClose, onConfirm, jobId, students, c
         <div className="flex justify-end gap-4">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors"
+            className="px-4 py-2 cursor-pointer bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
-            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+            className="px-4 py-2 cursor-pointer bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
             disabled={selectedEmails.length === 0}
           >
             Add Selected ({selectedEmails.length})
@@ -498,7 +498,7 @@ const AdminJobRegistrations = () => {
               <div className="flex gap-2 w-full sm:w-auto flex-wrap">
                 <button
                   onClick={() => toggleStudentList(job.jobId)}
-                  className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-orange-500 text-white py-1.5 px-3 rounded hover:bg-orange-600 transition-colors text-sm"
+                  className="flex-1 cursor-pointer sm:flex-none flex items-center justify-center gap-1.5 bg-orange-500 text-white py-1.5 px-3 rounded hover:bg-orange-600 transition-colors text-sm"
                 >
                   <Users size={16} />
                   <span className="hidden lg:inline">
@@ -507,14 +507,14 @@ const AdminJobRegistrations = () => {
                 </button>
                 <button
                   onClick={() => handleAddPlacedClick(job.jobId)}
-                  className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-green-500 text-white py-1.5 px-3 rounded hover:bg-green-600 transition-colors text-sm"
+                  className="flex-1 sm:flex-none cursor-pointer flex items-center justify-center gap-1.5 bg-green-500 text-white py-1.5 px-3 rounded hover:bg-green-600 transition-colors text-sm"
                 >
                   <CheckCircle size={16} />
                   <span className="hidden lg:inline">Add Placed Students</span>
                 </button>
                 <button
                   onClick={() => handleDeleteClick(job.jobId, job.companyName)}
-                  className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-red-500 text-white py-1.5 px-3 rounded hover:bg-red-600 transition-colors text-sm"
+                  className="flex-1 sm:flex-none flex cursor-pointer items-center justify-center gap-1.5 bg-red-500 text-white py-1.5 px-3 rounded hover:bg-red-600 transition-colors text-sm"
                 >
                   <Trash2 size={16} />
                   <span className="hidden lg:inline">Delete</span>
@@ -554,7 +554,7 @@ const AdminJobRegistrations = () => {
                   {job.students && job.students.length > 0 && (
                     <button
                       onClick={() => exportToExcel(job.students, job.companyName)}
-                      className="flex items-center justify-center gap-1.5 bg-green-500 text-white py-1.5 px-3 rounded hover:bg-green-600 transition-colors text-sm"
+                      className="flex items-center cursor-pointer justify-center gap-1.5 bg-green-500 text-white py-1.5 px-3 rounded hover:bg-green-600 transition-colors text-sm"
                     >
                       <Download size={16} />
                       <span className="hidden lg:inline">Export to Excel</span>

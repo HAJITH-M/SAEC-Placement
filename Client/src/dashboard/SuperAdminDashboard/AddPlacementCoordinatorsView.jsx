@@ -104,7 +104,7 @@ const AddPlacementCoordinatorsView = () => {
 
             <button
               type="submit"
-              className="w-full bg-orange-500 text-white py-2 px-4 rounded-md hover:bg-orange-600 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
+              className="w-full cursor-pointer bg-orange-500 text-white py-2 px-4 rounded-md hover:bg-orange-600 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
             >
               Add Coordinator
             </button>

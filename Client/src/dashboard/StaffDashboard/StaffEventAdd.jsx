@@ -177,7 +177,7 @@ const StaffEventAdd = () => {
             <button
               type="submit"
               disabled={uploading}
-              className="px-6 py-2 bg-orange-500 cursor-pointer text-white rounded-md hover:bg-orange-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
+              className="px-6 py-2  bg-orange-500 cursor-pointer text-white rounded-md hover:bg-orange-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
             >
               {uploading ? "Uploading..." : "Add Event"}
             </button>

@@ -128,7 +128,7 @@ const SuperAdminDashboardView = () => {
         <div className="p-4 h-full overflow-y-auto">
           <button
             onClick={toggleSidebar}
-            className="lg:hidden absolute right-4 top-4 p-2 rounded-md bg-orange-500 text-white"
+            className="lg:hidden absolute right-4 cursor-pointer top-4 p-2 rounded-md bg-orange-500 text-white"
           >
             {isOpen ? <X size={16} /> : <Menu size={16} />}
           </button>
@@ -207,7 +207,7 @@ const SuperAdminDashboardView = () => {
       {!isOpen && (
         <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white p-4 flex justify-between items-center shadow-md">
           <h2 className="text-xl font-bold text-black">Super Admin Dashboard</h2>
-          <button onClick={toggleSidebar} className="p-2 rounded-md bg-orange-500 text-white">
+          <button onClick={toggleSidebar} className="p-2 rounded-md cursor-pointer bg-orange-500 text-white">
             <Menu size={16} />
           </button>
         </div>

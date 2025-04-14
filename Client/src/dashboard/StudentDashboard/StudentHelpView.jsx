@@ -70,7 +70,7 @@ const StudentHelpView = ({ onClose }) => {
           {onClose && (
             <button
               onClick={onClose}
-              className="text-white hover:text-gray-200 focus:outline-none"
+              className="text-white cursor-pointer hover:text-gray-200 focus:outline-none"
               title="Close"
             >
               <X className="w-6 h-6" />

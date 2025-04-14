@@ -136,7 +136,7 @@ const StaffDashboardView = () => {
         <div className="p-4 h-full overflow-y-auto">
           <button
             onClick={toggleSidebar}
-            className="lg:hidden absolute right-4 top-4 p-2 rounded-md bg-orange-500 text-white"
+            className="lg:hidden absolute right-4 top-4 p-2 cursor-pointer rounded-md bg-orange-500 text-white"
           >
             {isOpen ? <X size={16} /> : <Menu size={16} />}
           </button>
@@ -269,7 +269,7 @@ const StaffDashboardView = () => {
           <h2 className="text-xl font-bold text-black">Staff Dashboard</h2>
           <button
             onClick={toggleSidebar}
-            className="p-2 rounded-md bg-orange-500 text-white"
+            className="p-2 rounded-md cursor-pointer bg-orange-500 text-white"
           >
             <Menu size={16} />
           </button>

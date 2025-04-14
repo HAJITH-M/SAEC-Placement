@@ -98,13 +98,13 @@ const AdminViewStaff = () => {
           <div className="flex flex-col sm:flex-row justify-end gap-4">
             <button
               onClick={onClose}
-              className="w-full sm:w-auto px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors text-sm sm:text-base"
+              className="w-full sm:w-auto px-4 py-2 cursor-pointer bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors text-sm sm:text-base"
             >
               Cancel
             </button>
             <button
               onClick={onConfirm}
-              className="w-full sm:w-auto px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors text-sm sm:text-base"
+              className="w-full sm:w-auto px-4 py-2 cursor-pointer bg-red-500 text-white rounded hover:bg-red-600 transition-colors text-sm sm:text-base"
             >
               Remove
             </button>
@@ -202,7 +202,7 @@ const AdminViewStaff = () => {
                           e.stopPropagation();
                           handleDeleteClick(staffMember.staffId, staffMember.name);
                         }}
-                        className="flex items-center gap-1.5 bg-red-500 text-white py-1 px-2 sm:py-1.5 sm:px-3 rounded hover:bg-red-600 transition-colors text-xs sm:text-sm"
+                        className="flex items-center gap-1.5 cursor-pointer bg-red-500 text-white py-1 px-2 sm:py-1.5 sm:px-3 rounded hover:bg-red-600 transition-colors text-xs sm:text-sm"
                         disabled={!staffMember.staffId}
                       >
                         <Trash2 size={16} />

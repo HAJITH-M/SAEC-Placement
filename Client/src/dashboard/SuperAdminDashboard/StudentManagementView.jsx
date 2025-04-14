@@ -33,7 +33,7 @@
           <h2 className="text-2xl font-bold">Student Management</h2>
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="bg-orange-500 text-white px-4 py-2 rounded-md flex items-center gap-2"
+            className="bg-orange-500 cursor-pointer text-white px-4 py-2 rounded-md flex items-center gap-2"
           >
             <Plus size={20} />
             Add Student
@@ -92,11 +92,11 @@
                                     <div className="flex gap-2">
                                       <button
                                         onClick={() => setEditingStudent(student)}
-                                        className="text-blue-500 hover:text-blue-700"
+                                        className="text-blue-500 cursor-pointer hover:text-blue-700"
                                       >
                                         <Edit2 size={18} />
                                       </button>
-                                      <button className="text-red-500 hover:text-red-700">
+                                      <button className="text-red-500 cursor-pointer hover:text-red-700">
                                         <Trash2 size={18} />
                                       </button>
                                     </div>
@@ -154,13 +154,13 @@
                       setIsAddModalOpen(false);
                       setEditingStudent(null);
                     }}
-                    className="px-4 py-2 border rounded-md"
+                    className="px-4 py-2 border rounded-md cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-orange-500 text-white rounded-md"
+                    className="px-4 py-2 bg-orange-500 text-white rounded-md cursor-pointer"
                   >
                     {editingStudent ? "Update" : "Add"} Student
                   </button>

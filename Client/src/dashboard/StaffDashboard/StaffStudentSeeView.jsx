@@ -24,7 +24,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
         <button
           onClick={() => onPageChange(1)}
           disabled={currentPage === 1}
-          className={`px-3 py-1 rounded-l-md ${
+          className={`px-3 py-1 rounded-l-md cursor-pointer ${
             currentPage === 1
               ? "bg-gray-200 text-gray-500 cursor-not-allowed"
               : "bg-orange-500 text-white hover:bg-orange-600"
@@ -49,7 +49,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
           <button
             key={page}
             onClick={() => onPageChange(page)}
-            className={`px-3 py-1 ${
+            className={`px-3 py-1 cursor-pointer ${
               currentPage === page
                 ? "bg-orange-600 text-white"
                 : "bg-orange-500 text-white hover:bg-orange-600"
@@ -74,7 +74,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
         <button
           onClick={() => onPageChange(totalPages)}
           disabled={currentPage === totalPages}
-          className={`px-3 py-1 rounded-r-md ${
+          className={`px-3 py-1 rounded-r-md cursor-pointer ${
             currentPage === totalPages
               ? "bg-gray-200 text-gray-500 cursor-not-allowed"
               : "bg-orange-500 text-white hover:bg-orange-600"
@@ -301,7 +301,7 @@ const StaffStudentSeeView = () => {
         <div className="lg:flex lg:flex-row sm:flex-row gap-2 mb-4 grid grid-cols-2">
           <button
             onClick={() => handleViewModeChange("your")}
-            className={`w-full sm:w-auto px-4 py-2 rounded ${
+            className={`w-full sm:w-auto px-4 py-2 rounded cursor-pointer ${
               viewMode === "your" ? "bg-orange-500 text-white" : "bg-gray-200"
             }`}
           >
@@ -309,7 +309,7 @@ const StaffStudentSeeView = () => {
           </button>
           <button
             onClick={() => handleViewModeChange("all")}
-            className={`w-full sm:w-auto px-4 py-2 rounded ${
+            className={`w-full sm:w-auto px-4 py-2 rounded cursor-pointer ${
               viewMode === "all" ? "bg-orange-500 text-white" : "bg-gray-200"
             }`}
           >
@@ -617,7 +617,7 @@ const StaffStudentSeeView = () => {
                                 e.stopPropagation(); // Prevent row click when clicking button
                                 setStudentToRemove(student);
                               }}
-                              className="flex items-center gap-1.5 bg-red-500 text-white py-1 px-2 sm:py-1.5 sm:px-3 rounded hover:bg-red-600 transition-colors text-xs sm:text-sm"
+                              className="flex items-center gap-1.5 cursor-pointer bg-red-500 text-white py-1 px-2 sm:py-1.5 sm:px-3 rounded hover:bg-red-600 transition-colors text-xs sm:text-sm"
                               disabled={loading}
                             >
                               <Trash2 size={16} />
@@ -668,14 +668,14 @@ const StaffStudentSeeView = () => {
             <div className="flex flex-col sm:flex-row justify-end gap-4">
               <button
                 onClick={() => setStudentToRemove(null)}
-                className="w-full sm:w-auto px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors text-sm sm:text-base"
+                className="w-full sm:w-auto px-4 py-2 cursor-pointer bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors text-sm sm:text-base"
                 disabled={loading}
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleRemoveStudent(studentToRemove.studentId)}
-                className="w-full sm:w-auto px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors text-sm sm:text-base"
+                className="w-full sm:w-auto px-4 py-2 cursor-pointer bg-red-500 text-white rounded hover:bg-red-600 transition-colors text-sm sm:text-base"
                 disabled={loading}
               >
                 Remove

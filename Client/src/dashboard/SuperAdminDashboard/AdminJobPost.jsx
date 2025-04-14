@@ -306,7 +306,7 @@ const AdminJobPost = () => {
               <div className="mt-2">
                 <button
                   onClick={handleManualRetry}
-                  className="text-blue-600 underline hover:text-blue-800"
+                  className="text-blue-600 underline cursor-pointer hover:text-blue-800"
                 >
                   Retry Analysis
                 </button>

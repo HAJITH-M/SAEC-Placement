@@ -194,25 +194,25 @@ const StudentJobView = () => {
       <div className="flex flex-wrap gap-4 mb-6 justify-center sm:justify-start">
         <button
           onClick={() => setFilter("all")}
-          className={`px-4 py-2 rounded ${filter === "all" ? "bg-orange-500 text-white" : "bg-gray-200"}`}
+          className={`px-4 py-2 rounded cursor-pointer ${filter === "all" ? "bg-orange-500 text-white" : "bg-gray-200"}`}
         >
           All
         </button>
         <button
           onClick={() => setFilter("registered")}
-          className={`px-4 py-2 rounded ${filter === "registered" ? "bg-orange-500 text-white" : "bg-gray-200"}`}
+          className={`px-4 py-2 rounded cursor-pointer ${filter === "registered" ? "bg-orange-500 text-white" : "bg-gray-200"}`}
         >
           Registered
         </button>
         <button
           onClick={() => setFilter("open")}
-          className={`px-4 py-2 rounded ${filter === "open" ? "bg-orange-500 text-white" : "bg-gray-200"}`}
+          className={`px-4 py-2 rounded cursor-pointer ${filter === "open" ? "bg-orange-500 text-white" : "bg-gray-200"}`}
         >
           Open
         </button>
         <button
           onClick={() => setFilter("closed")}
-          className={`px-4 py-2 rounded ${filter === "closed" ? "bg-orange-500 text-white" : "bg-gray-200"}`}
+          className={`px-4 py-2 rounded cursor-pointer ${filter === "closed" ? "bg-orange-500 text-white" : "bg-gray-200"}`}
         >
           Closed
         </button>
@@ -230,7 +230,7 @@ const StudentJobView = () => {
                 {job.company.length > 100 && (
                   <button
                     onClick={() => setSelectedJob(job)}
-                    className="text-orange-500 hover:text-orange-600 text-sm mt-1"
+                    className="text-orange-500 cursor-pointer hover:text-orange-600 text-sm mt-1"
                   >
                     Read More
                   </button>
@@ -311,7 +311,7 @@ const StudentJobView = () => {
               <div className="flex flex-col sm:flex-row justify-between gap-1.5">
                 <button
                   onClick={() => handleThumbsUp(index)}
-                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded text-sm text-white transition-colors ${
+                  className={`flex-1 flex items-center justify-center cursor-pointer gap-1.5 py-1.5 px-3 rounded text-sm text-white transition-colors ${
                     job.status === "Registered" || loadingStates[job.id] || job.status === "Closed" || job.status === "Registered and Closed"
                       ? "bg-gray-400 cursor-not-allowed"
                       : "bg-orange-400 hover:bg-orange-500"
@@ -323,7 +323,7 @@ const StudentJobView = () => {
                 </button>
                 <button
                   onClick={() => handleThumbsDown(index)}
-                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded text-sm text-white transition-colors ${
+                  className={`flex-1 flex items-center justify-center cursor-pointer gap-1.5 py-1.5 px-3 rounded text-sm text-white transition-colors ${
                     loadingStates[job.id] || job.status === "Closed" || job.status === "Registered and Closed"
                       ? "bg-gray-400 cursor-not-allowed"
                       : "bg-orange-400 hover:bg-orange-500"

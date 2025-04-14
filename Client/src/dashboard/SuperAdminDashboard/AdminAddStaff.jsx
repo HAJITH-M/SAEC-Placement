@@ -179,7 +179,7 @@ const AdminAddStaff = ({ onStaffCreated }) => {
             </div>
             <button
               type="submit"
-              className="w-full bg-orange-500 text-white py-3 px-6 rounded-md hover:bg-orange-600 transition duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
+              className="w-full bg-orange-500 cursor-pointer text-white py-3 px-6 rounded-md hover:bg-orange-600 transition duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
             >
               Create Staff
             </button>
@@ -236,7 +236,7 @@ const AdminAddStaff = ({ onStaffCreated }) => {
             </div>
             <button
               type="submit"
-              className="w-full bg-orange-500 text-white py-3 px-6 rounded-md hover:bg-orange-600"
+              className="w-full bg-orange-500 cursor-pointer text-white py-3 px-6 rounded-md hover:bg-orange-600"
             >
               Upload Staff
             </button>

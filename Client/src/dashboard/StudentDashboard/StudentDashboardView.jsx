@@ -102,7 +102,7 @@ const StudentDashboardView = () => {
             {/* Hamburger Menu Button */}
             <button
               onClick={toggleSidebar}
-              className="lg:hidden absolute right-4 top-4 p-2 rounded-md bg-orange-500 text-white"
+              className="lg:hidden absolute cursor-pointer right-4 top-4 p-2 rounded-md bg-orange-500 text-white"
             >
               {isOpen ? <X size={16} /> : <Menu size={16} />}
             </button>
@@ -236,7 +236,7 @@ const StudentDashboardView = () => {
             <h2 className="text-xl font-bold text-black">Dashboard</h2>
             <button
               onClick={toggleSidebar}
-              className="p-2 rounded-md bg-orange-500 text-white"
+              className="p-2 rounded-md cursor-pointer bg-orange-500 text-white"
             >
               <Menu size={16} />
             </button>
