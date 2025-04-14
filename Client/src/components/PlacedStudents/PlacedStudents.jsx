@@ -25,7 +25,6 @@ const PlacedStudents = () => {
         const response = await fetchData("get-placed-students");
         setStudents(response?.data || []);
       } catch (err) {
-        console.error("Error fetching placed students:", err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -134,7 +133,7 @@ const PlacedStudents = () => {
   }
 
   return (
-    <div className="bg-white py-10 lg:py-16 px-4">
+    <div className="bg-slate-50 py-10 lg:py-16 px-4">
       <div className="container mx-auto">
         <h2 className="text-2xl lg:text-3xl font-bold text-center mb-8 text-black">
           Placed Students

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Home, User, FileText, HelpCircle, Menu, X, Plus, LogOut, Users, Briefcase, ClipboardList, UserCircle, PlusCircle, Loader, Loader2, Loader2Icon } from "lucide-react";
+import { Home, User, FileText, HelpCircle, Menu, X, Plus, LogOut, Users, Briefcase, ClipboardList, UserCircle, PlusCircle, Loader, Loader2, Loader2Icon, MessageCircle } from "lucide-react";
 import { CSVLink } from "react-csv";
-import axios from "axios";
 import { useNavigate } from "react-router-dom"; // Import useNavigate
 import StaffProfileView from "./StaffProfileView";
 import StaffStudentAddView from "./StaffStudentAddView";
@@ -14,6 +13,7 @@ import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 import { fetchData, postData } from "../../services/apiService";
 import StaffHomeView from "./StaffHomeView";
+import ContactInfo from "../../components/Contacts/ContactInfo";
 
 const ExportCSV = ({ job, interestedStudents }) => {
   const prepareCsvData = () => {
@@ -31,7 +31,7 @@ const ExportCSV = ({ job, interestedStudents }) => {
       <CSVLink
         data={prepareCsvData()}
         filename={`${job.title}-interested-students.csv`}
-        className="mt-2 text-sm text-blue-500 underline"
+        className="mt-2 text-sm text-orange-500 underline"
       >
         Download Interested Students List
       </CSVLink>
@@ -59,7 +59,6 @@ const StaffDashboardView = () => {
           department: staff.department || "",
         });
       } catch (error) {
-        console.error("Error fetching staff details:", error);
         setStaffDetails({ email: "staff@example.com", name: "", department: "Unknown" });
       } finally {
         setLoading(false);
@@ -87,6 +86,8 @@ const StaffDashboardView = () => {
         return <StaffSeeRegistrations />;
       case "profile":
         return <StaffProfileView staffDetails={staffDetails} />;
+      case "contact":
+        return <ContactInfo />;
       case "viewStudents":
         return <StaffStudentSeeView />;
       case "studentManagement":
@@ -106,11 +107,12 @@ const StaffDashboardView = () => {
     try {
       const response = await postData("/staff/logout", {}, { withCredentials: true });
       if (response.data.message === "Logged out successfully" || response.status === 200) {
-        toast.success("Logged out successfully")
         navigate("/auth/staff");
+        toast.success("Logged out successfully")
+        
       }
     } catch (error) {
-      console.log(error);
+      return toast.error("Error logging out");
     }
   };
   
@@ -118,15 +120,17 @@ const StaffDashboardView = () => {
     return(
 
           <div className="flex justify-center items-center h-screen">
-            <Loader className="animate-spin" size={48} />
+            <Loader className="animate-spin text-orange-500" size={48} />
           </div>
+
+          
     )
   }
 
   return (
     <div className="flex relative">
       <div
-        className={`fixed lg:static lg:translate-x-0 z-40 w-64 h-screen shadow-xl bg-white text-blue-500 transform transition-transform duration-300 ease-in-out
+        className={`fixed lg:static lg:translate-x-0 z-40 w-64 h-screen shadow-xl bg-white text-orange-500 transform transition-transform duration-300 ease-in-out
         ${isOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
         <div className="p-4 h-full overflow-y-auto">
@@ -158,7 +162,7 @@ const StaffDashboardView = () => {
                 setIsOpen(false);
               }}
             >
-              <Home size={20} className={activeComponent === "home" ? "text-white" : "text-blue-500"} />
+              <Home size={20} className={activeComponent === "home" ? "text-white" : "text-orange-500"} />
               <span>Home</span>
             </div>
 
@@ -170,7 +174,7 @@ const StaffDashboardView = () => {
                 setIsOpen(false);
               }}
             >
-              <Users size={20} className={activeComponent === "studentManagement" ? "text-white" : "text-blue-500"} />
+              <Users size={20} className={activeComponent === "studentManagement" ? "text-white" : "text-orange-500"} />
               <span>Student Management</span>
             </div>
 
@@ -182,7 +186,7 @@ const StaffDashboardView = () => {
                 setIsOpen(false);
               }}
             >
-              <Briefcase size={20} className={activeComponent === "addJob" ? "text-white" : "text-blue-500"} />
+              <Briefcase size={20} className={activeComponent === "addJob" ? "text-white" : "text-orange-500"} />
               <span>Post Job</span>
             </div>
 
@@ -195,7 +199,7 @@ const StaffDashboardView = () => {
               }}
             >
 
-              <PlusCircle size={20} className={activeComponent === "staffeventadd" ? "text-white" : "text-blue-500"} />
+              <PlusCircle size={20} className={activeComponent === "staffeventadd" ? "text-white" : "text-orange-500"} />
               <span>Event Add</span>
             </div>
 
@@ -207,7 +211,7 @@ const StaffDashboardView = () => {
                 setIsOpen(false);
               }}
             >
-              <ClipboardList size={20} className={activeComponent === "jobRegisteredStudents" ? "text-white" : "text-blue-500"} />
+              <ClipboardList size={20} className={activeComponent === "jobRegisteredStudents" ? "text-white" : "text-orange-500"} />
               <span>Registered Students</span>
             </div>
 
@@ -220,11 +224,22 @@ const StaffDashboardView = () => {
               }}
             >
 
-              <UserCircle size={20} className={activeComponent === "profile" ? "text-white" : "text-blue-500"} />
+              <UserCircle size={20} className={activeComponent === "profile" ? "text-white" : "text-orange-500"} />
               <span>Profile</span>
             </div>
 
-          
+            <div
+                className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${
+                  activeComponent === "contact" ? "bg-orange-500 text-white" : "text-black"
+                }`}
+                onClick={() => {
+                  setActiveComponent("contact");
+                  setIsOpen(false);
+                }}
+              >
+                <MessageCircle size={20} className={activeComponent === "contact" ? "text-white" : "text-orange-500"} />
+                <span>Contact</span>              
+              </div>
 
             <div
               onClick={handleLogout}
@@ -265,19 +280,5 @@ const StaffDashboardView = () => {
   );
 };
 
-const HomeComponent = () => (
-  <div className="bg-white p-6 rounded-lg shadow">
-    <h2 className="text-2xl font-bold mb-4">Home</h2>
-    <p>Welcome to the staff dashboard. Use the menu to manage students and job opportunities.</p>
-  
-  <PlacementCoordinatorContact/>
-  </div>
-);
-
-
-
 
 export default StaffDashboardView;
-
-
-

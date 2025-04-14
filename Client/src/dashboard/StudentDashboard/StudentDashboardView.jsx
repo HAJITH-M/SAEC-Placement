@@ -1,18 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { Home, User, FileText, HelpCircle, Menu, X, Calendar, LogOut, Users, UserPlus, Contact } from "lucide-react";
+import { Home, User, FileText, HelpCircle, Menu, X, Calendar, LogOut, Users, UserPlus, Contact, MessageCircle } from "lucide-react";
 import { Helmet } from "react-helmet";
 import StudentProfileView from "./StudentProfileView";
 import StudentJobView from "./StudentJobView";
 import StudentEventView from "./StudentEventView";
 import { useNavigate } from "react-router-dom";
-import PlacedStudents from "../../components/PlacedStudents/PlacedStudents";
-import PlacementStats from "../../components/PlacementStats/PlacementStatsView";
-import RecentPlacements from "../../components/RecentPlacements/RecentPlacementsView";
-import HomeVM from "../../pages/HomePage/HomeVM";
+
 import { fetchData, postData } from "../../services/apiService";
 import StudentHelpView from "./StudentHelpView";
-import OurDevelopers from "../../components/OurDevelopers/OurDevelopers";
 import PlacementCoordinators from "../../components/PlacementCoordinators/PlacementCoordinators";
+import StudentHomeComponent from "./StudentHomeView";
+import ContactInfo from "../../components/Contacts/ContactInfo";
 
 const StudentDashboardView = () => {
   const [activeComponent, setActiveComponent] = useState("home");
@@ -30,8 +28,6 @@ const StudentDashboardView = () => {
         const response = await fetchData("/student", {
           withCredentials: true, // Send cookies (student_session)
         });
-        console.log("Full session response:", response);
-        console.log("Session data:", response.data);
         if (response.data.success) {
           if (response.data.student && response.data.student.email) {
             setUserEmail(response.data.student.email);
@@ -43,7 +39,6 @@ const StudentDashboardView = () => {
           throw new Error(response.data.error || "Failed to fetch user data");
         }
       } catch (error) {
-        console.error("Error fetching session email:", error.response || error.message);
         setFetchError(error.response?.data?.error || error.message || "Failed to fetch session data");
         setUserEmail("user@example.com"); // Fallback
         navigate("/auth/student"); // Redirect to correct login route
@@ -61,7 +56,7 @@ const StudentDashboardView = () => {
     switch (activeComponent) {
       case "home":
         return (
-            <HomeComponent />
+            <StudentHomeComponent />
         );
       case "profile":
         return <StudentProfileView />
@@ -72,8 +67,8 @@ const StudentDashboardView = () => {
         return <StudentEventView />;
       case "coordinators":
         return <PlacementCoordinators />;
-      case "ourDevelopers":
-        return <OurDevelopers />;
+      case "contact":
+        return <ContactInfo />;
       case "help":
         return <HelpComponent />;
       default:
@@ -88,7 +83,7 @@ const StudentDashboardView = () => {
         navigate("/home");
       }
     } catch (error) {
-      console.log(error);
+      return error;
     }
   };
 
@@ -189,16 +184,15 @@ const StudentDashboardView = () => {
                 <span>Co-ordinators</span>              </div>
               <div
                 className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${
-                  activeComponent === "ourDevelopers" ? "bg-orange-500 text-white" : "text-black"
+                  activeComponent === "contact" ? "bg-orange-500 text-white" : "text-black"
                 }`}
                 onClick={() => {
-                  setActiveComponent("ourDevelopers");
+                  setActiveComponent("contact");
                   setIsOpen(false);
                 }}
               >
-
-                <Users size={20} className={activeComponent === "ourDevelopers" ? "text-white" : "text-orange-500"} />
-                <span>Our Developers</span>
+                <MessageCircle size={20} className={activeComponent === "contact" ? "text-white" : "text-orange-500"} />
+                <span>Contact</span>              
               </div>
               <div
                 className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${
@@ -252,27 +246,6 @@ const StudentDashboardView = () => {
     </>
   );
 };
-
-const HomeComponent = () => {
-  const viewModel = HomeVM();  // renamed for clarity
-
-  return(
-    <>
-      <div className={`w-full transition-margin duration-300 ease-in-out ${viewModel.isSidebarOpen ? 'lg:ml-0' : 'ml-0'} flex-1  lg:mt-0`}>
-        <div className="text-orange-500 py-6 lg:py-12 px-4 shadow-xl bg-orange-500">
-          <div className="container mx-auto text-center bg-orange-500">
-            <h1 className="text-2xl lg:text-5xl font-bold lg:mb-4 text-white">Welcome to SAEC Placement Portal</h1>
-            <p className="text-xl text-gray-200 mb-6">Shaping Careers, Building Futures</p>
-          </div>
-        </div>
-
-        <PlacedStudents/>
-        <PlacementStats />
-        <RecentPlacements />
-      </div>
-    </>
-  )
-}
 
 const HelpComponent = () => (
   <>

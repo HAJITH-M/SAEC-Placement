@@ -1,74 +1,70 @@
 import React, { useState } from "react";
 import { ToastContainer, toast } from "react-toastify";
+import { useForm } from "react-hook-form";
 import { postData } from "../../services/apiService";
 
 const StaffEventAdd = () => {
-  const [eventData, setEventData] = useState({
-    eventName: "",
-    eventLink: "",
-    date: "",
-    file: null,
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm({
+    defaultValues: {
+      eventName: "",
+      eventLink: "",
+      date: "",
+    },
   });
 
+  const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
   const handleFileChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      console.log("Selected file:", file);
-      setEventData((prev) => ({ ...prev, file }));
+    const selectedFile = event.target.files[0];
+    if (selectedFile) {
+      setFile(selectedFile);
     }
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setEventData((prev) => ({ ...prev, [name]: value }));
   };
 
   const convertFileToBase64 = (file) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => {
-        console.log("File read successfully.");
         resolve(reader.result.split(",")[1]);
       };
       reader.onerror = (error) => {
-        console.error("Error reading file:", error);
         reject(error);
       };
       reader.readAsDataURL(file);
     });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const onSubmit = async (data) => {
     setUploading(true);
     setError("");
     setSuccess("");
 
     try {
-      console.log("🧪 Current eventData state before upload:", eventData);
-
       let uploadData = {
-        event_name: eventData.eventName,
-        event_link: eventData.eventLink,
-        date: eventData.date,
+        event_name: data.eventName,
+        event_link: data.eventLink,
+        date: data.date,
       };
 
-      if (!eventData.eventName || !eventData.eventLink || !eventData.date) {
+      if (!data.eventName || !data.eventLink || !data.date) {
         throw new Error("⚠️ Event name, link, or date is missing!");
       }
 
-      if (eventData.file) {
-        console.log("Converting file to Base64...");
-        const base64File = await convertFileToBase64(eventData.file);
+      if (file) {
+        const base64File = await convertFileToBase64(file);
         uploadData = {
           ...uploadData,
           file: base64File,
-          fileName: eventData.file.name,
-          fileType: eventData.file.type,
+          fileName: file.name,
+          fileType: file.type,
         };
       }
 
@@ -77,37 +73,27 @@ const StaffEventAdd = () => {
         headers: { "Content-Type": "application/json" },
       });
 
-      console.log("Server response:", response);
-      if (response.ok) {
+      if (response.status >= 200 && response.status < 300) {
         setSuccess("Event added successfully!");
         toast.success("Event added successfully!");
+        reset();
+        setFile(null);
       } else {
         setSuccess("False");
-        toast.error("Cannot add event try again later..");
+        toast.error("Cannot add event, try again later.");
       }
-      setEventData({
-        eventName: "",
-        eventLink: "",
-        date: "",
-        file: null,
-      });
     } catch (err) {
-      console.error("Error during event upload:", err);
       toast.error("Failed to upload event.");
 
       if (err.response) {
-        console.log("Error response data:", err.response.data);
-        console.log("Error status:", err.response.status);
         setError(
           `Failed to upload event: ${
             err.response?.data?.error || "Unknown error"
           }`
         );
       } else if (err.request) {
-        console.log("No response received:", err.request);
         setError("No response from server. Please try again.");
       } else {
-        console.log("Unexpected error:", err.message);
         setError(err.message || "Unexpected error occurred.");
       }
     } finally {
@@ -125,7 +111,7 @@ const StaffEventAdd = () => {
           </div>
         )}
         <form
-          onSubmit={handleSubmit}
+          onSubmit={handleSubmit(onSubmit)}
           className="grid grid-cols-1 md:grid-cols-2 gap-6"
         >
           <div>
@@ -134,12 +120,14 @@ const StaffEventAdd = () => {
             </label>
             <input
               type="text"
-              name="eventName"
-              value={eventData.eventName}
-              onChange={handleChange}
-              required
+              {...register("eventName", { required: "Event name is required" })}
               className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
             />
+            {errors.eventName && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.eventName.message}
+              </p>
+            )}
           </div>
 
           <div>
@@ -148,12 +136,14 @@ const StaffEventAdd = () => {
             </label>
             <input
               type="text"
-              name="eventLink"
-              value={eventData.eventLink}
-              onChange={handleChange}
-              required
+              {...register("eventLink", { required: "Event link is required" })}
               className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
             />
+            {errors.eventLink && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.eventLink.message}
+              </p>
+            )}
           </div>
 
           <div>
@@ -162,12 +152,14 @@ const StaffEventAdd = () => {
             </label>
             <input
               type="date"
-              name="date"
-              value={eventData.date}
-              onChange={handleChange}
-              required
+              {...register("date", { required: "Date is required" })}
               className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
             />
+            {errors.date && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.date.message}
+              </p>
+            )}
           </div>
 
           <div>

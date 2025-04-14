@@ -13,13 +13,13 @@ export const forgotPassword = async (role, email) => {
         });
 
         if (error) {
-            console.error('Supabase Magic Link Error:', error);
+            // console.error('Supabase Magic Link Error:', error);
             throw { message: error.message || 'Failed to send reset link', status: 400 };
         }
 
         return { message: 'Check your email for the reset link.' };
     } catch (error) {
-        console.error('Forgot Password Error:', error);
+        // console.error('Forgot Password Error:', error);
         throw {
             message: error?.message || 'Failed to send reset link',
             status: error?.status || 500
@@ -33,8 +33,8 @@ export const resetPassword = async (role, token, newPassword) => {
   
     try {
       const baseUrl = await getApiUrl();
-      console.log('Making request to:', `${baseUrl}${endpoint}`); 
-      console.log('Payload:', { token, newPassword });  
+      // console.log('Making request to:', `${baseUrl}${endpoint}`); 
+      // console.log('Payload:', { token, newPassword });  
   
       const response = await postData(`${endpoint}`, {
         token,                   
@@ -43,7 +43,7 @@ export const resetPassword = async (role, token, newPassword) => {
   
       return response.data;
     } catch (error) {
-      console.error('Reset Password Error:', error);
+      // console.error('Reset Password Error:', error);
       throw {
         message: error?.response?.data?.error || 'Failed to reset password',
         status: error?.response?.status || 500
@@ -80,10 +80,10 @@ export const resetPassword = async (role, token, newPassword) => {
         }
       );
       
-      console.log('POST Gemini API Response:', response.data);
+      // console.log('POST Gemini API Response:', response.data);
       return response; // Return full response object
     } catch (error) {
-      console.error('POST Gemini API Error:', error.response?.data || error.message);
+      // console.error('POST Gemini API Error:', error.response?.data || error.message);
       throw error;
     }
   };
@@ -106,7 +106,7 @@ export const resetPassword = async (role, token, newPassword) => {
         if (attempt === retries) {
           throw new Error(`Failed after ${retries} attempts: ${error.message}`);
         }
-        console.log(`Retrying (${attempt}/${retries}) after ${delayMs}ms...`);
+        // console.log(`Retrying (${attempt}/${retries}) after ${delayMs}ms...`);
         await new Promise(resolve => setTimeout(resolve, delayMs * Math.pow(2, attempt))); // Exponential backoff
       }
     }
@@ -138,7 +138,7 @@ export const resetPassword = async (role, token, newPassword) => {
       
       return JSON.parse(cleanedText);
     } catch (error) {
-      console.error('Failed to parse Gemini response:', error.message);
+      // console.error('Failed to parse Gemini response:', error.message);
       throw new Error(`Response parsing failed: ${error.message}`);
     }
   };

@@ -1,8 +1,8 @@
-
-
 import React, { useState } from 'react';
 import { FaLock, FaEnvelope, FaGoogle, FaUser, FaEye, FaEyeSlash } from 'react-icons/fa';
 import SuperAdminAuthFormVM from './SuperAdminAuthFormVM';
+import { Link } from 'react-router-dom';
+import { Home } from 'lucide-react';
 
 const SuperAdminAuthFormView = ({ onSubmit, onOAuth, userType, toggleAuthMode }) => {
   const vm = SuperAdminAuthFormVM({ onSubmit, userType });
@@ -24,6 +24,15 @@ const SuperAdminAuthFormView = ({ onSubmit, onOAuth, userType, toggleAuthMode })
                   ? `Register for your ${userType.toLowerCase()} account`
                   : `Access your ${userType.toLowerCase()} dashboard`}
               </p>
+              <div className="mt-4 flex justify-center">
+                <Link
+                  to="/home"
+                  className="inline-flex p-3 items-center text-sm md:text-base font-medium text-orange-500 hover:text-orange-600 hover:scale-105 transform transition-all duration-200"
+                >
+                  <Home className="w-3 h-3 md:w-4 md:h-4 mr-1" />
+                  Go back to home
+                </Link>
+              </div>
             </div>
           </div>
 
@@ -58,8 +67,7 @@ const SuperAdminAuthFormView = ({ onSubmit, onOAuth, userType, toggleAuthMode })
                         <FaLock />
                       </span>
                       <input
-
-                        type={showPassword ? "text" : "password"}
+                        type={showPassword ? 'text' : 'password'}
                         {...vm.register('password')}
                         className="block w-full px-10 py-3 text-black placeholder-gray-500 transition-all duration-200 bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500 caret-orange-500"
                         placeholder="Enter your password"
@@ -97,7 +105,10 @@ const SuperAdminAuthFormView = ({ onSubmit, onOAuth, userType, toggleAuthMode })
                   )}
                   <div className="flex justify-end">
                     {!isRegistration && (
-                      <a href={`${userType}/forgot-password`} className="text-sm text-orange-500 hover:underline">
+                      <a
+                        href={`${userType}/forgot-password`}
+                        className="text-sm text-orange-500 hover:underline"
+                      >
                         Forgot Password?
                       </a>
                     )}
@@ -133,13 +144,12 @@ const SuperAdminAuthFormView = ({ onSubmit, onOAuth, userType, toggleAuthMode })
                 )}
 
                 <div className="mt-4 text-center">
-
                   {toggleAuthMode && (
                     <p className="text-sm text-gray-600">
                       {isRegistration ? 'Already have an account?' : "Don't have an account?"}{' '}
                       <button
                         onClick={toggleAuthMode}
-                        className="text-orange-500  cursor-pointer hover:underline focus:outline-none"
+                        className="text-orange-500 cursor-pointer hover:underline focus:outline-none"
                       >
                         {isRegistration ? 'Sign in' : 'Sign up'}
                       </button>

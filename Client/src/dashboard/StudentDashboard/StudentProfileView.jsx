@@ -43,7 +43,6 @@ const StudentProfileView = () => {
         url: updatedStudent.url,
       }));
     } catch (err) {
-      console.error('Error uploading profile picture:', err.response?.data || err.message);
       setError('Failed to upload profile picture. Please try again.');
     } finally {
       setUploading(false);
@@ -56,7 +55,6 @@ const StudentProfileView = () => {
         const response = await fetchData('/student/resume', {
           withCredentials: true,
         });
-        console.log('Fetched Student Data:', response.data);
 
         setStudentData({
           name: response.data.name || 'N/A',
@@ -76,7 +74,6 @@ const StudentProfileView = () => {
           batch: response.data.batch || 'N/A',
         });
       } catch (err) {
-        console.error('Error fetching student data:', err.response?.data || err.message);
         setError('Failed to load profile data. Please try again later.');
       } finally {
         setLoading(false);
@@ -99,19 +96,16 @@ const StudentProfileView = () => {
           [field === 'emailId' ? 'email' : field]: value,
         };
 
-        console.log('Sending update:', updateData);
 
         const response = await patchData('/student/resume', updateData, {
           withCredentials: true,
         });
-        console.log('Update Response:', response.data);
 
         setStudentData((prev) => ({
           ...prev,
           [field]: response.data[field] || studentData[field],
         }));
       } catch (err) {
-        console.error('Error updating field:', err.response?.data || err.message);
         setError(`Failed to update ${field}: ${err.response?.data?.error || 'Unknown error'}`);
         return;
       }

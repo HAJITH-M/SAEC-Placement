@@ -1,24 +1,23 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
-import { Users, Search, Filter, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Users, Search, Filter, Trash2, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { toast } from "react-toastify";
 import { deleteData, fetchData } from "../../services/apiService";
 
 const Pagination = ({ currentPage, totalPages, onPageChange }) => {
   const pages = [];
   const maxPagesToShow = 5;
-  
+
   let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
   let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
-  
+
   if (endPage - startPage + 1 < maxPagesToShow) {
     startPage = Math.max(1, endPage - maxPagesToShow + 1);
   }
-  
+
   for (let i = startPage; i <= endPage; i++) {
     pages.push(i);
   }
-  
+
   return (
     <div className="flex justify-center mt-4">
       <nav className="flex items-center">
@@ -26,59 +25,59 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
           onClick={() => onPageChange(1)}
           disabled={currentPage === 1}
           className={`px-3 py-1 rounded-l-md ${
-            currentPage === 1 
-              ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
-              : 'bg-orange-500 text-white hover:bg-orange-600'
+            currentPage === 1
+              ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+              : "bg-orange-500 text-white hover:bg-orange-600"
           }`}
         >
           First
         </button>
-        
+
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
           className={`px-3 py-1 ${
-            currentPage === 1 
-              ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
-              : 'bg-orange-500 text-white hover:bg-orange-600'
+            currentPage === 1
+              ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+              : "bg-orange-500 text-white hover:bg-orange-600"
           }`}
         >
           <ChevronLeft size={16} />
         </button>
-        
-        {pages.map(page => (
+
+        {pages.map((page) => (
           <button
             key={page}
             onClick={() => onPageChange(page)}
             className={`px-3 py-1 ${
-              currentPage === page 
-                ? 'bg-orange-600 text-white' 
-                : 'bg-orange-500 text-white hover:bg-orange-600'
+              currentPage === page
+                ? "bg-orange-600 text-white"
+                : "bg-orange-500 text-white hover:bg-orange-600"
             }`}
           >
             {page}
           </button>
         ))}
-        
+
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
           className={`px-3 py-1 ${
-            currentPage === totalPages 
-              ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
-              : 'bg-orange-500 text-white hover:bg-orange-600'
+            currentPage === totalPages
+              ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+              : "bg-orange-500 text-white hover:bg-orange-600"
           }`}
         >
           <ChevronRight size={16} />
         </button>
-        
+
         <button
           onClick={() => onPageChange(totalPages)}
           disabled={currentPage === totalPages}
           className={`px-3 py-1 rounded-r-md ${
-            currentPage === totalPages 
-              ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
-              : 'bg-orange-500 text-white hover:bg-orange-600'
+            currentPage === totalPages
+              ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+              : "bg-orange-500 text-white hover:bg-orange-600"
           }`}
         >
           Last
@@ -101,7 +100,7 @@ const StaffStudentSeeView = () => {
   const [selectedBatch, setSelectedBatch] = useState("");
   const [viewMode, setViewMode] = useState("your");
   const [selectedStudentId, setSelectedStudentId] = useState(null);
-  
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -116,28 +115,28 @@ const StaffStudentSeeView = () => {
   const fetchStudents = async () => {
     try {
       setLoading(true);
-      const studentsResponse = await fetchData(`/staff?page=${currentPage}&limit=${pageSize}`, {
-        withCredentials: true,
-      });
-      
-      const { 
-        staffEmail, 
-        allStudents: all, 
+      const studentsResponse = await fetchData(
+        `/staff?page=${currentPage}&limit=${pageSize}`,
+        {
+          withCredentials: true,
+        }
+      );
+
+      const {
+        staffEmail,
+        allStudents: all,
         yourStudents: yours,
         allStudentsPagination,
-        yourStudentsPagination
+        yourStudentsPagination,
       } = studentsResponse.data;
-      
+
       setCurrentStaffEmail(staffEmail);
       setAllStudents(all || {});
       setYourStudents(yours || {});
       setAllStudentsPagination(allStudentsPagination);
       setYourStudentsPagination(yourStudentsPagination);
       setError(null);
-
-      console.log("All Students:", studentsResponse.data);
     } catch (err) {
-      console.error("Error fetching data:", err.response?.data || err.message);
       setError("Failed to load data");
     } finally {
       setLoading(false);
@@ -190,11 +189,10 @@ const StaffStudentSeeView = () => {
       toast.success("Student removed successfully");
       setError(null);
       setSelectedStudentId(null); // Reset selection when student is removed
-      
+
       // Refresh data after deletion
       fetchStudents();
     } catch (err) {
-      console.error("Error removing student:", err);
       setError(err.response?.data?.error || "Failed to remove student");
       toast.error("Failed to remove student");
     } finally {
@@ -216,17 +214,37 @@ const StaffStudentSeeView = () => {
               student.regNo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
               student.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
               student.batch?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-              student.department?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-              String(student.cgpa ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-              String(student.tenthMark ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-              String(student.twelfthMark ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-              String(student.noOfArrears ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-              String(student.phoneNumber ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+              student.department
+                ?.toLowerCase()
+                .includes(searchTerm.toLowerCase()) ||
+              String(student.cgpa ?? "")
+                .toLowerCase()
+                .includes(searchTerm.toLowerCase()) ||
+              String(student.tenthMark ?? "")
+                .toLowerCase()
+                .includes(searchTerm.toLowerCase()) ||
+              String(student.twelfthMark ?? "")
+                .toLowerCase()
+                .includes(searchTerm.toLowerCase()) ||
+              String(student.noOfArrears ?? "")
+                .toLowerCase()
+                .includes(searchTerm.toLowerCase()) ||
+              String(student.phoneNumber ?? "")
+                .toLowerCase()
+                .includes(searchTerm.toLowerCase()) ||
               student.skillSet?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-              student.languagesKnown?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-              student.linkedinUrl?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-              student.githubUrl?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-              student.companyPlacedIn?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              student.languagesKnown
+                ?.toLowerCase()
+                .includes(searchTerm.toLowerCase()) ||
+              student.linkedinUrl
+                ?.toLowerCase()
+                .includes(searchTerm.toLowerCase()) ||
+              student.githubUrl
+                ?.toLowerCase()
+                .includes(searchTerm.toLowerCase()) ||
+              student.companyPlacedIn
+                ?.toLowerCase()
+                .includes(searchTerm.toLowerCase()) ||
               String(student.placedStatus === "yes" ? "yes" : "no")
                 .toLowerCase()
                 .includes(searchTerm.toLowerCase())
@@ -280,7 +298,7 @@ const StaffStudentSeeView = () => {
           Search Students
         </h2>
 
-        <div className="lg:flex lg:flex-row sm:flex-row gap-2 mb-4 grid grid-cols-2 ">
+        <div className="lg:flex lg:flex-row sm:flex-row gap-2 mb-4 grid grid-cols-2">
           <button
             onClick={() => handleViewModeChange("your")}
             className={`w-full sm:w-auto px-4 py-2 rounded ${
@@ -335,9 +353,9 @@ const StaffStudentSeeView = () => {
 
       {/* Loading State */}
       {loading && (
-        <div className="w-full p-4 mb-4 bg-gray-100 text-gray-700 rounded text-center">
-          Loading...
-        </div>
+        <div className="flex justify-center items-center h-screen">
+        <Loader2 className="animate-spin text-orange-500" size={48} />
+      </div>
       )}
 
       {/* Students Section */}
@@ -345,7 +363,7 @@ const StaffStudentSeeView = () => {
         <h3 className="text-lg sm:text-xl font-semibold mb-4">
           {viewMode === "your" ? "Your Students" : "All Students"} by Department and Batch
         </h3>
-        
+
         {/* Page Size Selector */}
         <div className="flex justify-end mb-4">
           <div className="flex items-center gap-2">
@@ -365,10 +383,11 @@ const StaffStudentSeeView = () => {
             </select>
           </div>
         </div>
-        
-                {/* Department Selection */}
-                {Object.keys(filterStudents(viewMode === "your" ? yourStudents : allStudents)).length ===
-        0 ? (
+
+        {/* Department Selection */}
+        {Object.keys(
+          filterStudents(viewMode === "your" ? yourStudents : allStudents)
+        ).length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             <Users size={48} className="mx-auto mb-4 text-gray-400" />
             <p>No students found.</p>
@@ -377,14 +396,18 @@ const StaffStudentSeeView = () => {
           <>
             {/* Department Selector */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Select Department</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Select Department
+              </label>
               <select
                 value={selectedDepartment}
                 onChange={(e) => handleDepartmentChange(e.target.value)}
                 className="border rounded p-2 w-full sm:w-48 text-sm"
               >
-                <option value="">All Departments</option>
-                {Object.keys(filterStudents(viewMode === "your" ? yourStudents : allStudents)).map((dept) => (
+                <option value="">Select Department</option>
+                {Object.keys(
+                  filterStudents(viewMode === "your" ? yourStudents : allStudents)
+                ).map((dept) => (
                   <option key={dept} value={dept}>
                     {dept}
                   </option>
@@ -395,14 +418,20 @@ const StaffStudentSeeView = () => {
             {/* If department is selected, show batches for that department */}
             {selectedDepartment && (
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Select Batch</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Select Batch
+                </label>
                 <select
                   value={selectedBatch}
                   onChange={(e) => setSelectedBatch(e.target.value)}
                   className="border rounded p-2 w-full sm:w-48 text-sm"
                 >
                   <option value="">All Batches</option>
-                  {Object.keys(filterStudents(viewMode === "your" ? yourStudents : allStudents)[selectedDepartment] || {}).map((batch) => (
+                  {Object.keys(
+                    filterStudents(
+                      viewMode === "your" ? yourStudents : allStudents
+                    )[selectedDepartment] || {}
+                  ).map((batch) => (
                     <option key={batch} value={batch}>
                       Batch {batch}
                     </option>
@@ -416,7 +445,9 @@ const StaffStudentSeeView = () => {
               <div className="w-full overflow-x-auto rounded-lg border mb-4">
                 <h5 className="text-sm sm:text-md font-medium text-gray-700 p-2 bg-gray-50">
                   Department: {selectedDepartment}
-                  {selectedBatch ? ` - Batch ${selectedBatch}` : ' - All Batches'}
+                  {selectedBatch
+                    ? ` - Batch ${selectedBatch}`
+                    : " - All Batches"}
                 </h5>
                 <table className="w-full min-w-max">
                   <thead>
@@ -481,7 +512,11 @@ const StaffStudentSeeView = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {Object.entries(filterStudents(viewMode === "your" ? yourStudents : allStudents)[selectedDepartment] || {})
+                    {Object.entries(
+                      filterStudents(
+                        viewMode === "your" ? yourStudents : allStudents
+                      )[selectedDepartment] || {}
+                    )
                       .filter(([batch, _]) => !selectedBatch || batch === selectedBatch)
                       .flatMap(([batch, students]) => students)
                       .map((student) => (
@@ -489,7 +524,9 @@ const StaffStudentSeeView = () => {
                           key={student.studentId}
                           onClick={() => handleRowClick(student.studentId)}
                           className={`cursor-pointer hover:bg-gray-50 ${
-                            selectedStudentId === student.studentId ? "bg-yellow-100" : ""
+                            selectedStudentId === student.studentId
+                              ? "bg-yellow-100"
+                              : ""
                           }`}
                         >
                           <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
@@ -599,15 +636,15 @@ const StaffStudentSeeView = () => {
               <div className="mt-6">
                 <div className="flex justify-between items-center mb-2">
                   <div className="text-sm text-gray-600">
-                    {viewMode === "your" 
+                    {viewMode === "your"
                       ? `Showing your students (${getPaginationInfo().total} total)`
                       : `Showing all students (${getPaginationInfo().total} total)`}
                   </div>
                 </div>
-                
-                <Pagination 
-                  currentPage={getPaginationInfo().page} 
-                  totalPages={getPaginationInfo().totalPages} 
+
+                <Pagination
+                  currentPage={getPaginationInfo().page}
+                  totalPages={getPaginationInfo().totalPages}
                   onPageChange={handlePageChange}
                 />
               </div>
@@ -620,11 +657,13 @@ const StaffStudentSeeView = () => {
       {studentToRemove && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2">
           <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-md">
-            <h3 className="text-base sm:text-lg font-semibold mb-4">Confirm Deletion</h3>
+            <h3 className="text-base sm:text-lg font-semibold mb-4">
+              Confirm Deletion
+            </h3>
             <p className="text-gray-600 mb-6 text-sm sm:text-base">
               Are you sure you want to remove "
-              <span className="font-medium">{studentToRemove.email}</span>"? This action
-              cannot be undone.
+              <span className="font-medium">{studentToRemove.email}</span>"? This
+              action cannot be undone.
             </p>
             <div className="flex flex-col sm:flex-row justify-end gap-4">
               <button
@@ -650,4 +689,3 @@ const StaffStudentSeeView = () => {
 };
 
 export default StaffStudentSeeView;
-

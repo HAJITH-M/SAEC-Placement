@@ -11,12 +11,9 @@ const StudentEventView = () => {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        console.log("Fetching events from server...");
         const response = await fetchData("/get-events");
-        console.log("API response:", response.data);
         setEvents(response.data);
       } catch (error) {
-        console.error("Error fetching events:", error);
         setError("Failed to load events. Please try again.");
       } finally {
         setLoading(false);
@@ -89,7 +86,7 @@ const StudentEventView = () => {
                               <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500 flex-shrink-0" />
                               <div>
                                 <p className="text-xs text-gray-500">Event Link</p>
-                                <p className="text-gray-800 text-sm">Available</p>
+                                <p className="text-gray-800 text-sm">{event.link}</p>
                               </div>
                             </div>
                           )}

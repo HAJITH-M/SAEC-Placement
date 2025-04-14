@@ -14,8 +14,7 @@ const StaffProfileView = ({ staffDetails }) => {
     setMessage("");
     setError("");
 
-    console.log("Old Password Entered:", oldPassword);
-    console.log("New Password Entered:", newPassword);
+  
 
     try {
       const response = await patchData(
@@ -29,7 +28,6 @@ const StaffProfileView = ({ staffDetails }) => {
       setNewPassword("");
     } catch (err) {
       const errorMsg = err.response?.data?.error || "Failed to update password";
-      console.error("Password update error:", err.response?.data || err.message);
       setError(errorMsg);
       toast.error(errorMsg);
     }
@@ -109,7 +107,7 @@ const StaffProfileView = ({ staffDetails }) => {
 
                 <button
                   type="submit"
-                  className="w-full py-2 sm:py-3 bg-orange-500 text-white text-sm rounded-lg hover:bg-orange-600 flex items-center justify-center space-x-2"
+                  className="w-full cursor-pointer py-2 sm:py-3 bg-orange-500 text-white text-sm rounded-lg hover:bg-orange-600 flex items-center justify-center space-x-2"
                 >
                   <Lock className="w-4 h-4 sm:w-5 sm:h-5" />
                   <span>Update Password</span>

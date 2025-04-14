@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Home, User, FileText, Menu, X, Calendar, Users, LogOut, Loader, GraduationCap } from "lucide-react";
+import { Home, User, FileText, Menu, X, Calendar, Users, LogOut, Loader, GraduationCap, MessageCircle, Mail } from "lucide-react";
 import axios from 'axios';
 import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
@@ -14,6 +14,7 @@ import { toast, ToastContainer } from "react-toastify";
 import { fetchData, postData } from "../../services/apiService";
 import AdminStudentsPlaced from "./AdminStudentsPlaced";
 import AddPlacementCoordinatorsView from "./AddPlacementCoordinatorsView";
+import ContactInfo from "../../components/Contacts/ContactInfo";
 
 const SuperAdminDashboardView = () => {
   const [activeComponent, setActiveComponent] = useState("home");
@@ -39,7 +40,6 @@ const SuperAdminDashboardView = () => {
       }
       return false; // Session is invalid
     } catch (error) {
-      console.error('Session check failed:', error.response?.data || error.message);
       return false; // Session check failed
     }
   };
@@ -47,7 +47,7 @@ const SuperAdminDashboardView = () => {
   const fetchDataSuperAdmin = async () => {
     setIsLoading(true); // Start loading only when fetching data
     try {
-      const response = await axios.get('http://localhost:9999/superadmin', {
+      const response = await fetchData('/superadmin', {
         withCredentials: true,
       });
       if (response.data.success) {
@@ -58,7 +58,6 @@ const SuperAdminDashboardView = () => {
         throw new Error('Failed to fetch superadmin data');
       }
     } catch (error) {
-      console.error('Error fetching dashboard data:', error.response?.data || error.message);
       navigate('/auth/superadmin', { replace: true });
     } finally {
       setIsLoading(false);
@@ -91,6 +90,7 @@ const SuperAdminDashboardView = () => {
       case "events": return <AdminAddEvents />;
       case "adminJobPost": return <AdminJobPost />;
       case "jobRegistrations": return <AdminJobRegistrations />;
+      case "contact": return <ContactInfo />;
       default: return <HomeComponent staffCount={staffList.length} studentCount={studentList.length} />;
     }
   };
@@ -105,7 +105,6 @@ const SuperAdminDashboardView = () => {
         throw new Error('Logout failed: ' + (response.data.message || 'Unknown error'));
       }
     } catch (error) {
-      console.error('Logout failed:', error.response?.data || error.message);
       toast.error("Log Out Failed");
     }
   };
@@ -163,10 +162,9 @@ const SuperAdminDashboardView = () => {
               <span>Students Placed</span>
             </div>
             <div onClick={() => { setActiveComponent("addMail"); setIsOpen(false); }} className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${activeComponent === "addMail" ? "bg-orange-500 text-white" : "text-black"}`}>
-              <User size={20} className={activeComponent === "addMail" ? "text-white" : "text-orange-500"} />
+              <Mail size={20} className={activeComponent === "addMail" ? "text-white" : "text-orange-500"} />
               <span>Add Mail</span>
-            </div>
-            <div onClick={() => { setActiveComponent("addplacementcoordinators"); setIsOpen(false); }} className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${activeComponent === "addplacementcoordinators" ? "bg-orange-500 text-white" : "text-black"}`}>
+            </div>            <div onClick={() => { setActiveComponent("addplacementcoordinators"); setIsOpen(false); }} className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${activeComponent === "addplacementcoordinators" ? "bg-orange-500 text-white" : "text-black"}`}>
               <User size={20} className={activeComponent === "addplacementcoordinators" ? "text-white" : "text-orange-500"} />
               <span>Add Co-ordinators</span>
             </div>
@@ -178,6 +176,18 @@ const SuperAdminDashboardView = () => {
               <Calendar size={20} className={activeComponent === "events" ? "text-white" : "text-orange-500"} />
               <span>Event Management</span>
             </div>
+            <div
+                className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-orange-500 hover:text-white rounded transition-all duration-200 ${
+                  activeComponent === "contact" ? "bg-orange-500 text-white" : "text-black"
+                }`}
+                onClick={() => {
+                  setActiveComponent("contact");
+                  setIsOpen(false);
+                }}
+              >
+                <MessageCircle size={20} className={activeComponent === "contact" ? "text-white" : "text-orange-500"} />
+                <span>Contact</span>              
+              </div>
             <div onClick={handleLogout} className="flex items-center space-x-2 p-2 cursor-pointer hover:bg-red-500 hover:text-white rounded transition-all duration-200 text-black">
               <LogOut size={20} className="text-red-500" />
               <span>Logout</span>

@@ -28,7 +28,6 @@ const StudentJobView = () => {
         setLoadingStates({});
 
         const drivesResponse = await fetchData("/student/displaydrives");
-        console.log('Drives Response:', drivesResponse);
 
         const drivesData = drivesResponse.data;
         if (!drivesData?.drives_list) {
@@ -79,7 +78,6 @@ const StudentJobView = () => {
         setEndsOn(endsOnData);
 
       } catch (err) {
-        console.error('Fetch Error:', err);
         addToast(err.message || "Failed to fetch jobs", "error");
       } finally {
         setIsFetching(false);
@@ -94,7 +92,6 @@ const StudentJobView = () => {
       const response = await fetchData(`/student/check-application-status/${driveId}`);
       return response.data?.applied || false;
     } catch (err) {
-      console.error(`Error checking status for drive ${driveId}:`, err);
       return false;
     }
   };

@@ -1,21 +1,31 @@
 import React, { useState, useEffect } from "react";
 import { ToastContainer, toast } from "react-toastify";
+import { useForm } from "react-hook-form";
 import { fetchData, postData } from "../../services/apiService";
 import { generateContent, parseGeminiResponse } from "../../config/api";
 
 const StaffJobAddView = () => {
-  const [formData, setFormData] = useState({
-    companyName: "",
-    jobDescription: "",
-    role: "",
-    lpa: "",
-    driveDate: "",
-    expiration: "",
-    batch: "",
-    department: [],
-    driveLink: "",
-    notificationEmail: [],
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    reset,
+    formState: { errors },
+  } = useForm({
+    defaultValues: {
+      companyName: "",
+      jobDescription: "",
+      role: "",
+      lpa: "",
+      driveDate: "",
+      expiration: "",
+      batch: "",
+      department: "",
+      driveLink: "",
+    },
   });
+
+  const [notificationEmails, setNotificationEmails] = useState([]);
   const [rawDescription, setRawDescription] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -31,47 +41,30 @@ const StaffJobAddView = () => {
         const response = await fetchData(`/staff/getfeedgroupmail`, {
           withCredentials: true,
         });
-        console.log("Received group emails:", response.data.groupMailList);
         if (response.data && Array.isArray(response.data.groupMailList)) {
           const emailList = response.data.groupMailList
             .map((item) => (typeof item === "string" ? item : item.email))
             .filter(Boolean);
           setGroupEmails(emailList);
         } else {
-          console.error("Unexpected response format:", response.data);
           setError("Failed to parse notification email options");
         }
       } catch (err) {
-        console.error("Failed to fetch group emails:", err);
         setError("Failed to load notification email options");
       }
     };
     fetchGroupEmails();
   }, []);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    if (name === "department") {
-      setFormData({
-        ...formData,
-        [name]: value
-          .split(",")
-          .map((d) => d.trim())
-          .filter((d) => d),
-      });
-    } else if (name === "notificationEmail") {
-      const updatedEmails = e.target.checked
-        ? [...formData.notificationEmail, value]
-        : formData.notificationEmail.filter((em) => em !== value);
-      setFormData({ ...formData, notificationEmail: updatedEmails });
-    } else {
-      setFormData({ ...formData, [name]: value });
-    }
+  const handleNotificationEmailChange = (email, checked) => {
+    setNotificationEmails((prev) =>
+      checked ? [...prev, email] : prev.filter((em) => em !== email)
+    );
   };
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
-    setIsDropdownOpen(true); // Open dropdown when typing starts
+    setIsDropdownOpen(true);
   };
 
   const toggleDropdown = () => {
@@ -94,7 +87,6 @@ const StaffJobAddView = () => {
         return date.toISOString().split("T")[0];
       }
     } catch (err) {
-      console.error("Date formatting error:", err.message);
       return dateStr;
     }
   };
@@ -110,7 +102,6 @@ const StaffJobAddView = () => {
       const minutes = String(date.getMinutes()).padStart(2, "0");
       return `${year}-${month}-${day}T${hours}:${minutes}`;
     } catch (err) {
-      console.error("Date formatting for input error:", err.message);
       return dateStr;
     }
   };
@@ -122,10 +113,6 @@ const StaffJobAddView = () => {
       const response = await generateContent(prompt, MAX_RETRIES, 1000);
       return response.data;
     } catch (err) {
-      console.error(
-        `API Request failed (attempt ${currentRetry + 1}):`,
-        err.message
-      );
       throw err;
     }
   };
@@ -133,7 +120,7 @@ const StaffJobAddView = () => {
   const analyzeJobDescription = async (description) => {
     if (!description) {
       setError(null);
-      setFormData({
+      reset({
         companyName: "",
         jobDescription: "",
         driveDate: "",
@@ -141,10 +128,10 @@ const StaffJobAddView = () => {
         batch: "",
         role: "",
         lpa: "",
-        department: [],
+        department: "",
         driveLink: "",
-        notificationEmail: [],
       });
+      setNotificationEmails([]);
       return;
     }
 
@@ -170,19 +157,11 @@ const StaffJobAddView = () => {
       `;
 
       const responseData = await makeApiRequest(prompt);
-      console.log("Raw API Response:", responseData);
-
       let aiData;
       try {
         aiData = parseGeminiResponse({ data: responseData });
-        console.log("Parsed AI Data:", aiData);
       } catch (parseErr) {
-        console.error("Parsing Error:", parseErr);
-        throw new Error(
-          "Failed to parse AI response as JSON. Raw response: " +
-            responseData.candidates[0].content.parts[0].text.substring(0, 100) +
-            "..."
-        );
+        throw new Error("Failed to parse AI response as JSON.");
       }
 
       const jobData = Array.isArray(aiData) ? aiData[0] : aiData;
@@ -198,9 +177,7 @@ const StaffJobAddView = () => {
               ? ""
               : date.toISOString().split("T")[0];
           }
-        } catch (err) {
-          console.error("Error parsing drive date:", err);
-        }
+        } catch (err) {}
       }
 
       let expirationFormatted = "";
@@ -229,9 +206,7 @@ const StaffJobAddView = () => {
               expirationFormatted = formatDateForInput(date);
             }
           }
-        } catch (err) {
-          console.error("Error parsing expiration date:", err);
-        }
+        } catch (err) {}
       }
 
       const department = Array.isArray(jobData.department)
@@ -240,37 +215,22 @@ const StaffJobAddView = () => {
         ? [jobData.department]
         : [];
 
-      const updatedFormData = {
-        companyName: jobData.companyName || "Unknown Company",
-        jobDescription: jobData.jobDescription || description,
-        driveDate: driveDateFormatted || "",
-        expiration: expirationFormatted || "",
-        batch: jobData.batch || "",
-        department: department.length > 0 ? department : [],
-        driveLink: jobData.driveLink || "",
-        lpa: jobData.lpa || "",
-        role: jobData.role || "",
-        notificationEmail: formData.notificationEmail,
-      };
-
-      console.log("Updated Form Data:", updatedFormData);
-      setFormData(updatedFormData);
+      setValue("companyName", jobData.companyName || "Unknown Company");
+      setValue("jobDescription", jobData.jobDescription || description);
+      setValue("driveDate", driveDateFormatted || "");
+      setValue("expiration", expirationFormatted || "");
+      setValue("batch", jobData.batch || "");
+      setValue("department", department.join(", ") || "");
+      setValue("driveLink", jobData.driveLink || "");
+      setValue("lpa", jobData.lpa || "");
+      setValue("role", jobData.role || "");
       setError(null);
     } catch (err) {
-      console.error(
-        "Analysis Error Details:",
-        err.response?.data || err.message
-      );
       const errorMsg = `Failed to analyze job description: ${err.message}`;
       setError(errorMsg);
 
-      setFormData((prev) => ({
-        ...prev,
-        companyName: prev.companyName || "Error Parsing",
-        jobDescription: description,
-        notificationEmail: prev.notificationEmail,
-      }));
-
+      setValue("companyName", "Error Parsing");
+      setValue("jobDescription", description);
       setRetryCount(retryCount + 1);
     } finally {
       setLoading(false);
@@ -285,39 +245,36 @@ const StaffJobAddView = () => {
     if (rawDescription.trim()) analyzeJobDescription(rawDescription);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const onSubmit = async (data) => {
     try {
       setLoading(true);
       const formattedData = {
-        ...formData,
-        driveDate: formatDateForBackend(formData.driveDate),
-        expiration: formatDateForBackend(formData.expiration, true),
-        notificationEmail: formData.notificationEmail,
+        companyName: data.companyName,
+        jobDescription: data.jobDescription,
+        role: data.role,
+        lpa: data.lpa,
+        driveDate: formatDateForBackend(data.driveDate),
+        expiration: formatDateForBackend(data.expiration, true),
+        batch: data.batch,
+        department: data.department
+          .split(",")
+          .map((d) => d.trim())
+          .filter((d) => d),
+        driveLink: data.driveLink,
+        notificationEmail: notificationEmails,
       };
-      console.log("Data being sent to /staff/createjobs:", [formattedData]);
+
       await postData(`/staff/createjobs`, [formattedData], {
         withCredentials: true,
       });
-      // Reset all form-related state
-      setFormData({
-        companyName: "",
-        jobDescription: "",
-        driveDate: "",
-        expiration: "",
-        role: "",
-        lpa: "",
-        batch: "",
-        department: [],
-        driveLink: "",
-        notificationEmail: [],
-      });
+
+      reset();
+      setNotificationEmails([]);
       setRawDescription("");
       setError(null);
-      setSearchQuery(""); // Clear email search input
-      setIsDropdownOpen(false); // Close email dropdown
+      setSearchQuery("");
+      setIsDropdownOpen(false);
       toast.success("Job created successfully!");
-      console.log("Form reset triggered after successful submission");
     } catch (err) {
       setError(
         `Failed to create job: ${err.response?.data?.error || err.message}`
@@ -371,7 +328,7 @@ const StaffJobAddView = () => {
           <button
             onClick={handleAutoFill}
             disabled={loading || !rawDescription.trim()}
-            className="mt-3 px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
+            className="mt-3 px-4 py-2 bg-orange-500 cursor-pointer text-white rounded-md hover:bg-orange-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
           >
             {loading ? "Analyzing..." : "Auto Fill"}
           </button>
@@ -382,7 +339,7 @@ const StaffJobAddView = () => {
         </div>
 
         <form
-          onSubmit={handleSubmit}
+          onSubmit={handleSubmit(onSubmit)}
           className="grid grid-cols-1 md:grid-cols-3 gap-6"
         >
           <div className="space-y-4">
@@ -392,13 +349,17 @@ const StaffJobAddView = () => {
               </label>
               <input
                 type="text"
-                name="companyName"
-                value={formData.companyName}
-                onChange={handleInputChange}
+                {...register("companyName", {
+                  required: "Company name is required",
+                })}
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
-                required
                 placeholder="e.g., TechCorp"
               />
+              {errors.companyName && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.companyName.message}
+                </p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -406,12 +367,16 @@ const StaffJobAddView = () => {
               </label>
               <input
                 type="date"
-                name="driveDate"
-                value={formData.driveDate}
-                onChange={handleInputChange}
+                {...register("driveDate", {
+                  required: "Drive date is required",
+                })}
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
-                required
               />
+              {errors.driveDate && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.driveDate.message}
+                </p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -419,13 +384,15 @@ const StaffJobAddView = () => {
               </label>
               <input
                 type="text"
-                name="batch"
-                value={formData.batch}
-                onChange={handleInputChange}
+                {...register("batch", { required: "Batch is required" })}
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
-                required
                 placeholder="e.g., 2025"
               />
+              {errors.batch && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.batch.message}
+                </p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -433,19 +400,21 @@ const StaffJobAddView = () => {
               </label>
               <input
                 type="text"
-                name="lpa"
-                value={formData.lpa}
-                onChange={handleInputChange}
+                {...register("lpa", { required: "Job CTC is required" })}
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
-                required
                 placeholder="e.g., 50 LPA"
               />
+              {errors.lpa && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.lpa.message}
+                </p>
+              )}
             </div>
             <div>
               <button
                 type="submit"
                 disabled={loading}
-                className="px-6 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
+                className="px-6 py-2 cursor-pointer bg-orange-500 text-white rounded-md hover:bg-orange-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
               >
                 {loading ? "Posting..." : "Post Job"}
               </button>
@@ -458,14 +427,18 @@ const StaffJobAddView = () => {
                 Job Description
               </label>
               <textarea
-                name="jobDescription"
-                value={formData.jobDescription}
-                onChange={handleInputChange}
+                {...register("jobDescription", {
+                  required: "Job description is required",
+                })}
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
-                required
                 rows={3}
                 placeholder="e.g., Software Engineer role..."
               />
+              {errors.jobDescription && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.jobDescription.message}
+                </p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -473,12 +446,16 @@ const StaffJobAddView = () => {
               </label>
               <input
                 type="datetime-local"
-                name="expiration"
-                value={formData.expiration}
-                onChange={handleInputChange}
+                {...register("expiration", {
+                  required: "Expiration date is required",
+                })}
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
-                required
               />
+              {errors.expiration && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.expiration.message}
+                </p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -486,13 +463,15 @@ const StaffJobAddView = () => {
               </label>
               <input
                 type="text"
-                name="role"
-                value={formData.role}
-                onChange={handleInputChange}
+                {...register("role", { required: "Job role is required" })}
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
-                required
                 placeholder="e.g., Software Engineer"
               />
+              {errors.role && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.role.message}
+                </p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -500,13 +479,17 @@ const StaffJobAddView = () => {
               </label>
               <input
                 type="text"
-                name="driveLink"
-                value={formData.driveLink}
-                onChange={handleInputChange}
+                {...register("driveLink", {
+                  required: "Drive link is required",
+                })}
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
-                required
                 placeholder="e.g., https://example.com/drive"
               />
+              {errors.driveLink && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.driveLink.message}
+                </p>
+              )}
             </div>
           </div>
 
@@ -517,13 +500,17 @@ const StaffJobAddView = () => {
               </label>
               <input
                 type="text"
-                name="department"
-                value={formData.department.join(", ")}
-                onChange={handleInputChange}
+                {...register("department", {
+                  required: "Departments are required",
+                })}
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
-                required
                 placeholder="e.g., Computer Science, IT"
               />
+              {errors.department && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.department.message}
+                </p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -542,8 +529,8 @@ const StaffJobAddView = () => {
                   className="w-full p-3 border border-gray-300 rounded-md bg-white text-gray-700 text-sm cursor-pointer flex justify-between items-center hover:bg-gray-50 transition-all"
                 >
                   <span>
-                    {formData.notificationEmail.length > 0
-                      ? `${formData.notificationEmail.length} selected`
+                    {notificationEmails.length > 0
+                      ? `${notificationEmails.length} selected`
                       : "Select emails"}
                   </span>
                   <svg
@@ -573,12 +560,14 @@ const StaffJobAddView = () => {
                             <input
                               type="checkbox"
                               id={`email-${index}`}
-                              name="notificationEmail"
                               value={email}
-                              checked={formData.notificationEmail.includes(
-                                email
-                              )}
-                              onChange={handleInputChange}
+                              checked={notificationEmails.includes(email)}
+                              onChange={(e) =>
+                                handleNotificationEmailChange(
+                                  email,
+                                  e.target.checked
+                                )
+                              }
                               className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300 rounded"
                             />
                             <label

@@ -3,7 +3,7 @@ import { FaGraduationCap, FaBriefcase, FaChartLine, FaHandshake } from 'react-ic
 
 const PlacementStats = () => {
   return (
-    <div className="container mx-auto py-10 lg:py-16 px-4">
+    <div className="container bg-slate-50 mx-auto py-10 lg:py-16 px-4">
       <h2 className="text-2xl lg:text-3xl font-bold text-center mb-8 lg:mb-12 text-black">Placement Highlights</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-8">
         <div className="bg-white p-4 lg:p-6 rounded-lg shadow-lg text-center border border-gray-200 hover:border-orange-500 transition-all duration-200">

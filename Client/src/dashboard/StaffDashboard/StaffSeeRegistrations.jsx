@@ -82,7 +82,6 @@ const AddPlacedStudentsModal = ({
         data,
         { withCredentials: true }
       );
-      console.log("Response from server:", response.data);
 
       onConfirm(selectedEmails);
 
@@ -90,7 +89,6 @@ const AddPlacedStudentsModal = ({
       setSearchTerm("");
       toast.success("Students marked as placed successfully!");
     } catch (err) {
-      console.error("Error posting to /staff/updateplacedstudentslist:", err);
       toast.error("Failed to add placed students. Please try again.");
     }
   };
@@ -110,7 +108,6 @@ const AddPlacedStudentsModal = ({
   };
 
   const filteredStudents = filterStudents(students);
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-2xl">
@@ -125,7 +122,7 @@ const AddPlacedStudentsModal = ({
             <select
               value={filterBy}
               onChange={(e) => setFilterBy(e.target.value)}
-              className="w-full focus:outline-none text-sm"
+              className="w-full cursor-pointer focus:outline-none text-sm"
             >
               <option value="all">All</option>
               <option value="studentName">Name</option>
@@ -411,12 +408,10 @@ const StaffSeeRegistrations = () => {
       });
       const staffEmail = staffResponse.data.staffEmail;
       setCurrentStaffEmail(staffEmail);
-      console.log("Current Staff Email:", staffEmail);
 
       const response = await fetchData(`/staff/displaydrives`, {
         withCredentials: true,
       });
-      console.log("Display Drives Response:", response.data);
       const drives = response.data.drives_list || [];
       
       // Create a new map to store pagination info for each job
@@ -432,10 +427,7 @@ const StaffSeeRegistrations = () => {
             { withCredentials: true }
           );
           
-          console.log(
-            `Registered Students Response for job ${job.id}:`,
-            studentsResponse.data
-          );
+         
           
           const students = studentsResponse.data.registered_students || [];
           
@@ -453,7 +445,6 @@ const StaffSeeRegistrations = () => {
       setJobs(jobsWithStudents);
       setError(null);
     } catch (err) {
-      console.error("Fetch Jobs Error:", err);
       setError(err.response?.data?.error || "Failed to fetch jobs");
       toast.error("Failed to fetch jobs");
       setJobs([]);
@@ -490,7 +481,6 @@ const StaffSeeRegistrations = () => {
       );
       
     } catch (err) {
-      console.error(`Error fetching students for job ${jobId}:`, err);
       toast.error("Failed to fetch students for this job");
     } finally {
       setLoading(false);
@@ -678,7 +668,7 @@ const StaffSeeRegistrations = () => {
         <div className="flex flex-row gap-2 mb-4">
           <button
             onClick={() => setViewMode("all")}
-            className={`px-4 py-2 rounded ${
+            className={`px-4 py-2 rounded cursor-pointer ${
               viewMode === "all" ? "bg-orange-500 text-white" : "bg-gray-200"
             }`}
           >
@@ -686,7 +676,7 @@ const StaffSeeRegistrations = () => {
           </button>
           <button
             onClick={() => setViewMode("your")}
-            className={`px-4 py-2 rounded ${
+            className={`px-4 py-2 rounded cursor-pointer ${
               viewMode === "your" ? "bg-orange-500 text-white" : "bg-gray-200"
             }`}
           >
@@ -699,7 +689,7 @@ const StaffSeeRegistrations = () => {
             <select
               value={jobFilterBy}
               onChange={(e) => setJobFilterBy(e.target.value)}
-              className="w-full focus:outline-none text-sm"
+              className="w-full focus:outline-none text-sm cursor-pointer"
             >
               <option value="all">All Fields</option>
               <option value="companyName">Company Name</option>
@@ -753,7 +743,7 @@ const StaffSeeRegistrations = () => {
               <div className="flex gap-2 w-full sm:w-auto flex-wrap">
                 <button
                   onClick={() => toggleStudentList(job.id)}
-                  className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-orange-500 text-white py-1.5 px-3 rounded hover:bg-orange-600 transition-colors text-sm"
+                  className="flex-1 sm:flex-none flex items-center cursor-pointer justify-center gap-1.5 bg-orange-500 text-white py-1.5 px-3 rounded hover:bg-orange-600 transition-colors text-sm"
                 >
                   <Users size={16} />
                   <span className="hidden lg:inline">
@@ -762,14 +752,14 @@ const StaffSeeRegistrations = () => {
                 </button>
                 <button
                   onClick={() => handleAddPlacedClick(job.id)}
-                  className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-green-500 text-white py-1.5 px-3 rounded hover:bg-green-600 transition-colors text-sm"
+                  className="flex-1 sm:flex-none cursor-pointer flex items-center justify-center gap-1.5 bg-green-500 text-white py-1.5 px-3 rounded hover:bg-green-600 transition-colors text-sm"
                 >
                   <CheckCircle size={16} />
                   <span className="hidden lg:inline">Add Placed Students</span>
                 </button>
                 <button
                   onClick={() => handleDeleteClick(job.id, job.companyName)}
-                  className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-red-500 text-white py-1.5 px-3 rounded hover:bg-red-600 transition-colors text-sm"
+                  className="flex-1 sm:flex-none cursor-pointer flex items-center justify-center gap-1.5 bg-red-500 text-white py-1.5 px-3 rounded hover:bg-red-600 transition-colors text-sm"
                   >
                     <Trash2 size={16} />
                     <span className="hidden lg:inline">Delete</span>
@@ -832,7 +822,7 @@ const StaffSeeRegistrations = () => {
                             onClick={() =>
                               exportToExcel(job.students, job.companyName, "all")
                             }
-                            className="flex items-center justify-center gap-1.5 bg-green-500 text-white py-1.5 px-3 rounded hover:bg-green-600 transition-colors text-sm"
+                            className="flex cursor-pointer items-center justify-center gap-1.5 bg-green-500 text-white py-1.5 px-3 rounded hover:bg-green-600 transition-colors text-sm"
                           >
                             <Download size={16} />
                             <span className="hidden lg:inline">Export All to Excel</span>
@@ -846,7 +836,7 @@ const StaffSeeRegistrations = () => {
                                   "your"
                                 )
                               }
-                              className="flex items-center justify-center gap-1.5 bg-blue-500 text-white py-1.5 px-3 rounded hover:bg-blue-600 transition-colors text-sm"
+                              className="flex items-center cursor-pointer justify-center gap-1.5 bg-blue-500 text-white py-1.5 px-3 rounded hover:bg-blue-600 transition-colors text-sm"
                             >
                               <Download size={16} />
                               <span className="hidden lg:inline">Export Your Students</span>
