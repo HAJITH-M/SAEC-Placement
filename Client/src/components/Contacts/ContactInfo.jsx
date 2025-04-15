@@ -13,28 +13,28 @@ const HEAD_COORDINATOR = {
 
 const DEVELOPERS = [
   {
-    name: "John Doe",
+    name: "Mohammed Hajith",
     dept: "Computer Science",
     batch: "2021-2025",
-    email: "john.doe@example.com",
+    email: "mhajith2003@gmail.com ",
   },
   {
-    name: "Jane Smith",
-    dept: "Electronics",
+    name: "Madhumitta P",
+    dept: "Computer Science",
     batch: "2021-2025",
-    email: "jane.smith@example.com",
+    email: "madhumegha900@gmail.com",
   },
   {
-    name: "Alex Johnson",
-    dept: "Mechanical",
+    name: "Kirthevasen K",
+    dept: "Computer Science",
     batch: "2021-2025",
-    email: "alex.johnson@example.com",
+    email: "vasen2353@gmail.com",
   },
   {
-    name: "jemmi",
-    dept: "Mechanical",
+    name: "Usha Nandhini G",
+    dept: "Computer Science",
     batch: "2021-2025",
-    email: "alex.johnson@example.com",
+    email: "gushanandhini2004@gmail.com",
   },
 ];
 
