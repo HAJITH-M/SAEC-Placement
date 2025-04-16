@@ -76,7 +76,7 @@ const StaffLogin = () => {
       window.location.href = oauthUrl;
     } catch (error) {
       console.error('Error determining OAuth URL:', error);
-      window.location.href = 'https://your-production-api.com/auth/oauth/staff';
+      window.location.href = 'http://localhost:9999/auth/oauth/staff';
     }
   };
 

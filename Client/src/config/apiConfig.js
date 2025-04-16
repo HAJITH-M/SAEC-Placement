@@ -1,7 +1,7 @@
 import axios from 'axios';  // Add this at the top
 
-const LOCAL_URL = import.meta.env.VITE_LOCAL_API_URL || 'http://localhost:9999';
-const PROD_URL = import.meta.env.VITE_PROD_API_URL || 'https://your-production-api.com/api';
+const LOCAL_URL = import.meta.env.VITE_LOCAL_API_URL;
+const PROD_URL = import.meta.env.VITE_PROD_API_URL ;
 
 async function checkLocalBackend() {
   try {
